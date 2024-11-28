@@ -3,10 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <title>Directory File Indexer</title>
-    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.3/cdn.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.3/cdn.min.js" defer></script>
 </head>
 <body>
-    <div x-data="fileIndexer()" class="container mx-auto p-4">
+    <div x-data="{ 
+        files: [], 
+        async selectDirectory() {
+            try {
+                const dirHandle = await window.showDirectoryPicker();
+                this.files = [];
+                
+                const getFilesRecursively = async (dirHandle, path = '') => {
+                    for await (const entry of dirHandle.values()) {
+                        const newPath = path ? `${path}/${entry.name}` : entry.name;
+                        
+                        if (entry.kind === 'file') {
+                            const file = await entry.getFile();
+                            file.relativePath = newPath;
+                            this.files.push(file);
+                        } else if (entry.kind === 'directory') {
+                            await getFilesRecursively(entry, newPath);
+                        }
+                    }
+                };
+
+                await getFilesRecursively(dirHandle);
+            } catch (error) {
+                console.error('Error selecting directory:', error);
+            }
+        },
+        createDownloadLink(file) {
+            return URL.createObjectURL(file);
+        }
+    }" class="container mx-auto p-4">
         <h1 class="text-2xl font-bold mb-4">Directory File Indexer</h1>
         
         <button 
@@ -22,36 +51,16 @@
                 <template x-for="file in files" :key="file.name">
                     <li class="mb-2">
                         <a 
-                            :href="createObjectURL(file)" 
+                            :href="createDownloadLink(file)" 
+                            :download="file.relativePath || file.name"
                             target="_blank" 
                             class="text-blue-600 hover:underline"
-                            x-text="file.name"
+                            x-text="file.relativePath || file.name"
                         ></a>
                     </li>
                 </template>
             </ul>
         </div>
     </div>
-
-    <script>
-        function fileIndexer() {
-            return {
-                files: [],
-                async selectDirectory() {
-                    const dirHandle = await window.showDirectoryPicker();
-                    this.files = [];
-                    for await (const entry of dirHandle.values()) {
-                        if (entry.kind === 'file') {
-                            const file = await entry.getFile();
-                            this.files.push(file);
-                        }
-                    }
-                },
-                createObjectURL(file) {
-                    return URL.createObjectURL(file);
-                }
-            };
-        }
-    </script>
 </body>
 </html>
