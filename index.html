@@ -1,66 +1,315 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <title>Directory File Indexer</title>
+    <title>Archive Browser</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.3/cdn.min.js" defer></script>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <div x-data="{ 
-        files: [], 
-        async selectDirectory() {
-            try {
-                const dirHandle = await window.showDirectoryPicker();
-                this.files = [];
-                
-                const getFilesRecursively = async (dirHandle, path = '') => {
+
+<body x-data class="m-0 p-0 h-dvh w-dvw font-sans">
+    <template x-if="!('showDirectoryPicker' in window)">
+        <div class="flex items-center justify-center h-dvh w-dvw bg-gray-200">
+            <div class="max-w-md p-8 bg-white rounded-lg shadow-lg">
+                <div class="flex items-center justify-center mb-6">
+                    <svg class="w-16 h-16 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <h1 class="text-2xl font-bold text-center mb-4">Error: missing showDirectoryPicker API</h1>
+                <p class="text-gray-600 text-center mb-6">This Archive Browser requires the 'showDirectoryPicker' API which is only
+                    available in Chromium-based browsers such as Brave, Edge, or Chrome</p>
+            </div>
+        </div>
+    </template>
+
+    <template x-if="'showDirectoryPicker' in window">
+        <div x-data="initialize()" class="h-dvh w-dvw flex flex-col">
+            <header class="flex flex-row space-x-8 flex-shrink-0 p-2.5 bg-gray-200">
+                <div>
+                    <h1 class="text-2xl font-bold mb-4">Archive Browser</h1>
+                    <button @click="selectDirectory" class="bg-blue-500 text-white px-4 py-2 rounded mb-4"
+                        x-text="`${dirHandles.length > 0 ? 'Add' : 'Select'} Directory`">
+                    </button>
+                    <ol>
+                        <template x-for="dir in dirHandles" :key="dir.name">
+                            <div class="flex flex-row space-x-4">
+                                <input type="checkbox" x-model="dir.active" @change="scanDirectory"></input>
+                                <h2 x-text="dir.name"></h2>
+                            </div>
+                        </template>
+                    </ol>
+                </div>
+                <div>
+                    <h2>Global Search</h2>
+                    <input 
+                        type="text" 
+                        x-model="globalSearch" 
+                        placeholder="Search across all fields"
+                        class="border rounded px-2 py-1 w-full mb-4"
+                    >
+                    <div x-show="scanErrors.length > 0" class="relative overflow-y-auto" style="color: red">
+                        <button x-on:click="scanErrors = []" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                        <h2 class="text-2xl font-bold mb-4">Filename Parsing Errors:</h2>
+                        <ol class="list-decimal pl-6 space-y-2">
+                            <template x-for="error in scanErrors" :key="error.timestamp">
+                                <li x-text="error.message"></li>
+                            </template>
+                        </ol>
+                    </div>
+                </div>
+            </header>
+
+            <main class="flex-grow overflow-y-auto mx-3.75">
+                <div x-show="dirHandles.length > 0">
+                    <table x-data="{ 
+                        data: [], 
+                        init() {
+                            this.updateIndex()
+                        },
+                        updateIndex() {
+                            this.data = Object.entries($store.app.getFilteredIndex()).reduce((acc, [trackingNumber, revisions]) => {
+                                acc[trackingNumber] = revisions;
+                                return acc;
+                            }, {});
+                        }
+                    }" 
+                    x-init="$watch('$store.app.files', () => updateIndex())
+                            $watch('$store.app.globalSearch', () => updateIndex())
+                            $watch('$store.app.filters', () => updateIndex())" 
+                    class="w-full border-collapse">
+                        <thead class="sticky top-0 bg-gray-200 z-index-10">
+                            <tr>
+                                <template x-for="(column, key) in $store.app.columns" :key="key">
+                                    <th class="p-2 text-left cursor-pointer hover:bg-gray-300">
+                                        <span x-text="column.title"></span>
+                                    </th>
+                                </template>
+                            </tr>
+                            <tr>
+                                <template x-for="(column, key) in $store.app.columns" :key="key">
+                                    <th class="p-0">
+                                        <input type="text" x-model="$store.app.filters[key]"
+                                            :placeholder="`Filter ${column.title}`"
+                                            class="border rounded px-2 py-1 w-full">
+                                    </th>
+                                </template>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template x-for="(revisions, key) in data" :key="key">
+                                <tr>
+                                    <td class="font-mono text-lg" x-text="key"></td>
+                                    <td x-text="Object.values(revisions)[0][0].meta.title"></td>
+                                    <td>
+                                        <template x-for="rev in Object.keys(revisions).sort(textBeforeNumbersSort)"
+                                            :key="`${key}_${rev}`">
+                                            <div>
+                                                <div style="display: inline"
+                                                    x-text="`${rev} (${revisions[rev][0].meta.purpose})`"></div>
+                                                <template x-for="file in revisions[rev]"
+                                                    :key="file.meta.canonicalName">
+                                                    <a style="margin: 0.2rem;" x-bind:href="URL.createObjectURL(file)"
+                                                        x-bind:download="file.meta.canonicalName" target="_blank"
+                                                        x-text="file.meta.extension"></a>
+                                                </template>
+                                            </div>
+                                        </template>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </template>
+</body>
+
+<script>
+    function textBeforeNumbersSort(a, b) {
+        const strA = String(a || '');
+        const strB = String(b || '');
+        const isNumberA = !isNaN(Number(strA.trim()));
+        const isNumberB = !isNaN(Number(strB.trim()));
+
+        if (isNumberA && isNumberB) {
+            return Number(strA) - Number(strB);
+        } else if (isNumberA) {
+            return 1;
+        } else if (isNumberB) {
+            return -1;
+        } else {
+            return strA.localeCompare(strB);
+        }
+    }
+
+    function downloadFile(fileHandle) {
+        const url = URL.createObjectURL(fileHandle);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileHandle.name;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+
+    function parseFileName(fileName) {
+        const regex = /^(([A-Z]{2})-([A-Z]{3})-(\d{5})-([A-Z]{2})-([A-Z]{3})-(\d{4})(?:-(\S*))?)_(\S+)(?: \((.*)\))? - (.*)\.(.*)$/i;
+        const match = fileName.match(regex);
+
+        if (match) {
+            return {
+                trackingNumber: match[1],
+                originator: match[2],
+                projectPhase: match[3],
+                projectNumber: match[4],
+                discipline: match[5],
+                documentType: match[6],
+                sequence: match[7],
+                suffix: match[8],
+                revision: match[9],
+                purpose: match[10],
+                title: match[11],
+                extension: match[12],
+                fileName,
+                get canonicalName() {
+                    return `${this.trackingNumber}_${this.revision} (${this.purpose}) - ${this.title}.${this.extension}`
+                }
+            };
+        } else {
+            throw new Error(`failed to parse filename: ${fileName}`)
+        }
+    }
+
+    function initialize() {
+        Alpine.store('app', {
+            dirHandles: [],
+            files: [],
+            scanErrors: [],
+            globalSearch: '',
+            
+            // Define columns with their filtering keys
+            columns: {
+                trackingNumber: { 
+                    title: "TRACKING NUMBER", 
+                    filterKey: 'trackingNumber'
+                },
+                title: { 
+                    title: "TITLE", 
+                    filterKey: 'title'
+                },
+                revision: { 
+                    title: "REVISION", 
+                    filterKey: 'revision'
+                },
+            },
+
+            // Filters for each column
+            filters: {},
+
+            async selectDirectory() {
+                const dirHandle = await window.showDirectoryPicker({ id: "archive" });
+                dirHandle.active = true
+                this.dirHandles.push(dirHandle)
+                await this.scanDirectory()
+            },
+
+            async scanDirectory() {
+                console.debug('scanning directories ...')
+                this.files = [] // Clear previous files
+                this.scanErrors = [] // Clear previous scan errors
+                for (const dirHandle of this.dirHandles.filter(dirHandle => dirHandle.active)) {
                     for await (const entry of dirHandle.values()) {
-                        const newPath = path ? `${path}/${entry.name}` : entry.name;
-                        
                         if (entry.kind === 'file') {
-                            const file = await entry.getFile();
-                            file.relativePath = newPath;
-                            this.files.push(file);
-                        } else if (entry.kind === 'directory') {
-                            await getFilesRecursively(entry, newPath);
+                            const file = await entry.getFile()
+                            try {
+                                file.meta = parseFileName(file.name)
+                                this.files.push(file)
+                            } catch (error) {
+                                error.timestamp = Date.now()
+                                this.scanErrors.push(error)
+                            }
                         }
                     }
-                };
+                }
+                console.debug(`finished scanning directories (found ${this.files.length} files)`)
+            },
 
-                await getFilesRecursively(dirHandle);
-            } catch (error) {
-                console.error('Error selecting directory:', error);
-            }
-        },
-        createDownloadLink(file) {
-            return URL.createObjectURL(file);
-        }
-    }" class="container mx-auto p-4">
-        <h1 class="text-2xl font-bold mb-4">Directory File Indexer</h1>
-        
-        <button 
-            @click="selectDirectory" 
-            class="bg-blue-500 text-white px-4 py-2 rounded mb-4"
-        >
-            Select Directory
-        </button>
+            getFilteredIndex() {
+                // If no files, return empty object
+                if (this.files.length === 0) return {};
 
-        <div x-show="files.length > 0" class="mt-4">
-            <h2 class="text-xl font-semibold mb-2">Files in Directory</h2>
-            <ul class="list-disc pl-5">
-                <template x-for="file in files" :key="file.name">
-                    <li class="mb-2">
-                        <a 
-                            :href="createDownloadLink(file)" 
-                            :download="file.relativePath || file.name"
-                            target="_blank" 
-                            class="text-blue-600 hover:underline"
-                            x-text="file.relativePath || file.name"
-                        ></a>
-                    </li>
-                </template>
-            </ul>
-        </div>
-    </div>
-</body>
+                // Normalize global search to lowercase
+                const globalSearchLower = (this.globalSearch || '').toLowerCase().trim();
+
+                // Filter files based on global search and column filters
+                const filteredFiles = this.files.filter(file => {
+                    // Global search check
+                    if (globalSearchLower) {
+                        const searchableFields = [
+                            file.meta.trackingNumber, 
+                            file.meta.title, 
+                            file.meta.revision, 
+                            file.meta.purpose
+                        ];
+                        
+                        const matchesGlobalSearch = searchableFields.some(field => 
+                            String(field).toLowerCase().includes(globalSearchLower)
+                        );
+                        
+                        if (!matchesGlobalSearch) return false;
+                    }
+
+                    // Column-specific filters
+                    return Object.entries(this.columns).every(([key, column]) => {
+                        const filterValue = (this.filters[key] || '').toLowerCase().trim();
+                        
+                        // If no filter, include the file
+                        if (!filterValue) return true;
+
+                        // Get the corresponding meta field for filtering
+                        const fieldValue = file.meta[column.filterKey];
+                        
+                        // Case-insensitive includes check
+                        return String(fieldValue).toLowerCase().includes(filterValue);
+                    });
+                });
+
+                // Group filtered files by tracking number and revision
+                return filteredFiles.reduce((result, current) => {
+                    if (!result[current.meta.trackingNumber]) 
+                        result[current.meta.trackingNumber] = {};
+                    
+                    if (!result[current.meta.trackingNumber][current.meta.revision]) 
+                        result[current.meta.trackingNumber][current.meta.revision] = [];
+                    
+                    result[current.meta.trackingNumber][current.meta.revision].push(current);
+                    return result;
+                }, {});
+            },
+        });
+
+        return Alpine.store('app');
+    }
+</script>
+
+<style>
+    th,
+    td {
+        border: 1px solid black;
+        padding: 8px;
+        white-space: nowrap;
+    }
+</style>
+
 </html>
