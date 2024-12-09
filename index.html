@@ -219,9 +219,14 @@
 
             async selectDirectory() {
                 const dirHandle = await window.showDirectoryPicker({ id: "archive" });
-                dirHandle.active = true
-                this.dirHandles.push(dirHandle)
-                await this.scanDirectory()
+                if (this.dirHandles.some(async (existing) => await existing.isSameEntry(dirHandle))) {
+                    alert(`directory ${dirHandle.name} is already included`)
+                } else {
+                    dirHandle.active = true
+                    this.dirHandles.push(dirHandle)
+                    console.log(dirHandle)
+                    await this.scanDirectory()
+                }
             },
 
             async scanDirectory() {
