@@ -44,7 +44,7 @@
                         </template>
                     </ol>
                 </div>
-                <div>
+                <div x-show="dirHandles.length > 0">
                     <h2>Global Search</h2>
                     <input 
                         type="text" 
@@ -224,7 +224,6 @@
                 } else {
                     dirHandle.active = true
                     this.dirHandles.push(dirHandle)
-                    console.log(dirHandle)
                     await this.scanDirectory()
                 }
             },
