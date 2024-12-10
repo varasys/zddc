@@ -256,6 +256,18 @@
 
                 // Normalize global search to lowercase
                 const globalSearchLower = (this.globalSearch || '').toLowerCase().trim();
+                
+                const autoFilters = Object.entries(this.filters).reduce((result, [field, filter]) => {
+                    if (filter !== null && filter !== '') {
+                        try {
+                            const regex = new RegExp(filter, 'i')
+                            result.push([field, regex])
+                        } catch (error) {
+                            console.debug(`error: invalid regex '${filter}' on '${field}'`, error)
+                        }
+                    }
+                    return result
+                }, [])
 
                 // Filter files based on global search and column filters
                 const filteredFiles = this.files.filter(file => {
@@ -274,20 +286,8 @@
                         
                         if (!matchesGlobalSearch) return false;
                     }
-
-                    // Column-specific filters
-                    return Object.entries(this.columns).every(([key, column]) => {
-                        const filterValue = (this.filters[key] || '').toLowerCase().trim();
-                        
-                        // If no filter, include the file
-                        if (!filterValue) return true;
-
-                        // Get the corresponding meta field for filtering
-                        const fieldValue = file.meta[column.filterKey];
-                        
-                        // Case-insensitive includes check
-                        return String(fieldValue).toLowerCase().includes(filterValue);
-                    });
+                    
+                    return autoFilters.every(([field, regex]) => regex.test(file.meta[field]))
                 });
 
                 // Group filtered files by tracking number and revision
