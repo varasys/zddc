@@ -1,0 +1,203 @@
+/* ── Native <dialog> base ─────────────────────────────── */
+dialog.modal {
+    border: none;
+    border-radius: 0.75rem;
+    max-width: 32rem;
+    width: min(90%, 32rem);
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.25);
+    padding: 1.5rem;
+    gap: 1.25rem;
+    background: var(--bg);
+    color: var(--text);
+}
+
+dialog.modal[open] {
+    display: flex;
+    flex-direction: column;
+}
+
+dialog.modal::backdrop {
+    background: rgba(17, 24, 39, 0.55);
+}
+
+/* Prevent background scroll while a modal dialog is open */
+html:has(dialog.modal[open]) {
+    overflow: hidden;
+}
+
+/* ── Shared modal layout ─────────────────────────────── */
+.modal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.modal__title {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0;
+}
+
+.modal__close {
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--text-muted);
+}
+
+.modal__body {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.modal__options {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.modal__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+.modal__feedback {
+    min-height: 1.25rem;
+    font-size: 0.85rem;
+    color: var(--danger);
+}
+
+/* ── Narrow modal variant ────────────────────────────── */
+dialog.modal--narrow {
+    max-width: 24rem;
+    width: min(90%, 24rem);
+}
+
+/* ── Publish field styles ────────────────────────────── */
+.publish-field__label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.publish-field__row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+}
+
+.publish-field__input {
+    border: 1px solid var(--border);
+    border-radius: 0.375rem;
+    padding: 0.35rem 0.5rem;
+    font-size: 0.85rem;
+    width: 100%;
+    background: var(--bg);
+    color: var(--text);
+}
+
+.publish-field__warning {
+    font-size: 0.7rem;
+    color: #92400e;
+    white-space: nowrap;
+}
+
+.publish-outputs {
+    border: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.publish-outputs legend {
+    margin-bottom: 0.25rem;
+}
+
+.publish-check {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+/* ── Key dialog ──────────────────────────────────────── */
+.key-dialog__desc {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin: 0 0 0.75rem;
+}
+
+.key-dialog__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+/* ── Success notification ────────────────────────────── */
+@keyframes notification-slide-in {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+.publish-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #10b981;
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    z-index: 10000;
+    max-width: 400px;
+    animation: notification-slide-in 0.3s ease-out;
+}
+
+.publish-notification__title {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.publish-notification__file {
+    font-size: 0.875rem;
+}
+
+.publish-notification__close {
+    margin-top: 0.5rem;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    font-size: 0.875rem;
+}
+
+/* ── Responsive ──────────────────────────────────────── */
+@media (max-width: 480px) {
+    dialog.modal {
+        padding: 1.25rem;
+        gap: 1rem;
+    }
+
+    .modal__footer {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+
+    .key-dialog__actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}

@@ -1,0 +1,163 @@
+/* 
+ * Legal-style heading numbering for ZDDC documents
+ * Adds hierarchical numbering like 1, 1.1, 1.1.1, etc.
+ */
+
+/* Reset counters at document level */
+.document-content {
+  counter-reset: h1-counter;
+}
+
+/* H1 counters */
+h1 {
+  counter-reset: h2-counter;
+  counter-increment: h1-counter;
+}
+
+h1::before {
+  content: counter(h1-counter) ". ";
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+/* H2 counters */
+h2 {
+  counter-reset: h3-counter;
+  counter-increment: h2-counter;
+}
+
+h2::before {
+  content: counter(h1-counter) "." counter(h2-counter) " ";
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+/* H3 counters */
+h3 {
+  counter-reset: h4-counter;
+  counter-increment: h3-counter;
+}
+
+h3::before {
+  content: counter(h1-counter) "." counter(h2-counter) "." counter(h3-counter) " ";
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+/* H4 counters */
+h4 {
+  counter-reset: h5-counter;
+  counter-increment: h4-counter;
+}
+
+h4::before {
+  content: counter(h1-counter) "." counter(h2-counter) "." counter(h3-counter) "." counter(h4-counter) " ";
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+/* H5 counters */
+h5 {
+  counter-reset: h6-counter;
+  counter-increment: h5-counter;
+}
+
+h5::before {
+  content: counter(h1-counter) "." counter(h2-counter) "." counter(h3-counter) "." counter(h4-counter) "." counter(h5-counter) " ";
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+/* H6 counters */
+h6 {
+  counter-increment: h6-counter;
+}
+
+h6::before {
+  content: counter(h1-counter) "." counter(h2-counter) "." counter(h3-counter) "." counter(h4-counter) "." counter(h5-counter) "." counter(h6-counter) " ";
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+/* TOC numbering to match document headings */
+.toc {
+  counter-reset: toc-h1;
+}
+
+.toc ul {
+  list-style: none;
+}
+
+.toc > ul > li {
+  counter-increment: toc-h1;
+  counter-reset: toc-h2;
+}
+
+.toc > ul > li > a::before {
+  content: counter(toc-h1) ". ";
+  font-weight: bold;
+  color: var(--primary-color);
+  margin-right: 0.25em;
+}
+
+.toc > ul > li > ul > li {
+  counter-increment: toc-h2;
+  counter-reset: toc-h3;
+}
+
+.toc > ul > li > ul > li > a::before {
+  content: counter(toc-h1) "." counter(toc-h2) " ";
+  font-weight: bold;
+  color: var(--primary-color);
+  margin-right: 0.25em;
+}
+
+.toc > ul > li > ul > li > ul > li {
+  counter-increment: toc-h3;
+  counter-reset: toc-h4;
+}
+
+.toc > ul > li > ul > li > ul > li > a::before {
+  content: counter(toc-h1) "." counter(toc-h2) "." counter(toc-h3) " ";
+  font-weight: bold;
+  color: var(--primary-color);
+  margin-right: 0.25em;
+}
+
+/* Optional: Add some spacing after the numbers */
+h1::before, h2::before, h3::before, h4::before, h5::before, h6::before {
+  margin-right: 0.5em;
+}
+
+/* Print-specific adjustments */
+@media print {
+  h1::before, h2::before, h3::before, h4::before, h5::before, h6::before {
+    color: #000 !important; /* Ensure numbers print in black */
+  }
+}
+
+/* Optional: Style adjustments for better visual hierarchy */
+h1 {
+  border-bottom: 2px solid var(--primary-color);
+  padding-bottom: 0.3em;
+  margin-top: 1em;
+}
+
+/* Reduce margin for first heading */
+h1:first-of-type {
+  margin-top: 0.5em;
+}
+
+h2 {
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.2em;
+  margin-top: 1.5em;
+}
+
+h3 {
+  margin-top: 1.2em;
+}
+
+h4, h5, h6 {
+  margin-top: 1em;
+}

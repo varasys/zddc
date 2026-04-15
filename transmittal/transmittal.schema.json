@@ -1,0 +1,230 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://varasys.github.io/zddc/transmittal.schema.json",
+  "title": "ZDDC Transmittal",
+  "description": "Schema for ZDDC transmittal documents with cryptographic envelope",
+  "type": "object",
+  "properties": {
+    "payload": {
+      "type": "object",
+      "description": "The core transmittal data",
+      "properties": {
+        "version": {
+          "type": "integer",
+          "description": "Payload schema version",
+          "const": 1
+        },
+        "type": {
+          "type": "string",
+          "description": "Document type - Transmittal and Submittal are fixed, or any custom text for file lists",
+          "default": "Transmittal"
+        },
+        "title": {
+          "type": "string",
+          "description": "Optional descriptive title"
+        },
+        "client": {
+          "type": "string",
+          "description": "The Owner Name"
+        },
+        "project": {
+          "type": "string",
+          "description": "The Project Name"
+        },
+        "projectNumber": {
+          "type": "string",
+          "description": "The Project Number"
+        },
+        "date": {
+          "type": "string",
+          "description": "Date in YYYY-MM-DD format (canonicalized from friendly text)",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "trackingNumber": {
+          "type": "string",
+          "description": "Tracking number; must not contain spaces or underscores",
+          "pattern": "^[^\\s_]+$"
+        },
+        "from": {
+          "type": "string",
+          "description": "Who issued the document (hidden for file lists)"
+        },
+        "to": {
+          "type": "string",
+          "description": "Recipient of the document (hidden for file lists)"
+        },
+        "purpose": {
+          "type": "string",
+          "description": "Purpose of document (hidden for file lists)"
+        },
+        "responseDue": {
+          "type": "string",
+          "description": "Response deadline (shown only for Submittal type)"
+        },
+        "subject": {
+          "type": "string",
+          "description": "Subject line"
+        },
+        "remarks": {
+          "type": "string",
+          "description": "Free-form Markdown content"
+        },
+        "files": {
+          "type": "array",
+          "description": "List of files included in the transmittal",
+          "items": {
+            "type": "object",
+            "properties": {
+              "trackingNumber": {
+                "type": "string",
+                "description": "File tracking number from ZDDC filename convention"
+              },
+              "revision": {
+                "type": "string",
+                "description": "File revision from ZDDC filename convention"
+              },
+              "status": {
+                "type": "string",
+                "description": "File status from ZDDC filename convention"
+              },
+              "title": {
+                "type": "string",
+                "description": "File title from ZDDC filename convention"
+              },
+              "path": {
+                "type": "string",
+                "description": "Directory path relative to transmittal root (without filename)",
+                "default": ""
+              },
+              "filename": {
+                "type": "string",
+                "description": "Filename only (without path)"
+              },
+              "sha256": {
+                "type": "string",
+                "description": "SHA-256 hash of file contents (hex)",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "fileSize": {
+                "type": "integer",
+                "description": "File size in bytes",
+                "minimum": 0
+              }
+            },
+            "required": ["filename", "sha256"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": ["version", "type", "date", "trackingNumber", "files"],
+      "additionalProperties": false
+    },
+    "envelope": {
+      "type": "object",
+      "description": "Cryptographic envelope capturing state after publish",
+      "properties": {
+        "version": {
+          "type": "integer",
+          "description": "Schema version number",
+          "const": 1
+        },
+        "digestAlgorithm": {
+          "type": "string",
+          "description": "Digest algorithm used",
+          "const": "SHA-256"
+        },
+        "digest": {
+          "type": "string",
+          "description": "SHA-256 hash of canonical payload string (hex)",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "digestedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp when digest was computed"
+        },
+        "signatureAlgorithm": {
+          "type": "string",
+          "description": "Signature algorithm used",
+          "const": "ECDSA-P256-SHA256"
+        },
+        "signatures": {
+          "type": "array",
+          "description": "Array of signatures from multiple signers",
+          "items": {
+            "type": "object",
+            "properties": {
+              "signature": {
+                "type": "string",
+                "description": "ECDSA signature over canonical payload (base64)",
+                "contentEncoding": "base64"
+              },
+              "signedAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "ISO 8601 timestamp when this signature was created"
+              },
+              "publicKeyJwk": {
+                "type": "object",
+                "description": "EC P-256 public key in JWK format for signature verification",
+                "properties": {
+                  "kty": {
+                    "type": "string",
+                    "const": "EC"
+                  },
+                  "crv": {
+                    "type": "string",
+                    "const": "P-256"
+                  },
+                  "x": {
+                    "type": "string",
+                    "description": "X coordinate (base64url)"
+                  },
+                  "y": {
+                    "type": "string",
+                    "description": "Y coordinate (base64url)"
+                  }
+                },
+                "required": ["kty", "crv", "x", "y"],
+                "additionalProperties": false
+              }
+            },
+            "required": ["signature", "signedAt", "publicKeyJwk"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": ["version", "digestAlgorithm", "digest", "digestedAt", "signatureAlgorithm"],
+      "additionalProperties": false
+    },
+    "presentation": {
+      "type": "object",
+      "description": "Optional presentation assets (logos, styling) - not part of signed payload",
+      "properties": {
+        "leftLogo": {
+          "type": "string",
+          "description": "Left logo as data URL (e.g., data:image/png;base64,...)",
+          "pattern": "^data:image/[a-z]+;base64,"
+        },
+        "rightLogo": {
+          "type": "string",
+          "description": "Right logo as data URL (e.g., data:image/png;base64,...)",
+          "pattern": "^data:image/[a-z]+;base64,"
+        },
+        "theme": {
+          "type": "string",
+          "description": "Visual theme identifier",
+          "default": "default"
+        },
+        "customCss": {
+          "type": "string",
+          "description": "Optional custom CSS for styling the transmittal",
+          "default": ""
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": ["payload", "envelope"],
+  "additionalProperties": false
+}

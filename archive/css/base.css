@@ -1,0 +1,15 @@
+/* Archive-specific base overrides
+   Reset, tokens, and font are provided by shared/base.css */
+
+#app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.note {
+    font-size: 0.9em;
+    color: var(--text-muted);
+    font-style: italic;
+}

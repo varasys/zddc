@@ -1,0 +1,256 @@
+/* Table of Contents styles */
+.toc-pane {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.toc-container,
+.toc-content {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.toc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    font-weight: bold;
+}
+
+.toc-depth-selector {
+    font-size: 0.85rem;
+    padding: 2px 6px;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+}
+
+.toc-list {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+    font-size: 0.8rem;
+}
+
+.toc-item {
+    padding: 0;
+    margin: 0;
+    line-height: 1.2;
+}
+
+/* TOC heading level styles */
+.toc-level-1 > a {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.toc-level-2 > a {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.toc-level-3 > a {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.toc-level-4 > a {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.toc-level-5 > a,
+.toc-level-6 > a {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+/* Nested list spacing */
+.toc-list ul {
+    list-style: none;
+    padding-left: 6px;
+    margin: 0;
+}
+
+.toc-list li {
+    margin-bottom: 1px;
+    line-height: 1.2;
+}
+
+.toc-list li a {
+    display: block;
+    padding: 2px 6px;
+    color: var(--text-muted);
+    text-decoration: none;
+    border-radius: 3px;
+    transition: background-color 0.15s ease;
+}
+
+.toc-list li a:hover {
+    background-color: var(--bg-hover);
+    color: var(--text);
+}
+
+.toc-list li.toc-level-1 {
+    font-weight: 700;
+    font-size: 1rem;
+    padding-left: 0px;
+}
+
+.toc-list li.toc-level-1 a {
+    color: var(--text);
+    border-bottom: 1px solid var(--primary);
+    padding-bottom: 2px;
+}
+
+/* Tree-style connecting lines for TOC hierarchy */
+.toc-list li.toc-level-2 {
+    font-weight: 650;
+    font-size: 0.9rem;
+    padding-left: 16px;
+    position: relative;
+}
+
+.toc-list li.toc-level-2::before {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 0;
+    bottom: 50%;
+    border-left: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    width: 8px;
+}
+
+.toc-list li.toc-level-2 a {
+    color: var(--text);
+}
+
+.toc-list li.toc-level-3 {
+    font-weight: 600;
+    font-size: 0.8rem;
+    padding-left: 32px;
+    position: relative;
+}
+
+.toc-list li.toc-level-3::before {
+    content: '';
+    position: absolute;
+    left: 22px;
+    top: 0;
+    bottom: 50%;
+    border-left: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    width: 8px;
+}
+
+.toc-list li.toc-level-3 a {
+    color: var(--text-muted);
+}
+
+.toc-list li.toc-level-4 {
+    font-weight: 600;
+    font-size: 0.75rem;
+    padding-left: 48px;
+    position: relative;
+}
+
+.toc-list li.toc-level-4::before {
+    content: '';
+    position: absolute;
+    left: 38px;
+    top: 0;
+    bottom: 50%;
+    border-left: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    width: 8px;
+}
+
+.toc-list li.toc-level-4 a {
+    color: var(--text-muted);
+}
+
+.toc-list li.toc-level-5 {
+    font-weight: 600;
+    font-size: 0.7rem;
+    padding-left: 64px;
+    font-style: italic;
+    position: relative;
+}
+
+.toc-list li.toc-level-5::before {
+    content: '';
+    position: absolute;
+    left: 54px;
+    top: 0;
+    bottom: 50%;
+    border-left: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    width: 8px;
+}
+
+.toc-list li.toc-level-5 a {
+    color: var(--text-muted);
+}
+
+.toc-list li.toc-level-6 {
+    font-weight: 600;
+    font-size: 0.65rem;
+    padding-left: 80px;
+    font-style: italic;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    position: relative;
+}
+
+.toc-list li.toc-level-6::before {
+    content: '';
+    position: absolute;
+    left: 70px;
+    top: 0;
+    bottom: 50%;
+    border-left: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    width: 8px;
+}
+
+.toc-list li.toc-level-6 a {
+    color: var(--text-muted);
+}
+
+/* Vertical connecting lines */
+.toc-list li:not(.toc-level-1)::after {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 50%;
+    bottom: -2px;
+    border-left: 1px solid var(--border);
+    z-index: -1;
+}
+
+.toc-list li.toc-level-3::after {
+    left: 22px;
+}
+
+.toc-list li.toc-level-4::after {
+    left: 38px;
+}
+
+.toc-list li.toc-level-5::after {
+    left: 54px;
+}
+
+.toc-list li.toc-level-6::after {
+    left: 70px;
+}

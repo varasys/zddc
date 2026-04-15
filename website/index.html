@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZDDC — Zero Day Document Control</title>
+  <meta name="description" content="Document control that works with your file browser. No server, no license, no IT ticket. Start today.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://varasys.github.io/zddc/">
+  <meta property="og:title" content="ZDDC — Zero Day Document Control">
+  <meta property="og:description" content="Simple file naming convention. Your file browser becomes your document management system. No install, no account, no server.">
+  <meta name="theme-color" content="#2a5a8a">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="site-header">
+    <div class="container header-content">
+      <a href="/" class="brand">
+        <div class="brand-logo">
+          <svg viewBox="0 0 24 24">
+            <path d="M3 5h18v2H3V5zm0 6h12v2H3v-2zm0 6h6v2H3v-2z" />
+          </svg>
+        </div>
+        <span class="brand-name">ZDDC</span>
+      </a>
+      <nav class="header-nav">
+        <div class="dropdown">
+          <button class="dropdown-toggle" onmouseenter="showDropdown(this)" onmouseleave="hideDropdown(this)">
+            <span>Tools</span>
+            <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; fill: currentColor;">
+              <path d="M7 10l5 5 5-5z"/>
+            </svg>
+          </button>
+          <div class="dropdown-menu">
+            <a href="archive.html">Archive Browser</a>
+            <a href="transmittal.html">Transmittal Creator</a>
+            <a href="classifier.html">Document Classifier</a>
+            <a href="mdedit.html">Markdown Editor</a>
+          </div>
+        </div>
+        <a href="reference.html" class="nav-link">Docs</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero container" id="top">
+    <h1>Where Is It?</h1>
+    <p class="hero-subtitle">Document control that works with your file browser. No server, no license, no IT ticket. Start today.</p>
+    <div style="display: flex; gap: var(--spacing-sm); justify-content: center; flex-wrap: wrap;">
+      <a href="#tools" class="hero-cta">See the tools ↓</a>
+      <a href="reference.html" class="hero-cta" style="background: transparent; color: var(--color-accent); border: 2px solid var(--color-accent);">
+        Read the docs →
+      </a>
+    </div>
+  </section>
+
+  <!-- Pain Point Section 1 -->
+  <section class="pain-section">
+    <div class="container">
+      <div class="pain-section__badge">Pain Point</div>
+      <h2 class="pain-section__heading">Your folder structure is someone else's best guess</h2>
+      <div class="pain-section__body">
+        <p>Someone created the folders. Nobody else agrees with their logic.</p>
+        <p>Files end up in three different places because three people had different intuitions.</p>
+        <p>You spend 10 minutes finding a file you know exists. You give up and email someone to ask where it is.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pain Point Section 2 -->
+  <section class="pain-section" style="background: var(--color-bg-subtle);">
+    <div class="container">
+      <div class="pain-section__badge">Pain Point</div>
+      <h2 class="pain-section__heading">Which version is current?</h2>
+      <div class="pain-section__body">
+        <p>There's <code>Drawing_v2_final.pdf</code>, <code>Drawing_v2_final_REVISED.pdf</code>, and <code>Drawing_v2_final_REVISED_2.pdf</code>.</p>
+        <p>The email thread says "use the latest" but nobody defined what that means.</p>
+        <p>Six months later, someone built to the wrong version. The project is delayed.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pain Point Section 3 -->
+  <section class="pain-section">
+    <div class="container">
+      <div class="pain-section__badge">Pain Point</div>
+      <h2 class="pain-section__heading">Prove what was current on that date</h2>
+      <div class="pain-section__body">
+        <p>A contract dispute. A warranty claim. An audit.</p>
+        <p>"Which version of the specification was issued when the order was placed?"</p>
+        <p>You can't answer that. The emails are gone. The versions aren't dated. Nobody kept a record.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- The Insight -->
+  <section class="container content-block">
+    <div class="highlight-box">
+      <p>Encode the metadata in the filename. One flat folder. Your file browser becomes the search engine.</p>
+    </div>
+
+    <div class="filename-anatomy">
+      <span class="filename-anatomy__part filename-anatomy__part--tracking">123456-EL-SPC-2623</span>
+      <span class="filename-anatomy__part">_</span>
+      <span class="filename-anatomy__part filename-anatomy__part--revision">B</span>
+      <span class="filename-anatomy__part"> </span>
+      <span class="filename-anatomy__part filename-anatomy__part--status">(IFC)</span>
+      <span class="filename-anatomy__part"> - </span>
+      <span class="filename-anatomy__part filename-anatomy__part--title">Specification For Switchgear.pdf</span>
+    </div>
+
+    <div class="filename-parts">
+      <div>
+        <div style="display: flex; align-items: center; margin-bottom: var(--spacing-xs);">
+          <span class="filename-parts__dot filename-parts__dot--tracking"></span>
+          <span class="filename-parts__label">Tracking Number</span>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--color-text-muted);">Permanent ID. Never changes.</p>
+      </div>
+      <div>
+        <div style="display: flex; align-items: center; margin-bottom: var(--spacing-xs);">
+          <span class="filename-parts__dot filename-parts__dot--revision"></span>
+          <span class="filename-parts__label">Revision</span>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--color-text-muted);">B = second formal issue</p>
+      </div>
+      <div>
+        <div style="display: flex; align-items: center; margin-bottom: var(--spacing-xs);">
+          <span class="filename-parts__dot filename-parts__dot--status"></span>
+          <span class="filename-parts__label">Status</span>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--color-text-muted);">IFC = Issued For Construction</p>
+      </div>
+      <div>
+        <div style="display: flex; align-items: center; margin-bottom: var(--spacing-xs);">
+          <span class="filename-parts__dot filename-parts__dot--title"></span>
+          <span class="filename-parts__label">Title</span>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--color-text-muted);">Human-readable description</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Solution 1 -->
+  <section class="container content-block">
+    <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: var(--spacing-lg);">Solution 1 — Find anything. Instantly.</h2>
+    <p>Your file browser already knows how to search and sort filenames. Your search box is already there. Your filter is already there.</p>
+
+    <ul style="margin: var(--spacing-md) 0 var(--spacing-md) 1.5rem; color: var(--color-text-muted); line-height: 1.6;">
+      <li>Search <code class="accent-text">EL-SPC</code> → all electrical specifications</li>
+      <li>Search <code class="accent-text">IFR</code> → everything under review</li>
+      <li>Search <code class="accent-text">~</code> → all working drafts</li>
+    </ul>
+
+    <div class="code-block">
+123456-EL-SPC-2623_A (IFR) - Specification For Switchgear.pdf
+123456-EL-SPC-2623_B (IFC) - Specification For Switchgear.pdf
+123456-EL-SPC-2624_A (IFR) - Switchgear Bill of Materials.pdf
+123456-EL-SPC-2624_B (IFC) - Switchgear Bill of Materials.pdf
+    </div>
+  </section>
+
+  <!-- Solution 2 -->
+  <section class="container content-block">
+    <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: var(--spacing-lg);">Solution 2 — Always know which version is current</h2>
+    <p>Revision progression follows a clear pattern:</p>
+
+    <ul style="margin: var(--spacing-md) 0 var(--spacing-md) 1.5rem; color: var(--color-text-muted); line-height: 1.6;">
+      <li><strong>Letters</strong> (A, B, C...) for design/review phase</li>
+      <li><strong>Numbers</strong> (0, 1, 2...) for construction/record phase</li>
+      <li><code class="accent-text">~B</code> means "working draft of revision B — not yet issued"</li>
+    </ul>
+
+    <p>Sort by name and the full history is right there, in order.</p>
+
+    <div class="code-block">
+123456-EL-SPC-2623_A (IFR) - Specification For Switchgear.pdf
+123456-EL-SPC-2623_B (IFR) - Specification For Switchgear.pdf
+123456-EL-SPC-2623_~C - Specification For Switchgear.pdf (working draft)
+123456-EL-SPC-2623_0 (IFC) - Specification For Switchgear.pdf
+123456-EL-SPC-2623_1 (IFC) - Specification For Switchgear.pdf
+123456-EL-SPC-2623_2 (IFC) - Specification For Switchgear.pdf
+    </div>
+  </section>
+
+  <!-- Solution 3 -->
+  <section class="container content-block">
+    <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: var(--spacing-lg);">Solution 3 — Prove what was current, forever</h2>
+    <p>Transmittal folders use date-prefixed naming so they sort chronologically. SHA-256 checksums provide mathematical proof of file integrity.</p>
+
+    <p>Your receiver's archive becomes permanent, can be made read-only, and is shared with the whole team.</p>
+
+    <div class="code-block">
+2025-10-31_123456-EL-SPC-2623 (IFR) - Design for Review/
+2025-11-12_123456-ME-RFI-0024 (IFR) - Mechanical Room Size RFI/
+2025-12-03_123456-EL-SPC-2623 (IFC) - Issued For Construction/
+    </div>
+  </section>
+
+  <!-- The Tools -->
+  <section class="container content-block" id="tools">
+    <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: var(--spacing-sm);">Four tools. Each a single HTML file.</h2>
+    <p style="color: var(--color-text-muted); margin-bottom: var(--spacing-2xl);">Download once. Works forever. No internet, no updates, no subscription.</p>
+
+    <div class="grid-2" style="margin-top: var(--spacing-lg);">
+      <a href="archive.html" class="tool-card" style="text-decoration: none; display: block;">
+        <div class="tool-card__title">Archive Browser</div>
+        <div class="tool-card__desc">Your digital filing cabinet. Browse, search, filter, and download. Group by transmittal. Works with any folder.</div>
+        <div class="tool-card__link">Open Archive Browser</div>
+      </a>
+
+      <a href="transmittal.html" class="tool-card" style="text-decoration: none; display: block;">
+        <div class="tool-card__title">Transmittal Creator</div>
+        <div class="tool-card__desc">Fill in metadata, drag in files, publish a self-contained transmittal record with SHA-256 checksums. The published file IS the record.</div>
+        <div class="tool-card__link">Create Transmittal</div>
+      </a>
+
+      <a href="classifier.html" class="tool-card" style="text-decoration: none; display: block;">
+        <div class="tool-card__title">Document Classifier</div>
+        <div class="tool-card__desc">Spreadsheet-style bulk renamer. Copy/paste from Excel. Point it at a folder of badly-named files and fix them all at once.</div>
+        <div class="tool-card__link">Run Classifier</div>
+      </a>
+
+      <a href="mdedit.html" class="tool-card" style="text-decoration: none; display: block;">
+        <div class="tool-card__title">Markdown Editor</div>
+        <div class="tool-card__desc">Browser-based markdown editor with live preview, YAML front matter, and table of contents. Works directly with local files.</div>
+        <div class="tool-card__link">Open Editor</div>
+      </a>
+    </div>
+
+    <p style="margin-top: var(--spacing-lg); font-size: 0.9rem; color: var(--color-text-muted);">All tools require Chrome or Edge (File System Access API). Right-click any link to save a local copy.</p>
+  </section>
+
+  <!-- Getting Started -->
+  <section class="container content-block">
+    <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: var(--spacing-lg);">Start in three steps</h2>
+
+    <ol class="steps">
+      <li class="step">
+        <div class="step__number">1</div>
+        <div class="step__content">
+          <h3>Name your first file</h3>
+          <p>Pick a tracking number schema that fits your project. Rename one document. You're in.</p>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step__number">2</div>
+        <div class="step__content">
+          <h3>Open the Archive Browser</h3>
+          <p>Point it at your project folder. Every file is now searchable and sortable.</p>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step__number">3</div>
+        <div class="step__content">
+          <h3>Send your first transmittal</h3>
+          <p>Use the Transmittal Creator to package files with SHA-256 checksums. That's your first auditable record.</p>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container footer-content">
+      <span>ZDDC is open source — <a href="https://github.com/varasys/zddc">github.com/varasys/zddc</a></span>
+      <span>Licensed under AGPL-3.0</span>
+    </div>
+  </footer>
+
+  <script>
+    function showDropdown(el) { var m = el.nextElementSibling; if (m) m.classList.add('show'); }
+    function hideDropdown(el) { var m = el.nextElementSibling; if (m) m.classList.remove('show'); }
+  </script>
+  <script src="js/layout.js"></script>
+</body>
+</html>

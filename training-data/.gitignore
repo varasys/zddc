@@ -1,0 +1,6 @@
+# Training data — never commit actual data to the repo
+raw/
+processed/
+validation/
+adapters/
+snapshots/

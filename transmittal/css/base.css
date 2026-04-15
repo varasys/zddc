@@ -1,0 +1,155 @@
+/* Placeholder for contenteditable elements */
+[data-placeholder]:empty::before {
+    content: attr(data-placeholder);
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+/* Hide elements that should be hidden when JavaScript is available */
+[data-hydrate-hide] {
+    display: none;
+}
+
+@media screen {
+    body {
+        margin: 0;
+        padding: 0;
+        background: var(--bg-secondary);
+    }
+
+    .stack-below-600 {
+        display: flex;
+        flex-direction: row;
+    }
+
+    .page-container {
+        width: 100%;
+        max-width: 8.5in;
+        margin: 20px auto;
+        padding: 0.375in;
+        min-height: 0;
+        background: var(--bg);
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        border: 1px solid var(--border);
+    }
+}
+
+@media (max-width: 600px) {
+    .stack-below-600 {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 640px) {
+    .page-container {
+        padding: 12px;
+    }
+}
+
+/* ── Dark mode overrides for transmittal-specific hardcoded colours ──────── */
+/* Covers verify cards, table rows, path-diff, integrity cards, workflow badge */
+/* and Tailwind utility classes used as attributes in template.html.           */
+@media screen {
+    /* Integrity verify cards */
+    @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) .verify-card--ok    { background: #052e16; }
+        :root:not([data-theme="light"]) .verify-card--fail  { background: #2d0c0c; }
+        :root:not([data-theme="light"]) .verify-card--draft { background: #2d2305; }
+        :root:not([data-theme="light"]) .verify-card--info  { background: #0c1a2e; }
+    }
+    [data-theme="dark"] .verify-card--ok    { background: #052e16; }
+    [data-theme="dark"] .verify-card--fail  { background: #2d0c0c; }
+    [data-theme="dark"] .verify-card--draft { background: #2d2305; }
+    [data-theme="dark"] .verify-card--info  { background: #0c1a2e; }
+
+    /* Per-row verify result rows in file table */
+    @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) tr.verify-match td    { background: #052e16; }
+        :root:not([data-theme="light"]) tr.verify-mismatch td { background: #2d0c0c; }
+        :root:not([data-theme="light"]) tr.verify-missing td  { background: #2d2305; }
+        :root:not([data-theme="light"]) tr.verify-new td      { background: #0c1a2e; }
+    }
+    [data-theme="dark"] tr.verify-match td    { background: #052e16; }
+    [data-theme="dark"] tr.verify-mismatch td { background: #2d0c0c; }
+    [data-theme="dark"] tr.verify-missing td  { background: #2d2305; }
+    [data-theme="dark"] tr.verify-new td      { background: #0c1a2e; }
+
+    /* Workflow warning badge */
+    @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) .workflow-badge--warn {
+            background: #2d2305;
+            color: #fcd34d;
+            border-color: #92400e;
+        }
+    }
+    [data-theme="dark"] .workflow-badge--warn {
+        background: #2d2305;
+        color: #fcd34d;
+        border-color: #92400e;
+    }
+
+    /* Path diff semantic colours (verify mismatch) */
+    @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) .path-diff del {
+            color: #fca5a5;
+            background: #2d0c0c;
+        }
+        :root:not([data-theme="light"]) .path-diff ins {
+            color: #86efac;
+            background: #052e16;
+            border-bottom-color: #86efac;
+        }
+    }
+    [data-theme="dark"] .path-diff del { color: #fca5a5; background: #2d0c0c; }
+    [data-theme="dark"] .path-diff ins {
+        color: #86efac;
+        background: #052e16;
+        border-bottom-color: #86efac;
+    }
+
+    /* Owner/Project names area and inline bg-white / bg-gray-50 utility classes */
+    @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) .header-names {
+            background-color: var(--bg-secondary) !important;
+            border-color: var(--border) !important;
+        }
+        :root:not([data-theme="light"]) .text-gray-700 { color: var(--text-muted) !important; }
+        :root:not([data-theme="light"]) .bg-white  { background-color: var(--bg) !important; }
+        :root:not([data-theme="light"]) .bg-gray-50 { background-color: var(--bg-secondary) !important; }
+        :root:not([data-theme="light"]) .bg-gray-100 { background-color: var(--bg-secondary) !important; }
+        :root:not([data-theme="light"]) .border-gray-100,
+        :root:not([data-theme="light"]) .border-gray-200,
+        :root:not([data-theme="light"]) .border-gray-300 { border-color: var(--border) !important; }
+        :root:not([data-theme="light"]) .text-gray-900 { color: var(--text) !important; }
+    }
+    [data-theme="dark"] .header-names {
+        background-color: var(--bg-secondary) !important;
+        border-color: var(--border) !important;
+    }
+    [data-theme="dark"] .text-gray-700 { color: var(--text-muted) !important; }
+    [data-theme="dark"] .bg-white  { background-color: var(--bg) !important; }
+    [data-theme="dark"] .bg-gray-50 { background-color: var(--bg-secondary) !important; }
+    [data-theme="dark"] .bg-gray-100 { background-color: var(--bg-secondary) !important; }
+    [data-theme="dark"] .border-gray-100,
+    [data-theme="dark"] .border-gray-200,
+    [data-theme="dark"] .border-gray-300 { border-color: var(--border) !important; }
+    [data-theme="dark"] .text-gray-900 { color: var(--text) !important; }
+
+    /* Filter inputs in table column headers */
+    @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) .table-filter-input {
+            background-color: var(--bg);
+            color: var(--text);
+            border-color: var(--border);
+        }
+        :root:not([data-theme="light"]) .table-header__caption { color: var(--text-muted); }
+        :root:not([data-theme="light"]) .focus\:bg-white:focus { background-color: var(--bg) !important; }
+    }
+    [data-theme="dark"] .table-filter-input {
+        background-color: var(--bg);
+        color: var(--text);
+        border-color: var(--border);
+    }
+    [data-theme="dark"] .table-header__caption { color: var(--text-muted); }
+    [data-theme="dark"] .focus\:bg-white:focus { background-color: var(--bg) !important; }
+}

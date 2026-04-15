@@ -1,0 +1,550 @@
+#!/bin/sh
+
+# Function to show help
+show_help() {
+    echo "Universal File Converter"
+    echo "Supported conversions: DOCX→MD, MD→HTML, HTML→MD, MD→DOCX, HTML→DOCX"
+    echo "Usage: $0 [-f] [-o outputdir] [-t format] [-T template] [--no-toc] input1.ext [input2.ext ...]"
+    echo "  -f: Force overwrite existing output files"
+    echo "  -o: Output directory (default: same as input)"
+    echo "  -t: Target format (md, html, docx) - overrides auto-detection"
+    echo "  -T: Template file path (default: viewer-template.html)"
+    echo "  --no-toc: Skip table of contents generation"
+}
+
+# Function to source ZDDC config files if they exist
+source_config_file() {
+    local config_file="$1"
+    if [ -f "$config_file" ]; then
+        echo "  → Loading ZDDC configuration from: $config_file"
+        set -a  # automatically export all variables
+        . "$config_file"
+        set +a  # turn off automatic export
+        return 0
+    fi
+    return 1
+}
+
+# Load ZDDC configuration file
+load_zddc_config() {
+    local search_dir="$1"
+    
+    # Search for zddc.conf then .zddc.conf in the search directory
+    if source_config_file "$search_dir/zddc.conf"; then
+        return 0
+    elif source_config_file "$search_dir/.zddc.conf"; then
+        return 0
+    fi
+    
+    # No config file found - continue with defaults
+    return 1
+}
+
+# Source global ZDDC config from current working directory
+load_zddc_config "$(pwd)"
+
+# Parse arguments
+FORCE_OVERWRITE=false
+OUTPUT_DIR=""
+TARGET_FORMAT=""
+CUSTOM_TEMPLATE=""
+NO_TOC=false
+
+while [ $# -gt 0 ]; do
+    case $1 in
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        -f)
+            FORCE_OVERWRITE=true
+            echo "Force overwrite mode: ON"
+            shift
+            ;;
+        -o)
+            OUTPUT_DIR="$2"
+            echo "Output directory: $OUTPUT_DIR"
+            shift 2
+            ;;
+        -t)
+            TARGET_FORMAT="$2"
+            echo "Target format: $TARGET_FORMAT"
+            shift 2
+            ;;
+        -T)
+            CUSTOM_TEMPLATE="$2"
+            echo "Custom template: $CUSTOM_TEMPLATE"
+            shift 2
+            ;;
+        --no-toc)
+            NO_TOC=true
+            echo "Table of contents: DISABLED"
+            shift
+            ;;
+        -*)
+            echo "Unknown option: $1"
+            show_help
+            exit 1
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+if [ "$FORCE_OVERWRITE" = "false" ]; then
+    echo "Force overwrite mode: OFF (will skip existing output files)"
+fi
+
+if [ -z "$OUTPUT_DIR" ]; then
+    echo "Output directory: same as input files"
+fi
+
+if [ $# -eq 0 ]; then
+    echo "Error: No input files specified"
+    show_help
+    exit 1
+fi
+
+# Validate target format if specified
+if [ -n "$TARGET_FORMAT" ]; then
+    TARGET_FORMAT_LOWER=$(echo "$TARGET_FORMAT" | tr '[:upper:]' '[:lower:]')
+    if [ "$TARGET_FORMAT_LOWER" != "md" ] && [ "$TARGET_FORMAT_LOWER" != "html" ] && [ "$TARGET_FORMAT_LOWER" != "docx" ]; then
+        echo "Error: Invalid target format '$TARGET_FORMAT'. Supported: md, html, docx"
+        exit 1
+    fi
+    echo "Target format override: $TARGET_FORMAT_LOWER"
+fi
+
+echo "Processing $# files..."
+
+TOTAL_FILES=$#
+SUCCESSFUL=0
+FAILED=0
+SKIPPED=0
+
+# Function to convert DOCX to Markdown
+convert_docx_to_md() {
+    local INPUT="$1"
+    local OUTPUT_FILE="$2"
+    local TEMP_FILE="$3"
+    local MEDIA_DIR="$4"
+    local BASENAME="$5"
+    local FILENAME_NO_EXT="$6"
+    
+    # Convert using pandoc with proper extension stripping to temp file first
+    if pandoc -f docx -t gfm --markdown-headings=atx --extract-media="$MEDIA_DIR" --wrap=none --standalone "$INPUT" -o "$TEMP_FILE"; then
+        
+        # Parse ZDDC filename pattern: trackingNumber_revision (status) - title.extension
+        # Use sed to extract ZDDC components
+        ZDDC_MATCH=$(echo "$FILENAME_NO_EXT" | sed -n 's/^\([^_]*\)_\([^ ]*\) *(\([^)]*\)) *- *\(.*\)$/\1|\2|\3|\4/p')
+        if [ -n "$ZDDC_MATCH" ]; then
+            TRACKING_NUMBER=$(echo "$ZDDC_MATCH" | cut -d'|' -f1)
+            REVISION=$(echo "$ZDDC_MATCH" | cut -d'|' -f2)
+            STATUS=$(echo "$ZDDC_MATCH" | cut -d'|' -f3)
+            TITLE=$(echo "$ZDDC_MATCH" | cut -d'|' -f4)
+            
+            echo "  → ZDDC metadata detected:"
+            echo "    • Tracking: $TRACKING_NUMBER"
+            echo "    • Revision: $REVISION"
+            echo "    • Status: $STATUS"
+            echo "    • Title: $TITLE"
+            
+            # Create YAML front matter and combine with content
+            {
+                echo "---"
+                echo "client: \"${CLIENT:-}\""
+                echo "project: \"${PROJECT:-}\""
+                echo "tracking_number: \"$TRACKING_NUMBER\""
+                echo "revision: \"$REVISION\""
+                echo "status: \"$STATUS\""
+                echo "title: \"$TITLE\""
+                echo "source_file: \"$BASENAME\""
+                echo "created: \"$(date -u +%Y-%m-%d)\""
+                echo "---"
+                echo ""
+                cat "$TEMP_FILE"
+            } > "$OUTPUT_FILE"
+            
+            rm "$TEMP_FILE"
+        else
+            # No ZDDC pattern detected, just move temp file to final location
+            mv "$TEMP_FILE" "$OUTPUT_FILE"
+        fi
+        
+        echo "  ✓ Successfully converted: $BASENAME (DOCX→MD)"
+        return 0
+    else
+        echo "  ✗ Failed to convert: $BASENAME (DOCX→MD)"
+        # Clean up temp file on failure
+        [ -f "$TEMP_FILE" ] && rm "$TEMP_FILE"
+        return 1
+    fi
+}
+
+# Function to convert HTML to Markdown
+convert_html_to_md() {
+    local INPUT="$1"
+    local OUTPUT_FILE="$2"
+    local BASENAME="$3"
+    
+    if pandoc "$INPUT" -f html -t gfm --markdown-headings=atx --wrap=none -o "$OUTPUT_FILE"; then
+        echo "  ✓ Successfully converted: $BASENAME (HTML→MD)"
+        return 0
+    else
+        echo "  ✗ Failed to convert: $BASENAME (HTML→MD)"
+        return 1
+    fi
+}
+
+# Function to convert Markdown to DOCX
+convert_md_to_docx() {
+    local INPUT="$1"
+    local OUTPUT_FILE="$2"
+    local BASENAME="$3"
+    
+    if pandoc "$INPUT" -f gfm -t docx -o "$OUTPUT_FILE"; then
+        echo "  ✓ Successfully converted: $BASENAME (MD→DOCX)"
+        return 0
+    else
+        echo "  ✗ Failed to convert: $BASENAME (MD→DOCX)"
+        return 1
+    fi
+}
+
+# Function to convert HTML to DOCX
+convert_html_to_docx() {
+    local INPUT="$1"
+    local OUTPUT_FILE="$2"
+    local BASENAME="$3"
+    
+    if pandoc "$INPUT" -f html -t docx -o "$OUTPUT_FILE"; then
+        echo "  ✓ Successfully converted: $BASENAME (HTML→DOCX)"
+        return 0
+    else
+        echo "  ✗ Failed to convert: $BASENAME (HTML→DOCX)"
+        return 1
+    fi
+}
+
+# Function to convert Markdown to HTML
+convert_md_to_html() {
+    local INPUT="$1"
+    local OUTPUT_FILE="$2"
+    local BASENAME="$3"
+    local INPUT_DIR="$4"
+    
+    # Source per-directory ZDDC config file
+    load_zddc_config "$INPUT_DIR"
+    
+    # Get absolute paths - use pwd-based approach for POSIX compatibility
+    case "$INPUT" in
+        /*) INPUT_ABS="$INPUT" ;;
+        *) INPUT_ABS="$(pwd)/$INPUT" ;;
+    esac
+    case "$OUTPUT_FILE" in
+        /*) OUTPUT_ABS="$OUTPUT_FILE" ;;
+        *) OUTPUT_ABS="$(pwd)/$OUTPUT_FILE" ;;
+    esac
+    # Determine template to use
+    if [ -n "$CUSTOM_TEMPLATE" ]; then
+        # Use custom template if specified
+        if [ -f "$CUSTOM_TEMPLATE" ]; then
+            TEMPLATE_ABS="$CUSTOM_TEMPLATE"
+            echo "  → Using custom template: $TEMPLATE_ABS"
+        else
+            echo "  ⚠ Warning: Custom template not found: $CUSTOM_TEMPLATE, using default discovery"
+            CUSTOM_TEMPLATE=""
+        fi
+    fi
+    
+    # Default template discovery if no custom template or custom template not found
+    if [ -z "$CUSTOM_TEMPLATE" ]; then
+        # Convert script directory to absolute path
+        SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+        
+        # Check if script is a symlink and resolve target directory
+        SCRIPT_TARGET_DIR=""
+        if [ -L "$0" ]; then
+            # Script is a symlink - resolve the target
+            SCRIPT_TARGET=$(readlink "$0")
+            case "$SCRIPT_TARGET" in
+                /*) SCRIPT_TARGET_DIR=$(dirname "$SCRIPT_TARGET") ;;
+                *) SCRIPT_TARGET_DIR=$(cd "$(dirname "$0")" && cd "$(dirname "$SCRIPT_TARGET")" && pwd) ;;
+            esac
+        fi
+        
+        # Template search order: input dir, script dir, symlink target dir
+        if [ -f "$INPUT_DIR/viewer-template.html" ]; then
+            TEMPLATE_ABS="$INPUT_DIR/viewer-template.html"
+            echo "  → Using template from input directory: $TEMPLATE_ABS"
+        elif [ -f "$SCRIPT_DIR/viewer-template.html" ]; then
+            TEMPLATE_ABS="$SCRIPT_DIR/viewer-template.html"
+            echo "  → Using template from script directory: $TEMPLATE_ABS"
+        elif [ -n "$SCRIPT_TARGET_DIR" ] && [ -f "$SCRIPT_TARGET_DIR/viewer-template.html" ]; then
+            TEMPLATE_ABS="$SCRIPT_TARGET_DIR/viewer-template.html"
+            echo "  → Using template from symlink target directory: $TEMPLATE_ABS"
+        else
+            echo "  ⚠ Warning: viewer-template.html not found, using pandoc default template"
+            TEMPLATE_ABS=""
+        fi
+    fi
+    
+    # Change to input directory so pandoc can find relative resources
+    ORIGINAL_DIR=$(pwd)
+    cd "$INPUT_DIR"
+    
+    # Build pandoc command with conditional template option
+    PANDOC_CMD="pandoc \"$(basename "$INPUT_ABS")\" -o \"$OUTPUT_ABS\" \
+        --from markdown+yaml_metadata_block \
+        --standalone \
+        --embed-resources \
+        --section-divs"
+    
+    # Add TOC options if not disabled
+    if [ "$NO_TOC" = "false" ]; then
+        PANDOC_CMD="$PANDOC_CMD --toc --toc-depth=6"
+    fi
+    
+    if [ -n "$TEMPLATE_ABS" ]; then
+        PANDOC_CMD="$PANDOC_CMD --template=\"$TEMPLATE_ABS\""
+    fi
+    
+    # Generate timestamp for conversion
+    GENERATION_TIME=$(date '+%B %d, %Y at %I:%M:%S %p %Z')
+    
+    # Extract ZDDC metadata from filename for template variables
+    FILENAME_NO_EXT=$(basename "$INPUT" .md)
+    ZDDC_MATCH=$(echo "$FILENAME_NO_EXT" | sed -n 's/^\([^_]*\)_\([^ ]*\) *(\([^)]*\)) *- *\(.*\)$/\1|\2|\3|\4/p')
+    if [ -n "$ZDDC_MATCH" ]; then
+        TRACKING_NUMBER=$(echo "$ZDDC_MATCH" | cut -d'|' -f1)
+        REVISION=$(echo "$ZDDC_MATCH" | cut -d'|' -f2)
+        STATUS=$(echo "$ZDDC_MATCH" | cut -d'|' -f3)
+        TITLE=$(echo "$ZDDC_MATCH" | cut -d'|' -f4)
+        
+        # Pass ZDDC variables to template
+        PANDOC_CMD="$PANDOC_CMD --variable tracking_number='$TRACKING_NUMBER'"
+        PANDOC_CMD="$PANDOC_CMD --variable revision='$REVISION'"
+        PANDOC_CMD="$PANDOC_CMD --variable status='$STATUS'"
+        PANDOC_CMD="$PANDOC_CMD --variable generation_time='$GENERATION_TIME'"
+        PANDOC_CMD="$PANDOC_CMD --variable title='$TITLE'"
+        case "$REVISION" in
+            *~*)
+                PANDOC_CMD="$PANDOC_CMD --variable is_draft=true"
+                ;;
+        esac
+    else
+        # Still pass generation time even if no ZDDC match
+        PANDOC_CMD="$PANDOC_CMD --variable generation_time='$GENERATION_TIME'"
+    fi
+
+    # Add ZDDC configuration variables from zddc.conf
+    if [ -n "$client" ]; then
+        PANDOC_CMD="$PANDOC_CMD --variable client='$client'"
+    fi
+    if [ -n "$project" ]; then
+        PANDOC_CMD="$PANDOC_CMD --variable project='$project'"
+    fi
+    if [ -n "$contractor" ]; then
+        PANDOC_CMD="$PANDOC_CMD --variable contractor='$contractor'"
+    fi
+    if [ -n "$project_number" ]; then
+        PANDOC_CMD="$PANDOC_CMD --variable project_number='$project_number'"
+    fi
+    
+    # Pass TOC status to template
+    if [ "$NO_TOC" = "true" ]; then
+        PANDOC_CMD="$PANDOC_CMD --variable no-toc=true"
+    fi
+    
+    PANDOC_CMD="$PANDOC_CMD --section-divs \
+        --id-prefix=\"\" \
+        --html-q-tags"
+    
+    if eval "$PANDOC_CMD"; then
+        
+        echo "  ✓ Successfully converted: $BASENAME (MD→HTML)"
+        cd "$ORIGINAL_DIR"
+        return 0
+    else
+        echo "  ✗ Failed to convert: $BASENAME (MD→HTML)"
+        cd "$ORIGINAL_DIR"
+        return 1
+    fi
+}
+
+for INPUT in "$@"; do
+    echo ""
+    echo "Processing: $INPUT"
+    
+    # Validate input file exists
+    if [ ! -f "$INPUT" ]; then
+        echo "  ✗ Input file not found: $INPUT"
+        FAILED=$((FAILED + 1))
+        continue
+    fi
+    
+    # Extract filename without path and extension 
+    BASENAME=$(basename "$INPUT")
+    FILENAME_NO_EXT="${BASENAME%.*}"
+    EXTENSION="${BASENAME##*.}"
+    INPUT_DIR=$(dirname "$INPUT")
+    
+    # Convert extension to lowercase for comparison
+    EXTENSION_LOWER=$(echo "$EXTENSION" | tr '[:upper:]' '[:lower:]')
+    
+    # Determine conversion type based on target format override or auto-detection
+    if [ -n "$TARGET_FORMAT" ]; then
+        # Target format specified - determine conversion type
+        TARGET_EXT="$TARGET_FORMAT_LOWER"
+        case "$EXTENSION_LOWER" in
+            docx)
+                if [ "$TARGET_EXT" = "md" ]; then
+                    CONVERSION_TYPE="docx2md"
+                elif [ "$TARGET_EXT" = "html" ]; then
+                    echo "  ✗ Direct DOCX→HTML conversion not supported. Convert to MD first."
+                    FAILED=$((FAILED + 1))
+                    continue
+                elif [ "$TARGET_EXT" = "docx" ]; then
+                    echo "  ⚠ Skipping: $BASENAME (already DOCX format)"
+                    SKIPPED=$((SKIPPED + 1))
+                    continue
+                fi
+                ;;
+            md)
+                if [ "$TARGET_EXT" = "html" ]; then
+                    CONVERSION_TYPE="md2html"
+                elif [ "$TARGET_EXT" = "docx" ]; then
+                    CONVERSION_TYPE="md2docx"
+                elif [ "$TARGET_EXT" = "md" ]; then
+                    echo "  ⚠ Skipping: $BASENAME (already MD format)"
+                    SKIPPED=$((SKIPPED + 1))
+                    continue
+                fi
+                ;;
+            html|htm)
+                if [ "$TARGET_EXT" = "md" ]; then
+                    CONVERSION_TYPE="html2md"
+                elif [ "$TARGET_EXT" = "docx" ]; then
+                    CONVERSION_TYPE="html2docx"
+                elif [ "$TARGET_EXT" = "html" ]; then
+                    echo "  ⚠ Skipping: $BASENAME (already HTML format)"
+                    SKIPPED=$((SKIPPED + 1))
+                    continue
+                fi
+                ;;
+            *)
+                echo "  ✗ Unsupported input file type: .$EXTENSION (supported: .docx, .md, .html, .htm)"
+                FAILED=$((FAILED + 1))
+                continue
+                ;;
+        esac
+    else
+        # Auto-detect conversion type based on input extension
+        case "$EXTENSION_LOWER" in
+            docx)
+                CONVERSION_TYPE="docx2md"
+                TARGET_EXT="md"
+                ;;
+            md)
+                CONVERSION_TYPE="md2html"
+                TARGET_EXT="html"
+                ;;
+            html|htm)
+                CONVERSION_TYPE="html2md"
+                TARGET_EXT="md"
+                ;;
+            *)
+                echo "  ✗ Unsupported file type: .$EXTENSION (supported: .docx, .md, .html, .htm)"
+                FAILED=$((FAILED + 1))
+                continue
+                ;;
+        esac
+    fi
+    
+    # Determine output location
+    if [ -n "$OUTPUT_DIR" ]; then
+        OUTPUT_FILE="$OUTPUT_DIR/$FILENAME_NO_EXT.$TARGET_EXT"
+        if [ "$CONVERSION_TYPE" = "docx2md" ]; then
+            TEMP_FILE="$OUTPUT_DIR/temp_$FILENAME_NO_EXT.md"
+            MEDIA_DIR="$OUTPUT_DIR/$FILENAME_NO_EXT"
+        fi
+    else
+        OUTPUT_FILE="$INPUT_DIR/$FILENAME_NO_EXT.$TARGET_EXT"
+        if [ "$CONVERSION_TYPE" = "docx2md" ]; then
+            TEMP_FILE="$INPUT_DIR/temp_$FILENAME_NO_EXT.md"
+            MEDIA_DIR="$INPUT_DIR/$FILENAME_NO_EXT"
+        fi
+    fi
+    
+    echo "  → Output file: $OUTPUT_FILE"
+    if [ "$CONVERSION_TYPE" = "docx2md" ]; then
+        echo "  → Media dir: $MEDIA_DIR/"
+    fi
+    
+    # Create output directory if needed
+    OUTPUT_FILE_DIR=$(dirname "$OUTPUT_FILE")
+    if [ ! -d "$OUTPUT_FILE_DIR" ]; then
+        mkdir -p "$OUTPUT_FILE_DIR"
+    fi
+    
+    # Check if output file exists and handle accordingly
+    if [ -f "$OUTPUT_FILE" ] && [ "$FORCE_OVERWRITE" = "false" ]; then
+        echo "  ⚠ Skipped (file exists): $BASENAME"
+        SKIPPED=$((SKIPPED + 1))
+        continue
+    fi
+    
+    # Perform conversion based on type
+    case "$CONVERSION_TYPE" in
+        docx2md)
+            if convert_docx_to_md "$INPUT" "$OUTPUT_FILE" "$TEMP_FILE" "$MEDIA_DIR" "$BASENAME" "$FILENAME_NO_EXT"; then
+                SUCCESSFUL=$((SUCCESSFUL + 1))
+            else
+                FAILED=$((FAILED + 1))
+            fi
+            ;;
+        md2html)
+            if convert_md_to_html "$INPUT" "$OUTPUT_FILE" "$BASENAME" "$INPUT_DIR"; then
+                SUCCESSFUL=$((SUCCESSFUL + 1))
+            else
+                FAILED=$((FAILED + 1))
+            fi
+            ;;
+        html2md)
+            if convert_html_to_md "$INPUT" "$OUTPUT_FILE" "$BASENAME"; then
+                SUCCESSFUL=$((SUCCESSFUL + 1))
+            else
+                FAILED=$((FAILED + 1))
+            fi
+            ;;
+        md2docx)
+            if convert_md_to_docx "$INPUT" "$OUTPUT_FILE" "$BASENAME"; then
+                SUCCESSFUL=$((SUCCESSFUL + 1))
+            else
+                FAILED=$((FAILED + 1))
+            fi
+            ;;
+        html2docx)
+            if convert_html_to_docx "$INPUT" "$OUTPUT_FILE" "$BASENAME"; then
+                SUCCESSFUL=$((SUCCESSFUL + 1))
+            else
+                FAILED=$((FAILED + 1))
+            fi
+            ;;
+        *)
+            echo "  ✗ Unknown conversion type: $CONVERSION_TYPE"
+            FAILED=$((FAILED + 1))
+            ;;
+    esac
+done
+
+echo ""
+echo "=========================================="
+echo "CONVERSION SUMMARY"
+echo "=========================================="
+echo "Total files processed: $TOTAL_FILES"
+echo "Successful conversions: $SUCCESSFUL"
+echo "Failed conversions: $FAILED"
+echo "Skipped (existing files): $SKIPPED"
+echo "=========================================="

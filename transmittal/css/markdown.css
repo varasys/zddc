@@ -1,0 +1,113 @@
+#remarks-render h1,
+#remarks-render h2,
+#remarks-render h3,
+#remarks-render h4,
+#remarks-render h5,
+#remarks-render h6 {
+    margin: 0.5rem 0 0.25rem;
+    font-weight: 600;
+}
+
+#remarks-render h1 {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+#remarks-render h2 {
+    font-size: 1.125rem;
+    font-weight: 700;
+}
+
+#remarks-render h3 {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+#remarks-render h4 {
+    font-size: 0.9375rem;
+}
+
+#remarks-render h5 {
+    font-size: 0.875rem;
+}
+
+#remarks-render h6 {
+    font-size: 0.8125rem;
+}
+
+#remarks-render p {
+    margin: 0.5rem 0 0.85rem;
+}
+
+#remarks-render ul {
+    list-style: disc inside;
+    padding-left: 0.75rem;
+    margin: 0.25rem 0;
+}
+
+#remarks-render ol {
+    list-style: decimal inside;
+    padding-left: 0.75rem;
+    margin: 0.25rem 0;
+}
+
+#remarks-render li {
+    margin: 0.125rem 0;
+}
+
+#remarks-render blockquote {
+    border-left: 3px solid #e5e7eb;
+    padding-left: 0.75rem;
+    color: #374151;
+    margin: 0.25rem 0;
+}
+
+#remarks-render pre {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    overflow: auto;
+}
+
+#remarks-render code {
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    padding: 0 0.25rem;
+    border-radius: 0.125rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+#remarks-render hr {
+    border: 0;
+    border-top: 1px solid #e5e7eb;
+    margin: 0.5rem 0;
+}
+
+#remarks-render del {
+    text-decoration: line-through;
+    color: #9ca3af;
+}
+
+#remarks-render a {
+    color: #2563eb;
+    text-decoration: underline;
+}
+
+#remarks-render table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 0.25rem 0;
+}
+
+#remarks-render th,
+#remarks-render td {
+    border: 1px solid #d1d5db;
+    padding: 0.25rem 0.5rem;
+    text-align: left;
+}
+
+#remarks-render th {
+    background: #f3f4f6;
+    font-weight: 600;
+}

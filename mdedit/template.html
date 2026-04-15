@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZDDC Markdown</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Toast UI Editor v3.2.2 -->
+    <link rel="stylesheet" href="https://uicdn.toast.com/editor/3.2.2/toastui-editor.min.css">
+    <script src="https://uicdn.toast.com/editor/3.2.2/toastui-editor-all.min.js"></script>
+    <style>
+        {{CSS_PLACEHOLDER}}
+    </style>
+</head>
+<body>
+    <div id="app" class="flex flex-col h-screen w-full overflow-hidden">
+        <header class="app-header">
+            <div class="header-left">
+                <div class="header-title-group">
+                    <span class="app-header__title">ZDDC Markdown</span>
+                    <span class="build-timestamp">Built: {{BUILD_TIMESTAMP}}</span>
+                </div>
+                <button id="select-directory" class="btn btn-primary" title="Select a Directory">Select Directory</button>
+            </div>
+            <div class="header-right">
+                <button id="theme-btn" class="btn btn-secondary" title="Theme: auto (follows OS)" aria-label="Theme: auto (follows OS)">◐</button>
+                <button id="help-btn" class="btn btn-secondary" title="Help">?</button>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-hidden relative">
+            <div class="resizable-pane horizontal flex flex-row relative w-full h-full overflow-hidden" id="root-pane" data-pane-type="root">
+                <div class="pane nav-pane relative flex flex-col bg-white dark:bg-gray-900 overflow-hidden" id="file-nav" data-pane-type="file-nav" style="width: 450px; min-width: 200px;">
+                    <div class="pane-header flex flex-col px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-medium border-b border-gray-200 dark:border-gray-700 select-none">
+                        <div class="flex justify-between items-center w-full">
+                            <span>Files</span>
+                        </div>
+                    </div>
+                    <div class="pane-content flex-1 overflow-auto p-4">
+                        <div id="file-tree" class="file-tree py-2">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pane-resizer bg-gray-200 dark:bg-gray-700 transition-colors relative z-10 w-1 cursor-col-resize hover:bg-blue-500" data-resizer-for="file-nav"></div>
+
+                <div class="pane content-pane flex-1 relative flex flex-col bg-white dark:bg-gray-900 overflow-hidden" id="main-content">
+                    <div id="welcome-screen" class="welcome-screen flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400 text-center p-6">
+                        <h2 class="mb-2 text-xl">Welcome to ZDDC Markdown</h2>
+                        <p class="mb-4">All files are edited on your local computer.</p>
+                        <p id="welcome-hint" class="text-sm">Click <strong>Scratchpad</strong> to start editing,<br>or <strong>Select Directory</strong> to work with files.</p>
+                        <p id="welcome-firefox" class="text-sm text-amber-600 hidden mt-2">Your browser doesn't support the File System API.<br>Use <strong>Scratchpad</strong> to edit markdown and save via download.</p>
+                    </div>
+
+                    <div id="content-container" class="content-container flex flex-col h-full hidden">
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="status-bar flex justify-between items-center px-4 h-6 text-xs bg-gray-100 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+            <div class="status-left flex items-center gap-6 py-1">
+                <button id="save-all" class="btn inline-flex items-center gap-2 px-3 py-1 text-sm bg-transparent border border-gray-300 dark:border-gray-600 rounded text-gray-800 dark:text-gray-200 cursor-pointer transition-all hover:bg-gray-200 dark:hover:bg-gray-700 h-6 leading-none" title="Save All">
+                    <svg class="btn-icon w-3.5 h-3.5 fill-current opacity-80" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M11.5 1H4.5a1.5 1.5 0 0 0-1.5 1.5v11a1.5 1.5 0 0 0 1.5 1.5h7a1.5 1.5 0 0 0 1.5-1.5v-11a1.5 1.5 0 0 0-1.5-1.5zm-7 1h7a.5.5 0 0 1 .5.5V9H4V2.5a.5.5 0 0 1 .5-.5zM4 10h8v3.5a.5.5 0 0 1-.5.5h-7a.5.5 0 0 1-.5-.5V10z"></path>
+                        <path d="M6.5 0a.5.5 0 0 1 .5.5V2h2V.5a.5.5 0 0 1 1 0V2h1.5a.5.5 0 0 1 0 1H10v2.5a.5.5 0 0 1-1 0V3H7v2.5a.5.5 0 0 1-1 0V3H4.5a.5.5 0 0 1 0-1H6V.5a.5.5 0 0 1 .5-.5z"></path>
+                    </svg>
+                    Save All
+                </button>
+                <span id="folder-count" class="status-message text-sm text-gray-800 dark:text-gray-200 opacity-80">0 folders</span>
+                <span id="file-count" class="status-message text-sm text-gray-800 dark:text-gray-200 opacity-80">0 files</span>
+                <span id="unsaved-count" class="status-message text-sm text-gray-800 dark:text-gray-200 opacity-80">0 unsaved</span>
+            </div>
+            <div class="status-right flex items-center gap-4">
+                <a href="https://github.com/varasys/zddc" target="_blank" rel="noopener noreferrer" class="github-link" title="View on GitHub">
+                    <svg class="github-icon fill-current transition-opacity hover:opacity-80" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                    </svg>
+                </a>
+            </div>
+        </footer>
+
+        <!-- Help Panel -->
+        <aside id="help-panel" class="help-panel" hidden aria-labelledby="help-panel-title">
+            <div class="help-panel__header">
+                <h2 id="help-panel-title" class="help-panel__title">Help — ZDDC Markdown</h2>
+                <button type="button" class="help-panel__close" id="help-panel-close" aria-label="Close">&times;</button>
+            </div>
+            <div class="help-panel__body">
+                <h3>What is ZDDC Markdown?</h3>
+                <p>ZDDC Markdown is a browser-based Markdown editor that reads and writes files directly on your local file system. Everything runs locally — no data is sent to any server.</p>
+
+                <h3>Getting Started</h3>
+                <ol>
+                    <li>Click <strong>Select Directory</strong> to open a folder. The file tree on the left will populate with all files in that folder.</li>
+                    <li>Click any Markdown file (<code>.md</code>) in the tree to open it in the editor.</li>
+                    <li>Use the <strong>Scratchpad</strong> entry (always visible at the top of the tree) for temporary notes without saving to disk.</li>
+                </ol>
+
+                <h3>Editor Modes</h3>
+                <dl>
+                    <dt>WYSIWYG</dt>
+                    <dd>A rich-text view where formatting is rendered live. Good for composing content.</dd>
+                    <dt>Markdown</dt>
+                    <dd>A plain-text view showing raw Markdown syntax. Good for precise control.</dd>
+                </dl>
+                <p>Switch between modes using the toolbar buttons at the top-right of the editor.</p>
+
+                <h3>Saving Files</h3>
+                <dl>
+                    <dt>Auto-save indicator</dt>
+                    <dd>A bullet (•) next to the filename in the tree indicates unsaved changes.</dd>
+                    <dt>Save (Ctrl+S)</dt>
+                    <dd>Saves the currently active file.</dd>
+                    <dt>Save All</dt>
+                    <dd>Saves all files that have unsaved changes in one operation.</dd>
+                </dl>
+
+                <h3>Table of Contents</h3>
+                <p>When a Markdown file is open, a table of contents is generated from its headings and shown on the right side. Use the depth selector to control how many heading levels appear.</p>
+
+                <h3>Browser Compatibility</h3>
+                <p>File system access requires a Chromium-based browser (Chrome, Edge, Brave). In Firefox and other browsers, the <strong>Scratchpad</strong> is available for editing, and files can be saved via download.</p>
+
+                <h3>Keyboard Shortcuts</h3>
+                <dl>
+                    <dt><kbd>Ctrl+S</kbd></dt>
+                    <dd>Save the current file.</dd>
+                    <dt><kbd>Escape</kbd></dt>
+                    <dd>Close this help panel.</dd>
+                </dl>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        {{JS_PLACEHOLDER}}
+    </script>
+</body>
+</html>

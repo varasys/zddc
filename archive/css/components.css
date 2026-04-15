@@ -1,0 +1,713 @@
+/* Archive component styles — tokens from shared/base.css */
+
+/* Select All checkbox label */
+.select-all-label {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.select-all-label input[type="checkbox"] {
+    margin: 0;
+    cursor: pointer;
+}
+
+/* One-line bar variant — sits below the section header */
+.select-all-bar {
+    padding: 0.2rem 0;
+    margin-bottom: 0.35rem;
+}
+
+/* Filter + Select All inline row */
+.filter-select-row {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.35rem;
+}
+
+.filter-select-row .filter-input {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+/* Inline variant: label to the right of the filter, text above checkbox */
+.select-all-inline {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1rem;
+    font-size: 0.7rem;
+    line-height: 1.1;
+    color: var(--text-muted);
+    cursor: pointer;
+    white-space: nowrap;
+    text-align: center;
+}
+
+.select-all-inline input[type="checkbox"] {
+    margin: 0;
+    cursor: pointer;
+}
+
+/* Form Inputs */
+.filter-input,
+.global-search,
+.form-input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+    font-family: var(--font);
+    transition: border-color 0.2s;
+}
+
+.filter-input:focus,
+.global-search:focus,
+.form-input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.global-search {
+    min-width: 300px;
+    max-width: 500px;
+}
+
+/* Form Groups */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-weight: 500;
+}
+
+.form-help {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+/* Checkboxes */
+input[type="checkbox"] {
+    margin-right: 0.5rem;
+    cursor: pointer;
+}
+
+/* Folder Tree Chevrons */
+.folder-chevron {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1rem;
+    height: 1rem;
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: transform 0.15s ease;
+    flex-shrink: 0;
+    margin-right: 0.25rem;
+}
+
+.folder-chevron:not(.collapsed) {
+    transform: rotate(90deg);
+}
+
+.folder-chevron:hover {
+    color: var(--primary);
+}
+
+.folder-chevron-placeholder {
+    width: 1rem;
+    flex-shrink: 0;
+    margin-right: 0.25rem;
+}
+
+/* Folder Items */
+.folder-item {
+    display: flex;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    cursor: pointer;
+    user-select: none;
+    border-radius: 3px;
+    border-left: 3px solid transparent;
+}
+
+.folder-item:hover {
+    background: var(--bg-hover);
+}
+
+.folder-item.selected {
+    background: var(--bg-selected);
+    color: inherit;
+    border-left: 3px solid var(--primary);
+    padding-left: calc(0.5rem - 3px);
+}
+
+.folder-item.selected:hover {
+    background: var(--bg-hover);
+}
+
+.folder-item-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    user-select: text;
+    cursor: text;
+}
+
+/* Transmittal folder formatting */
+.transmittal-folder-content {
+    flex: 1;
+    overflow: hidden;
+    user-select: text;
+    cursor: text;
+}
+
+[data-folder-type="transmittal"] {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+.transmittal-first-line {
+    font-size: 0.9em;
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.transmittal-second-line {
+    font-size: 0.85em;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Empty filter message in folder lists */
+.folder-list-empty {
+    padding: 0.75rem 0.5rem;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-style: italic;
+    text-align: center;
+}
+
+/* Focus styles for keyboard navigation */
+.folder-list:focus {
+    outline: 2px solid var(--primary);
+    outline-offset: -2px;
+}
+
+.folder-list:focus .folder-item:focus {
+    outline: 1px dotted var(--primary);
+    outline-offset: -1px;
+}
+
+/* ── Folder type toggle bar ─────────────────────────────────────────────── */
+.folder-type-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    padding: 0.3rem 0 0.4rem;
+    flex-shrink: 0;
+}
+
+.folder-type-toggle {
+    padding: 0.2rem 0.6rem;
+    font-size: 0.8rem;
+    font-family: var(--font);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--bg);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.folder-type-toggle:hover {
+    background: var(--bg-hover);
+    color: var(--text);
+    border-color: var(--border-dark);
+}
+
+.folder-type-toggle.active {
+    background: var(--primary);
+    color: var(--text-light);
+    border-color: var(--primary);
+}
+
+.folder-type-toggle.active:hover {
+    background: var(--primary-hover);
+    border-color: var(--primary-hover);
+}
+
+/* Date Group Headers */
+.date-group-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+    font-weight: 600;
+    color: var(--text);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.date-group-header:hover {
+    background: var(--bg-hover);
+}
+
+.date-group-toggle {
+    font-size: 0.8em;
+    width: 1rem;
+    text-align: center;
+}
+
+.date-group-date {
+    flex: 1;
+}
+
+.date-group-count {
+    font-size: 0.85em;
+    color: var(--text-muted);
+    font-weight: normal;
+}
+
+/* Nav section header with button */
+.nav-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-secondary);
+    margin: -1rem -1rem 0.75rem -1rem;
+    padding: 0.4rem 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.nav-section-header h3 {
+    margin-bottom: 0;
+}
+
+.btn-icon {
+    background: none;
+    border: none;
+    padding: 0.25rem;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 1rem;
+    line-height: 1;
+    border-radius: 3px;
+    transition: background 0.2s;
+}
+
+.btn-icon:hover {
+    background: var(--bg-hover);
+    color: var(--text);
+}
+
+/* Modals */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    position: relative;
+    background: var(--bg);
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    max-width: 90vw;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-large {
+    width: 80vw;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.modal-header h2 {
+    margin: 0;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--text-muted);
+    padding: 0;
+    width: 2rem;
+    height: 2rem;
+    cursor: pointer;
+}
+
+.modal-close:hover {
+    color: var(--text);
+}
+
+.modal-body {
+    padding: 1.5rem;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border);
+}
+
+/* Preview Table */
+.preview-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0.5rem;
+}
+
+.preview-table th,
+.preview-table td {
+    text-align: left;
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.preview-table th {
+    font-weight: 600;
+    background: var(--bg-secondary);
+}
+
+/* Drag & Drop */
+.drag-over {
+    background: var(--bg-selected) !important;
+    border-color: var(--primary) !important;
+}
+
+/* Loading Spinner */
+.spinner {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid var(--border);
+    border-top: 2px solid var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0%   { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Revision Title Styling */
+.titles-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.revision-title-base,
+.revision-title-modifier {
+    margin-bottom: 0.5rem;
+}
+
+.revision-title-base:last-child,
+.revision-title-modifier:last-child {
+    margin-bottom: 0;
+}
+
+.revision-title-base {
+    color: var(--text);
+}
+
+.revision-title-modifier {
+    color: var(--text-muted);
+}
+
+/* Modifier Filter Dropdown */
+.modifier-filter-container {
+    position: relative;
+    display: inline-block;
+}
+
+.modifier-filter-btn {
+    min-width: 100px;
+}
+
+.modifier-filter-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1000;
+    min-width: 180px;
+    background: var(--bg);
+    border: 1px solid var(--border-dark);
+    border-radius: var(--radius);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    margin-top: 4px;
+}
+
+.modifier-filter-header {
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-secondary);
+}
+
+.modifier-filter-header label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.modifier-filter-list {
+    max-height: 250px;
+    overflow-y: auto;
+    padding: 0.25rem 0;
+}
+
+.modifier-filter-item {
+    padding: 0.4rem 0.75rem;
+}
+
+.modifier-filter-item label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.modifier-filter-item:hover {
+    background: var(--bg-hover);
+}
+
+.modifier-base {
+    font-weight: 500;
+    color: var(--text);
+}
+
+.modifier-type {
+    color: var(--text-muted);
+}
+
+/* Active toggle button state */
+.btn-active {
+    background: var(--primary);
+    color: var(--text-light);
+    border-color: var(--primary);
+}
+
+.btn-active:hover {
+    background: var(--primary-hover);
+    border-color: var(--primary-hover);
+}
+
+/* Path Error Row Warning */
+.file-row-path-error {
+    background: rgba(217, 119, 6, 0.08) !important;
+}
+
+.file-row-path-error:hover {
+    background: rgba(217, 119, 6, 0.15) !important;
+}
+
+.path-error-indicator {
+    color: var(--warning);
+    cursor: help;
+    margin-right: 0.25rem;
+}
+
+.file-link-disabled {
+    color: var(--text-muted);
+    text-decoration: none;
+    cursor: not-allowed;
+}
+
+.file-link-disabled:hover {
+    text-decoration: none;
+    color: var(--text-muted);
+}
+
+/* PDF Preview Toggle */
+.preview-toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--text);
+    cursor: pointer;
+    padding: 0.4rem 0.85rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg);
+    transition: background 0.15s;
+}
+
+.preview-toggle-label:hover {
+    background: var(--bg-secondary);
+}
+
+.preview-toggle-label input[type="checkbox"] {
+    margin: 0;
+    cursor: pointer;
+}
+
+.preview-toggle-label input[type="checkbox"]:checked + span {
+    color: var(--primary);
+    font-weight: 500;
+}
+
+/* ── Download progress indicator ────────────────────────────────────────── */
+.progress-indicator {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    min-width: 300px;
+}
+
+.progress-indicator__message {
+    margin-bottom: 10px;
+}
+
+.progress-indicator__track {
+    background: var(--bg-secondary);
+    height: 20px;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-indicator__fill {
+    background: var(--primary);
+    height: 100%;
+    transition: width 0.3s;
+}
+
+.progress-indicator__label {
+    text-align: center;
+    margin-top: 5px;
+    font-size: 0.9em;
+    color: var(--text-muted);
+}
+
+/* ── Welcome screen list ─────────────────────────────────────────────────── */
+.welcome-list {
+    text-align: left;
+    margin: 0.5rem auto;
+    max-width: 400px;
+}
+
+/* ── Windows path tip (inside welcome screen) ────────────────────────────── */
+.windows-tip {
+    text-align: left;
+    margin: 1rem auto;
+    max-width: 500px;
+    font-size: 0.9rem;
+}
+
+.windows-tip summary {
+    cursor: pointer;
+    color: var(--text-muted);
+}
+
+.windows-tip__body {
+    margin-top: 0.5rem;
+    padding: 0.75rem;
+    background: var(--bg);
+    border: 1px solid var(--warning);
+    border-radius: var(--radius);
+}
+
+.windows-tip__body > p:first-child {
+    margin: 0 0 0.5rem 0;
+}
+
+.windows-tip__body ol {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+}
+
+.windows-tip__code {
+    display: block;
+    margin: 0.25rem 0;
+    padding: 0.25rem 0.5rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius);
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+}
+
+.windows-tip__note {
+    margin: 0.5rem 0 0 0;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+/* Outstanding virtual transmittal — pinned at top of transmittal list */
+.outstanding-transmittal {
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0.25rem;
+}
+
+.outstanding-label {
+    font-style: italic;
+    color: var(--text-muted);
+}
+
+.outstanding-transmittal.selected .outstanding-label {
+    color: var(--text);
+}

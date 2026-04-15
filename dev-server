@@ -1,0 +1,438 @@
+#!/usr/bin/env python3
+"""
+Development HTTP server with cache-busting headers
+Supports start, status, and stop commands for process management.
+"""
+
+import argparse
+import os
+import signal
+import socketserver
+import sys
+import time
+import urllib.request
+import urllib.error
+from http.server import SimpleHTTPRequestHandler
+from pathlib import Path
+
+class NoCacheHTTPRequestHandler(SimpleHTTPRequestHandler):
+    def end_headers(self):
+        self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+        self.send_header('Pragma', 'no-cache')
+        self.send_header('Expires', '0')
+        super().end_headers()
+
+class DevServer:
+    def __init__(self, port=8000, directory=None):
+        self.port = port
+        self.directory = directory or os.getcwd()
+        self.runtime_dir = self._get_runtime_dir()
+        # Port-specific PID files to allow multiple servers
+        self.pidfile = self.runtime_dir / f"zddc-dev-server-{port}.pid"
+    
+    def _get_runtime_dir(self):
+        """Get appropriate runtime directory for PID files"""
+        # Try user runtime directory first (systemd)
+        import getpass
+        uid = os.getuid()
+        user_runtime = Path(f"/run/user/{uid}")
+        if user_runtime.exists() and user_runtime.is_dir():
+            runtime_dir = user_runtime / "zddc"
+            runtime_dir.mkdir(exist_ok=True)
+            return runtime_dir
+        
+        # Fall back to user's cache directory
+        home = Path.home()
+        cache_dir = home / ".cache" / "zddc"
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        return cache_dir
+    
+    def get_server_pid(self):
+        """Get the PID of running server from pidfile"""
+        pid, _ = self._get_server_info()
+        return pid
+    
+    def _get_server_info(self):
+        """Get PID and serving directory from pidfile"""
+        if not self.pidfile.exists():
+            return None, None
+        
+        try:
+            with open(self.pidfile, 'r') as f:
+                content = f.read().strip()
+            
+            # Handle different formats: PID, PID:PORT, PID:DIRECTORY
+            if ':' in content:
+                pid_str, rest = content.split(':', 1)
+                pid = int(pid_str)
+                # If rest is numeric, it's old PID:PORT format
+                try:
+                    int(rest)
+                    serving_dir = None  # Old format, directory unknown
+                except ValueError:
+                    serving_dir = rest  # New PID:DIRECTORY format
+            else:
+                pid = int(content)
+                serving_dir = None  # Old format, directory unknown
+            
+            # Check if process is actually running using /proc
+            if self._is_process_running(pid):
+                return pid, serving_dir
+            else:
+                # Clean up stale pidfile
+                print(f"  Cleaning up stale PID file for process {pid}")
+                self._cleanup()
+                return None, None
+            
+        except (ValueError, IOError) as e:
+            print(f"  Error reading PID file: {e}")
+            self._cleanup()
+            return None, None
+    
+    def _is_process_running(self, pid):
+        """Check if a process with given PID is running and is our process"""
+        try:
+            # Check if process exists
+            with open(f"/proc/{pid}/comm", 'r') as f:
+                comm = f.read().strip()
+            
+            # Verify it's a python process
+            if 'python' not in comm:
+                return False
+            
+            # Check command line to verify it's our dev-server
+            try:
+                with open(f"/proc/{pid}/cmdline", 'r') as f:
+                    cmdline = f.read()
+                    return 'dev-server.py' in cmdline
+            except (FileNotFoundError, PermissionError):
+                # If we can't read cmdline, assume it's our process if it's python
+                return True
+                
+        except (FileNotFoundError, PermissionError):
+            return False
+    
+    def is_server_running(self):
+        """Check if server is running by making HTTP request"""
+        try:
+            with urllib.request.urlopen(f"http://localhost:{self.port}/", timeout=2) as response:
+                return response.status == 200 or response.status == 403  # 403 for directory listing disabled
+        except (urllib.error.URLError, urllib.error.HTTPError, OSError):
+            return False
+    
+    def start(self, daemon=False):
+        """Start the development server"""
+        # Check if server is already running on this port
+        existing_pid = self.get_server_pid()
+        if existing_pid:
+            print(f"Server is already running (PID: {existing_pid}) at http://localhost:{self.port}")
+            return True  # Exit without error as requested
+        
+        # Check if port is in use by another process
+        if self.is_server_running():
+            print(f"Port {self.port} is already in use by another process")
+            return False
+        
+        if daemon:
+            self._start_daemon()
+        else:
+            self._start_foreground()
+        
+        return True
+    
+    def _start_foreground(self):
+        """Start server in foreground mode"""
+        print(f"Starting dev server on port {self.port}...")
+        print(f"Serving directory: {self.directory}")
+        print("Press Ctrl+C to stop")
+        
+        # Change to the specified directory
+        try:
+            os.chdir(self.directory)
+        except OSError as e:
+            print(f"Failed to change to directory {self.directory}: {e}")
+            return False
+        
+        # Set up signal handler for graceful shutdown
+        def signal_handler(signum, frame):
+            print("\nShutting down server...")
+            sys.exit(0)
+        
+        signal.signal(signal.SIGINT, signal_handler)
+        signal.signal(signal.SIGTERM, signal_handler)
+        
+        try:
+            httpd = socketserver.TCPServer(("", self.port), NoCacheHTTPRequestHandler)
+            httpd.serve_forever()
+        except OSError as e:
+            if e.errno == 98:  # Address already in use
+                print(f"Port {self.port} is already in use")
+            else:
+                print(f"Error starting server: {e}")
+            return False
+        except KeyboardInterrupt:
+            print("\nServer stopped")
+            return True
+        except Exception as e:
+            print(f"Error starting server: {e}")
+        finally:
+            self._cleanup()
+    
+    def _start_daemon(self):
+        """Start server in daemon mode (background)"""
+        try:
+            # Fork the first time (detach from parent)
+            pid = os.fork()
+            if pid > 0:
+                # Parent process - wait a moment then exit
+                time.sleep(0.5)
+                return True
+        except OSError as e:
+            print(f"Fork #1 failed: {e}")
+            return False
+        
+        # Change to the specified directory before daemonizing
+        try:
+            os.chdir(self.directory)
+        except OSError as e:
+            print(f"Failed to change to directory {self.directory}: {e}")
+            return False
+        
+        # Decouple from parent environment
+        os.setsid()
+        os.umask(0)
+        
+        # Fork the second time (prevent zombie processes)
+        try:
+            pid = os.fork()
+            if pid > 0:
+                # Parent process - exit immediately
+                os._exit(0)
+        except OSError as e:
+            print(f"Fork #2 failed: {e}")
+            os._exit(1)
+        
+        # Redirect standard file descriptors
+        sys.stdout.flush()
+        sys.stderr.flush()
+        
+        with open('/dev/null', 'r') as si:
+            os.dup2(si.fileno(), sys.stdin.fileno())
+        with open('/dev/null', 'w') as so:
+            os.dup2(so.fileno(), sys.stdout.fileno())
+        with open('/dev/null', 'w') as se:
+            os.dup2(se.fileno(), sys.stderr.fileno())
+        
+        # Write PID to file with directory information
+        try:
+            with open(self.pidfile, 'w') as f:
+                f.write(f"{os.getpid()}:{self.directory}")
+            print(f"Dev server started on port {self.port} serving {self.directory}")
+            return True
+        except IOError as e:
+            print(f"Failed to write PID file: {e}")
+            return False
+        
+        # Start the server
+        try:
+            with socketserver.TCPServer(("", self.port), NoCacheHTTPRequestHandler) as httpd:
+                httpd.serve_forever()
+        except Exception:
+            # In daemon mode, errors just cause the process to exit
+            pass
+        finally:
+            self._cleanup()
+    
+    def status(self):
+        """Check server status by testing HTTP connection"""
+        # Check for stale PID files first
+        self._cleanup_if_stale()
+        
+        pid, serving_dir = self._get_server_info()
+        if pid:
+            # Test if the server is actually responding on its port
+            server_responding = self.is_server_running()
+            
+            print(f"Dev server is running")
+            print(f"  PID: {pid}")
+            print(f"  Port: {self.port}")
+            print(f"  URL: http://localhost:{self.port}")
+            print(f"  Directory: {serving_dir or 'Unknown (old PID file format)'}")
+            print(f"  PID file: {self.pidfile}")
+            
+            if server_responding:
+                print(f"  Status: Responding to HTTP requests")
+            else:
+                print(f"  Status: Process running but not responding to HTTP (may be starting up)")
+            
+            # Get process uptime
+            try:
+                uptime_seconds = self._get_process_uptime(pid)
+                print(f"  Uptime: {self._format_uptime(uptime_seconds)}")
+            except (FileNotFoundError, IndexError, ValueError):
+                print(f"  Uptime: Unable to determine")
+            
+            return True
+        else:
+            print("Dev server is not running")
+            return False
+    
+    def _get_process_uptime(self, pid):
+        """Get the actual uptime of a process in seconds"""
+        with open(f"/proc/{pid}/stat", 'r') as f:
+            stat_data = f.read().split()
+            starttime_ticks = int(stat_data[21])  # Process start time in ticks since boot
+        
+        # Get system clock ticks per second
+        clock_ticks = os.sysconf(os.sysconf_names['SC_CLK_TCK'])
+        
+        # Get system boot time
+        with open("/proc/stat", 'r') as f:
+            for line in f:
+                if line.startswith('btime '):
+                    boot_time = int(line.split()[1])
+                    break
+        
+        # Calculate process start time in seconds since epoch
+        process_start_time = boot_time + (starttime_ticks / clock_ticks)
+        
+        # Calculate uptime
+        return time.time() - process_start_time
+    
+
+    
+    def _cleanup_if_stale(self):
+        """Check for and clean up stale PID files"""
+        if self.pidfile.exists():
+            try:
+                with open(self.pidfile, 'r') as f:
+                    content = f.read().strip()
+                
+                # Handle different formats: PID, PID:PORT, PID:DIRECTORY
+                if ':' in content:
+                    pid = int(content.split(':', 1)[0])
+                else:
+                    pid = int(content)
+                
+                if not self._is_process_running(pid):
+                    print(f"  Found stale PID file for process {pid}, cleaning up")
+                    self._cleanup()
+            except (ValueError, IOError):
+                print(f"  Found corrupted PID file, cleaning up")
+                self._cleanup()
+    
+    def stop(self):
+        """Stop the development server"""
+        pid = self.get_server_pid()
+        if not pid:
+            if self.is_server_running():
+                print("Server is running but not managed by this script")
+                print("Cannot stop server started by another process")
+                return False
+            else:
+                print("Dev server is not running")
+                return False
+        
+        try:
+            print(f"Stopping dev server (PID: {pid})...")
+            os.kill(pid, signal.SIGTERM)
+            
+            # Wait for process to stop
+            for i in range(30):  # Wait up to 3 seconds
+                time.sleep(0.1)
+                try:
+                    os.kill(pid, 0)  # Test if process still exists
+                except OSError:
+                    # Process no longer exists
+                    break
+            else:
+                # Force kill if still running
+                print("Process didn't stop gracefully, force killing...")
+                try:
+                    os.kill(pid, signal.SIGKILL)
+                except OSError:
+                    pass  # Process might have died already
+            
+            self._cleanup()
+            print("Dev server stopped")
+            return True
+            
+        except OSError as e:
+            print(f"Error stopping server: {e}")
+            self._cleanup()
+            return False
+    
+    def _cleanup(self):
+        """Clean up PID file"""
+        if self.pidfile.exists():
+            try:
+                self.pidfile.unlink()
+            except OSError as e:
+                print(f"Warning: Could not remove PID file {self.pidfile}: {e}")
+    
+    def _format_uptime(self, seconds):
+        """Format uptime in human readable format"""
+        if seconds < 60:
+            return f"{int(seconds)}s"
+        elif seconds < 3600:
+            return f"{int(seconds // 60)}m {int(seconds % 60)}s"
+        else:
+            hours = int(seconds // 3600)
+            minutes = int((seconds % 3600) // 60)
+            return f"{hours}h {minutes}m"
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="ZDDC Development Server",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Commands:
+  start     Start the development server (default)
+  status    Show server status
+  stop      Stop the development server
+
+Examples:
+  %(prog)s                # Start server in foreground (default)
+  %(prog)s start -d       # Start server in background
+  %(prog)s status         # Check if server is running
+  %(prog)s stop           # Stop the server
+  %(prog)s -p 8080 start  # Start on port 8080
+  %(prog)s start ~/docs   # Start serving ~/docs directory
+  %(prog)s -p 9000 ~/src  # Start serving ~/src on port 9000"""
+    )
+    
+    parser.add_argument('command', nargs='?', default='start',
+                       choices=['start', 'status', 'stop'],
+                       help='Command to execute (default: start)')
+    parser.add_argument('-p', '--port', type=int, default=8000,
+                       help='Port to run server on (default: 8000)')
+    parser.add_argument('-d', '--daemon', action='store_true',
+                       help='Run server in background (daemon mode)')
+    parser.add_argument('directory', nargs='?', default=None,
+                       help='Directory to serve (default: current directory)')
+    
+    args = parser.parse_args()
+    
+    server = DevServer(port=args.port, directory=args.directory)
+    
+    if args.command == 'start':
+        if not server.start(daemon=args.daemon):
+            sys.exit(1)
+        # After starting (or if already running), show status
+        if not server.status():
+            sys.exit(1)
+    elif args.command == 'status':
+        if not server.status():
+            sys.exit(1)
+    elif args.command == 'stop':
+        if not server.stop():
+            sys.exit(1)
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\nOperation cancelled")
+        sys.exit(1)
+    except Exception as e:
+        print(f"Error: {e}")
+        sys.exit(1)

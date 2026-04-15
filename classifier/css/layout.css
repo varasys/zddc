@@ -1,0 +1,319 @@
+/* Classifier layout — tokens from shared/base.css */
+
+/* Empty State — positioned below the app header */
+.empty-state {
+    position: absolute;
+    top: 50px; /* clear the header */
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    z-index: 10;
+}
+
+.empty-state-content {
+    text-align: center;
+    max-width: 500px;
+    padding: 2rem;
+}
+
+.empty-state-content h2 {
+    color: var(--text);
+    margin-bottom: 1rem;
+}
+
+.empty-state-content p {
+    margin-bottom: 1rem;
+    color: var(--text-muted);
+}
+
+.empty-state-content .note {
+    font-size: 0.85rem;
+    font-style: italic;
+}
+
+.welcome-list {
+    text-align: left;
+    margin: 0.5rem auto;
+    max-width: 400px;
+}
+
+.empty-state.drag-over {
+    background: var(--primary-light);
+    outline: 2px dashed var(--primary);
+    outline-offset: -4px;
+}
+
+/* Browser Warning */
+.browser-warning {
+    background-color: rgba(217, 119, 6, 0.08);
+    border: 2px solid var(--warning);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    text-align: left;
+}
+
+.browser-warning h3 {
+    color: var(--warning);
+    margin-top: 0;
+}
+
+.browser-warning ul {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+}
+
+/* Main App */
+.main-app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-color: var(--bg);
+    position: relative;
+}
+
+/* Header — shared/base.css provides .app-header base */
+.app-header {
+    padding: 0.5rem 1rem;
+}
+
+.header-left,
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.header-divider {
+    color: var(--border);
+    margin: 0 0.25rem;
+}
+
+/* Main Content */
+.main-content {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* Folder Tree Pane */
+.folder-tree-pane {
+    width: 300px;
+    min-width: 150px;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    flex-shrink: 0;
+    position: relative;
+    transition: width 0.2s ease, min-width 0.2s ease;
+}
+
+.folder-tree-pane.collapsed {
+    width: 40px !important;
+    min-width: 40px !important;
+    max-width: 40px !important;
+    overflow: hidden;
+}
+
+.folder-tree-pane.collapsed .pane-header-controls,
+.folder-tree-pane.collapsed .folder-tree,
+.folder-tree-pane.collapsed .pane-header h3 {
+    display: none;
+}
+
+.folder-tree-pane.collapsed .pane-header {
+    padding: 0.5rem;
+    justify-content: center;
+}
+
+.folder-tree-pane.collapsed .pane-header-title {
+    flex-direction: column;
+}
+
+.pane-header-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.collapse-tree-btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+}
+
+/* Resize Handle */
+.resize-handle {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    cursor: col-resize;
+    background-color: transparent;
+    z-index: 10;
+}
+
+.resize-handle:hover {
+    background-color: var(--primary);
+}
+
+.pane-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background-color: var(--bg);
+    border-bottom: 1px solid var(--border);
+}
+
+.pane-header-left,
+.pane-header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.pane-header h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.pane-header-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-end;
+}
+
+.folder-stats,
+.file-stats {
+    display: flex;
+    gap: 1rem;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.folder-tree {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.5rem;
+}
+
+/* Folder Item */
+.folder-item {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    cursor: pointer;
+    border-radius: var(--radius);
+    user-select: none;
+    transition: background-color 0.15s;
+}
+
+.folder-item:hover {
+    background-color: var(--bg-hover);
+}
+
+.folder-item.selected {
+    background-color: var(--bg-selected);
+    font-weight: 500;
+}
+
+.folder-item.folder-hover-highlight {
+    background-color: rgba(217, 119, 6, 0.12);
+    border-left: 3px solid var(--warning);
+    transition: background-color 0.2s, border-left 0.2s;
+}
+
+.folder-item.has-unsaved {
+    border-left: 3px solid var(--warning);
+}
+
+.folder-toggle {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.folder-icon {
+    margin-right: 0.5rem;
+    color: var(--text-muted);
+}
+
+.folder-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.folder-count {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-left: 0.5rem;
+}
+
+.folder-children {
+    margin-left: 1.5rem;
+}
+
+/* Spreadsheet Pane */
+.spreadsheet-pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.spreadsheet-container {
+    flex: 1;
+    overflow: auto;
+    background-color: var(--bg);
+}
+
+/* ZIP Extract Button in Tree */
+.zip-extract-btn {
+    margin-left: auto;
+    padding: 0.15rem 0.4rem;
+    font-size: 0.7rem;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+.folder-item:hover .zip-extract-btn {
+    opacity: 1;
+}
+
+.zip-extract-btn:disabled {
+    opacity: 0.5;
+    cursor: wait;
+}
+
+/* ZIP Extract All Button */
+.zip-extract-all-btn {
+    margin-left: auto;
+    padding: 0.15rem 0.4rem;
+    font-size: 0.7rem;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+.folder-item:hover .zip-extract-all-btn {
+    opacity: 1;
+}
+
+.zip-extract-all-btn:disabled {
+    opacity: 0.5;
+    cursor: wait;
+}

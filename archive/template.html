@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZDDC Archive</title>
+    <style>
+        {{CSS_PLACEHOLDER}}
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <div class="header-title-group">
+                    <span class="app-header__title">ZDDC Archive</span>
+                    <span class="build-timestamp">Built: {{BUILD_TIMESTAMP}}</span>
+                </div>
+                <button id="addDirectoryBtn" class="btn btn-primary">Add Local Directory</button>
+                <button id="refreshHeaderBtn" class="btn btn-secondary hidden" title="Refresh" style="font-size:1.1rem;">⟳</button>
+            </div>
+            <div class="header-right">
+                <button id="theme-btn" class="btn btn-secondary" title="Theme: auto (follows OS)" aria-label="Theme: auto (follows OS)">◐</button>
+                <button id="help-btn" class="btn btn-secondary" title="Help">?</button>
+            </div>
+        </header>
+
+        <!-- Main Container -->
+        <div class="main-container">
+            <!-- Navigation Pane -->
+            <nav id="navigationPane" class="nav-pane">
+                <!-- Grouping Folders Section -->
+                <div class="nav-section" id="groupingSection">
+                    <div class="nav-section-header">
+                        <h3>Parties</h3>
+                        <button id="toggleGroupingBtn" class="btn-icon" title="Collapse/Expand">
+                            <span id="toggleGroupingIcon">▼</span>
+                        </button>
+                    </div>
+                    <div id="groupingContent" class="nav-section-content">
+                        <!-- Global folder type toggle bar -->
+                        <div id="folderTypeBar" class="folder-type-bar">
+                            <!-- Dynamically populated by renderFolderTypeBar() -->
+                        </div>
+                        <div class="filter-select-row">
+                            <input type="text" 
+                                   id="groupingFilter" 
+                                   class="filter-input" 
+                                   placeholder="Filter parties...">
+                            <label class="select-all-label select-all-inline" title="Auto-select all visible parties">
+                                <span>Select<br>All</span>
+                                <input type="checkbox" id="selectAllGroupingCheckbox" checked>
+                            </label>
+                        </div>
+                        <div id="groupingFoldersList" class="folder-list">
+                            <!-- Dynamically populated -->
+                        </div>
+                    </div>
+                    <div class="resize-handle-vertical" data-resize="nav-sections"></div>
+                </div>
+
+                <!-- Transmittal Folders Section -->
+                <div class="nav-section" id="transmittalSection">
+                    <div class="nav-section-header">
+                        <h3>Transmittal Folders</h3>
+                        <button id="toggleAllDatesBtn" class="btn-icon" title="Expand/Collapse All">
+                            <span id="toggleAllDatesIcon">▼</span>
+                        </button>
+                    </div>
+                    <div class="filter-select-row">
+                        <input type="text" 
+                               id="transmittalFilter" 
+                               class="filter-input" 
+                               placeholder="Filter transmittal folders...">
+                        <label class="select-all-label select-all-inline" title="Auto-select all visible transmittals">
+                            <span>Select<br>All</span>
+                            <input type="checkbox" id="selectAllTransmittalsCheckbox" checked>
+                        </label>
+                    </div>
+                    <div id="transmittalFoldersList" class="folder-list">
+                        <!-- Dynamically populated -->
+                    </div>
+                </div>
+                <div class="resize-handle-horizontal" data-resize="nav-pane"></div>
+            </nav>
+
+            <!-- Content Area -->
+            <main class="content-area">
+                <!-- Global Search and Actions -->
+                <div class="content-header">
+                    <!-- Preview toggle -->
+                    <label class="preview-toggle-label" title="Preview PDF, Word, and Excel files in a popup window instead of downloading">
+                        <input type="checkbox" id="filePreviewToggle">
+                        <span>Preview</span>
+                    </label>
+
+                    <!-- Modifier Filter Dropdown -->
+                    <div class="modifier-filter-container">
+                        <button id="modifierFilterBtn" class="btn btn-secondary modifier-filter-btn">
+                            Modifiers ▼
+                        </button>
+                        <div id="modifierFilterDropdown" class="modifier-filter-dropdown hidden">
+                            <div class="modifier-filter-header">
+                                <label><input type="checkbox" id="modifierSelectAll" checked> Select All</label>
+                            </div>
+                            <div id="modifierFilterList" class="modifier-filter-list">
+                                <!-- Dynamically populated -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <input type="text" 
+                           id="globalSearch" 
+                           class="global-search" 
+                           placeholder="Global search…">
+                    
+                    <div class="content-actions">
+                        <button id="filterSelectedBtn" class="btn btn-secondary">Filter Selected</button>
+                        <button id="downloadSelectedBtn" class="btn btn-secondary">Download Selected (ZIP)</button>
+                        <button id="exportCsvBtn" class="btn btn-secondary">Export Selected (CSV)</button>
+                    </div>
+                </div>
+
+                <!-- Files Table -->
+                <div class="table-container">
+                    <table id="filesTable" class="files-table">
+                        <thead>
+                            <tr>
+                                <th class="sortable resizable" data-field="trackingNumber">
+                                    <div class="th-content">
+                                        <span>Tracking Number</span>
+                                        <span class="sort-indicator"></span>
+                                    </div>
+<input type="text" 
+       class="column-filter" 
+       data-filter-field="trackingNumber"
+       placeholder="Filter...">
+                                    <div class="resize-handle"></div>
+                                </th>
+                                <th class="sortable resizable" data-field="title">
+                                    <div class="th-content">
+                                        <span>Title</span>
+                                        <span class="sort-indicator"></span>
+                                    </div>
+<input type="text" 
+       class="column-filter" 
+       data-filter-field="title"
+       placeholder="Filter...">
+                                    <div class="resize-handle"></div>
+                                </th>
+                                <th class="resizable" data-field="revisions">
+                                    <div class="th-content" style="justify-content: flex-start;">
+                                        <input type="checkbox" 
+                                               id="selectAllVisibleCheckbox" 
+                                               title="Select/deselect all visible files"
+                                               style="margin-right: 0.5rem;">
+                                        <span>Revisions</span>
+                                    </div>
+<input type="text" 
+       class="column-filter" 
+       data-filter-field="revisions"
+       placeholder="Filter...">
+                                    <div class="resize-handle"></div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="filesTableBody">
+                            <!-- Dynamically populated -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Status Bar -->
+                <div class="status-bar">
+                    <span id="fileCount">0 files</span>
+                    <span id="selectedCount">0 selected</span>
+                    <span id="scanStatus"></span>
+                </div>
+            </main>
+        </div>
+
+        <!-- Drop Modal -->
+        <div id="dropModal" class="modal hidden">
+            <div class="modal-backdrop"></div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Create Transmittal</h2>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Transmittal Folder Name:</label>
+                        <input type="text" id="transmittalName" class="form-input">
+                        <small class="form-help">Format: YYYY-MM-DD_TRACKINGNUMBER (STATUS) - TITLE</small>
+                    </div>
+                    <div class="files-preview">
+                        <h3>Files to Add:</h3>
+                        <table class="preview-table">
+                            <thead>
+                                <tr>
+                                    <th>Original Name</th>
+                                    <th>New Name</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="filesPreviewBody">
+                                <!-- Dynamically populated -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary modal-cancel">Cancel</button>
+                    <button class="btn btn-primary modal-confirm">Create Transmittal</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- No Directory Selected Message -->
+        <div id="noDirectoryMessage" class="empty-state">
+            <div class="empty-state-content">
+                <h2>Welcome to ZDDC Archive</h2>
+                <p>Click <strong>Add Local Directory</strong> to select an archive folder to browse.</p>
+                <p>This browser provides a convenient interface for searching and retrieving files from ZDDC-compliant archives.</p>
+                <p><strong>How to navigate:</strong></p>
+                <ul class="welcome-list">
+                    <li>Select a party to see their transmittal folders; toggle folder types (Issued, Received, MDL, Incoming) above the list</li>
+                    <li>Select transmittal folders to see their files</li>
+                    <li>Use <kbd>Ctrl+Click</kbd> to select multiple folders</li>
+                    <li>Use <kbd>Shift+Click</kbd> to select a range</li>
+                    <li><kbd>Ctrl+Click</kbd> chevrons to recursively expand/collapse</li>
+                </ul>
+                
+                <details class="windows-tip">
+                    <summary><strong>⚠️ Windows Path Length Deficiency</strong></summary>
+                    <div class="windows-tip__body">
+                        <p>Microsoft Windows has a legacy 260-character path limit that affects most applications. If you see "files skipped" warnings, use Microsoft's own workaround:</p>
+                        <ol>
+                            <li>Open Command Prompt as Administrator</li>
+                            <li>Map your archive to a short drive letter:<br>
+                                <code class="windows-tip__code">subst Z: "C:\Your\Long\Path\To\Archive"</code>
+                            </li>
+                            <li>Use the <strong>Z:</strong> drive in Archive Browser</li>
+                            <li>To remove later: <code>subst Z: /d</code></li>
+                        </ol>
+                        <p class="windows-tip__note">This limitation dates back to Windows 95. The mapping persists until reboot.</p>
+                    </div>
+                </details>
+                
+                <p class="note">Note: This application works entirely in your browser and does not transmit any data.</p>
+            </div>
+        </div>
+
+
+        <!-- Help Panel -->
+        <aside id="help-panel" class="help-panel" hidden aria-labelledby="help-panel-title">
+            <div class="help-panel__header">
+                <h2 id="help-panel-title" class="help-panel__title">Help — ZDDC Archive</h2>
+                <button type="button" class="help-panel__close" id="help-panel-close" aria-label="Close">&times;</button>
+            </div>
+            <div class="help-panel__body">
+                <h3>What is the Archive Browser?</h3>
+                <p>The Archive Browser lets you search and retrieve files from a ZDDC-compliant archive stored on your local file system. Everything runs in your browser — no data is transmitted anywhere.</p>
+
+                <h3>Getting Started</h3>
+                <ol>
+                    <li>When opened from a web server, the archive loads automatically from that server.</li>
+                    <li>Click <strong>Add Local Directory</strong> to open a local archive folder — works in both offline and online modes, and local files are merged with any server files already loaded.</li>
+                    <li>The browser scans for grouping folders and transmittal folders automatically.</li>
+                    <li>Select folders in the left panel to see their files in the main table.</li>
+                </ol>
+
+                <h3>Navigating Folders</h3>
+                <p>The left panel has two sections:</p>
+                <dl>
+                    <dt>Parties</dt>
+                    <dd>Top-level folders representing other parties. Select one or more to filter which transmittals are shown. Use the folder type buttons above the list to show or hide Issued, Received, MDL, and Incoming folder content.</dd>
+                    <dt>Transmittal Folders</dt>
+                    <dd>Grouped by date. Select one or more to filter which files appear in the table.</dd>
+                </dl>
+                <p><strong>Multi-select:</strong> Hold <kbd>Ctrl</kbd> and click to toggle individual folders. Hold <kbd>Shift</kbd> and click to select a range. <kbd>Ctrl+Click</kbd> a chevron (&#9654;) to recursively expand or collapse all sub-folders.</p>
+
+                <h3>Searching and Filtering</h3>
+                <dl>
+                    <dt>Global Search</dt>
+                    <dd>Searches tracking number, title, revision, status, and extension simultaneously.</dd>
+                    <dt>Column Filters</dt>
+                    <dd>Type in the filter row under each column header. Both global search and column filters support the same expression syntax:</dd>
+                </dl>
+                <dl>
+                    <dt><code>term</code></dt>
+                    <dd>Contains "term" (case-insensitive)</dd>
+                    <dt><code>!term</code></dt>
+                    <dd>Does not contain "term"</dd>
+                    <dt><code>^term</code></dt>
+                    <dd>Starts with "term"</dd>
+                    <dt><code>term$</code></dt>
+                    <dd>Ends with "term"</dd>
+                    <dt><code>a b</code></dt>
+                    <dd>Matches both (AND)</dd>
+                    <dt><code>a | b</code></dt>
+                    <dd>Matches either (OR)</dd>
+                    <dt><code>^IFA | ^IFB</code></dt>
+                    <dd>Starts with IFA or IFB</dd>
+                    <dt><code>pdf !draft</code></dt>
+                    <dd>Contains "pdf" and not "draft"</dd>
+                    <dt><code>!^~</code></dt>
+                    <dd>Does not start with ~ (excludes drafts)</dd>
+                    <dt><code>el.*spc</code></dt>
+                    <dd>Regex: contains "el" followed by "spc" (use <code>.</code> for any char, <code>.*</code> for any sequence)</dd>
+                    <dt><code>[ei]fa</code></dt>
+                    <dd>Regex character class: matches "efa" or "ifa"</dd>
+                </dl>
+                <dl>
+                    <dt>Modifiers</dt>
+                    <dd>Use the Modifiers dropdown to show or hide files by revision modifier type (+B, +C, +N, +Q, or base).</dd>
+                </dl>
+
+                <h3>Downloading Files</h3>
+                <dl>
+                    <dt>Download Selected (ZIP)</dt>
+                    <dd>Packages all checked files into a ZIP archive for download.</dd>
+                    <dt>Export Selected (CSV)</dt>
+                    <dd>Exports the visible file list as a CSV spreadsheet.</dd>
+                    <dt>File Preview</dt>
+                    <dd>When enabled, clicking a PDF, Word, or Excel file opens a preview popup instead of downloading it.</dd>
+                </dl>
+
+                <h3>Keyboard Shortcuts</h3>
+                <dl>
+                    <dt><kbd>Ctrl+A</kbd></dt>
+                    <dd>Select / deselect all visible files in the table.</dd>
+                    <dt><kbd>F5</kbd></dt>
+                    <dd>Refresh — rescan the current directory.</dd>
+                    <dt><kbd>Escape</kbd></dt>
+                    <dd>Close this help panel (or any open modal).</dd>
+                </dl>
+
+                <h3>Windows Path Length Note</h3>
+                <p>Windows limits file paths to 260 characters by default. If files are skipped during scanning, map your archive to a short drive letter using <code>subst Z: "C:\Your\Long\Path"</code> in an Administrator Command Prompt, then open the <strong>Z:</strong> drive in the Archive Browser.</p>
+            </div>
+        </aside>
+
+    </div>
+
+    <script>
+        {{JS_PLACEHOLDER}}
+    </script>
+</body>
+</html>

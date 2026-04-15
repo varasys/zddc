@@ -1,0 +1,555 @@
+#!/bin/bash
+
+# convert-diff - Batch diff converter for markdown files
+# Compares pairs of files and outputs HTML diffs using the same template as convert script
+
+# Function to show help
+show_help() {
+    echo "Batch Markdown Diff Converter"
+    echo "Compares pairs of markdown files and outputs HTML diffs using the same template as convert script"
+    echo "Usage: $0 [-f] [-o outputdir] [-T template] [--no-toc] file1_rev_a.md file1_rev_b.md [file2_rev_a.md file2_rev_b.md ...]"
+    echo "  -f: Force overwrite existing output files"
+    echo "  -o: Output directory (default: same as first input file)"
+    echo "  -T: Template file path (default: viewer-template.html)"
+    echo "  --no-toc: Skip table of contents generation"
+    echo ""
+    echo "Arguments:"
+    echo "  Files must be provided in pairs (revision A, revision B)"
+    echo "  Total number of files must be even"
+    echo "  Output files will be named: basename_diff.html"
+}
+
+# Function to source ZDDC config files if they exist
+source_config_file() {
+    local config_file="$1"
+    if [ -f "$config_file" ]; then
+        echo "  → Loading ZDDC configuration from: $config_file"
+        set -a  # automatically export all variables
+        . "$config_file"
+        set +a  # turn off automatic export
+        return 0
+    fi
+    return 1
+}
+
+# Load ZDDC configuration file
+load_zddc_config() {
+    local search_dir="$1"
+    
+    # Search for zddc.conf then .zddc.conf in the search directory
+    if source_config_file "$search_dir/zddc.conf"; then
+        return 0
+    elif source_config_file "$search_dir/.zddc.conf"; then
+        return 0
+    fi
+    
+    # No config file found - continue with defaults
+    return 1
+}
+
+# Function to inject diff controls and styling into HTML
+inject_diff_controls() {
+    local html_file="$1"
+    
+    if [ ! -f "$html_file" ]; then
+        echo "Error: HTML file not found: $html_file"
+        return 1
+    fi
+    
+    # Create temporary files for each component
+    local temp_dir=$(mktemp -d)
+    local css_file="$temp_dir/diff.css"
+    local controls_file="$temp_dir/controls.html"
+    local js_file="$temp_dir/diff.js"
+    
+    # Write CSS to file
+    cat > "$css_file" << 'EOF'
+<style>
+/* Diff element styling */
+del {
+  background-color: #f8d7da;
+  color: #721c24;
+  text-decoration: line-through;
+  padding: 0.1em 0.2em;
+  border-radius: 0.2em;
+}
+
+u {
+  background-color: #d4edda;
+  color: #155724;
+  text-decoration: none;
+  padding: 0.1em 0.2em;
+  border-radius: 0.2em;
+}
+
+/* Dark mode diff styling */
+@media (prefers-color-scheme: dark) {
+  u {
+    background-color: #1e4620;
+    color: #75dd79;
+  }
+  
+  del {
+    background-color: #4a1e1e;
+    color: #f97583;
+  }
+}
+
+/* View mode controls */
+.diff-controls {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: var(--bg-secondary, #ffffff);
+  border: 1px solid var(--border-color, #e1e5e9);
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  font-size: 0.875rem;
+}
+
+.diff-controls h4 {
+  margin: 0 0 8px 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary, #333);
+}
+
+.view-mode-buttons {
+  display: flex;
+  gap: 4px;
+}
+
+.view-mode-btn {
+  padding: 6px 12px;
+  border: 1px solid var(--border-color, #e1e5e9);
+  background: var(--bg-primary, #ffffff);
+  color: var(--text-color, #333);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  transition: all 0.2s;
+}
+
+.view-mode-btn:hover {
+  background: var(--hover-bg, #f8f9fa);
+}
+
+.view-mode-btn.active {
+  background: var(--primary-color, #007bff);
+  color: white;
+  border-color: var(--primary-color, #007bff);
+}
+
+/* View mode states */
+body.view-original u {
+  display: none;
+}
+
+body.view-original del {
+  text-decoration: none;
+}
+
+body.view-final del {
+  display: none;
+}
+</style>
+EOF
+
+    # Write controls HTML to file
+    cat > "$controls_file" << 'EOF'
+        <!-- Diff View Controls -->
+        <div class="diff-controls">
+          <h4>View Mode</h4>
+          <div class="view-mode-buttons">
+            <button class="view-mode-btn active" data-mode="diff">Diff</button>
+            <button class="view-mode-btn" data-mode="original">Original</button>
+            <button class="view-mode-btn" data-mode="final">Final</button>
+          </div>
+        </div>
+EOF
+
+    # Write JavaScript to file
+    cat > "$js_file" << 'EOF'
+<script>
+    // View mode toggle functionality
+    document.addEventListener("DOMContentLoaded", function() {
+      var buttons = document.querySelectorAll(".view-mode-btn");
+      var body = document.body;
+      
+      buttons.forEach(function(button) {
+        button.addEventListener("click", function() {
+          // Remove active class from all buttons
+          buttons.forEach(function(btn) { btn.classList.remove("active"); });
+          
+          // Add active class to clicked button
+          this.classList.add("active");
+          
+          // Update body class for view mode
+          body.className = body.className.replace(/view-\w+/g, "");
+          if (this.dataset.mode !== "diff") {
+            body.classList.add("view-" + this.dataset.mode);
+          }
+        });
+      });
+    });
+</script>
+EOF
+    
+    # Create working copy
+    local temp_html="$temp_dir/temp.html"
+    cp "$html_file" "$temp_html"
+    
+    # Insert CSS before </head>
+    sed -i '/<\/head>/r '"$css_file" "$temp_html"
+    
+    # Insert controls after opening <body> tag
+    sed -i '/<body[^>]*>/r '"$controls_file" "$temp_html"
+    
+    # Insert JavaScript before </body>
+    sed -i '/<\/body>/r '"$js_file" "$temp_html"
+    
+    # Replace original file
+    mv "$temp_html" "$html_file"
+    
+    # Cleanup
+    rm -rf "$temp_dir"
+    
+    echo "  ✓ Diff controls injected successfully"
+}
+
+# Source global ZDDC config from current working directory
+load_zddc_config "$(pwd)"
+
+# Parse arguments
+FORCE_OVERWRITE=false
+OUTPUT_DIR=""
+
+    while [ $# -gt 0 ]; do
+        case $1 in
+            -h|--help)
+                show_help
+                exit 0
+                ;;
+            -f)
+                FORCE_OVERWRITE=true
+                echo "Force overwrite mode: ON"
+                shift
+                ;;
+            -o)
+                OUTPUT_DIR="$2"
+                echo "Output directory: $OUTPUT_DIR"
+                shift 2
+                ;;
+            -T)
+                CUSTOM_TEMPLATE="$2"
+                echo "Custom template: $CUSTOM_TEMPLATE"
+                shift 2
+                ;;
+            --no-toc)
+                NO_TOC=true
+                echo "Table of contents: DISABLED"
+                shift
+                ;;
+            -*)
+                echo "Unknown option: $1"
+                show_help
+                exit 1
+                ;;
+            *)
+                break
+                ;;
+        esac
+    done
+
+    if [ "$FORCE_OVERWRITE" = "false" ]; then
+        echo "Force overwrite mode: OFF (will skip existing output files)"
+    fi
+
+    if [ -z "$OUTPUT_DIR" ]; then
+        echo "Output directory: same as input files"
+    fi
+
+    # Validate file count
+    if [ $# -eq 0 ]; then
+        echo "Error: No input files specified"
+        show_help
+        exit 1
+    fi
+
+    if [ $(($# % 2)) -ne 0 ]; then
+        echo "Error: Number of files must be even (pairs of files for comparison)"
+        echo "Provided $# files, but need pairs"
+        show_help
+        exit 1
+    fi
+
+    TOTAL_PAIRS=$(($# / 2))
+    echo "Processing $TOTAL_PAIRS file pairs..."
+echo "Processing $TOTAL_PAIRS file pairs..."
+
+SUCCESSFUL=0
+FAILED=0
+SKIPPED=0
+
+# Process files in pairs
+while [ $# -gt 0 ]; do
+    FILE1="$1"
+    FILE2="$2"
+    shift 2
+    
+    echo ""
+    echo "Processing pair: $(basename "$FILE1") vs $(basename "$FILE2")"
+    
+    # Validate input files exist
+    if [ ! -f "$FILE1" ]; then
+        echo "  ✗ First file not found: $FILE1"
+        FAILED=$((FAILED + 1))
+        continue
+    fi
+    
+    if [ ! -f "$FILE2" ]; then
+        echo "  ✗ Second file not found: $FILE2"
+        FAILED=$((FAILED + 1))
+        continue
+    fi
+    
+    # Extract base filename for output
+    BASENAME1=$(basename "$FILE1" .md)
+    BASENAME2=$(basename "$FILE2" .md)
+    
+    # Extract revision from second file for +D suffix
+    FILE2_BASENAME=$(basename "$FILE2" .md)
+    SECOND_REV="1"  # default fallback
+    
+    # Try to extract revision from ZDDC naming convention: TRACKING_REV (STATUS) - TITLE
+    if echo "$FILE2_BASENAME" | grep -q "_.*(.*).*-"; then
+        SECOND_REV=$(echo "$FILE2_BASENAME" | sed 's/^[^_]*_\([^[:space:]]*\).*/\1/')
+    fi
+    
+    # Generate output filename with +D[revision] suffix, no _diff suffix
+    BASENAME=$(basename "$FILE1" .md)
+    # Replace first space with +D[revision] space
+    BASENAME_D1=$(echo "$BASENAME" | sed "s/ /+D${SECOND_REV} /")
+    
+    if [ -n "$OUTPUT_DIR" ]; then
+        OUTPUT_FILE="$OUTPUT_DIR/${BASENAME_D1}.html"
+    else
+        FILE1_DIR=$(dirname "$FILE1")
+        OUTPUT_FILE="$FILE1_DIR/${BASENAME_D1}.html"
+    fi
+    
+    echo "  → Output file: $OUTPUT_FILE"
+    
+    # Check if output file already exists and skip if not forcing overwrite
+    if [ -f "$OUTPUT_FILE" ] && [ "$FORCE_OVERWRITE" = "false" ]; then
+        echo "  → Output file already exists, skipping (use -f to overwrite)"
+        SKIPPED=$((SKIPPED + 1))
+        continue
+    fi
+    
+    # Load ZDDC configuration from first file's directory
+    FILE1_DIR=$(dirname "$FILE1")
+    load_zddc_config "$FILE1_DIR"
+    
+    echo "  → Loading ZDDC configuration from: $FILE1_DIR/zddc.conf"
+    
+    # Determine template to use
+    TEMPLATE_ABS=""
+    if [ -n "$CUSTOM_TEMPLATE" ]; then
+        if [ -f "$CUSTOM_TEMPLATE" ]; then
+            TEMPLATE_ABS="$CUSTOM_TEMPLATE"
+            echo "  → Using custom template: $TEMPLATE_ABS"
+        else
+            echo "  → Custom template not found: $CUSTOM_TEMPLATE"
+            echo "  → Falling back to default template"
+        fi
+    fi
+    
+    # Check for symlinked template in current directory
+    if [ -z "$TEMPLATE_ABS" ] && [ -L "viewer-template.html" ]; then
+        TEMPLATE_TARGET=$(readlink "viewer-template.html")
+        if [ -f "$TEMPLATE_TARGET" ]; then
+            TEMPLATE_ABS="$TEMPLATE_TARGET"
+            echo "  → Using template from symlink target: $TEMPLATE_ABS"
+        fi
+    fi
+    
+    # Check for template in current directory
+    if [ -z "$TEMPLATE_ABS" ] && [ -f "viewer-template.html" ]; then
+        TEMPLATE_ABS="$(pwd)/viewer-template.html"
+        echo "  → Using template from current directory: $TEMPLATE_ABS"
+    fi
+    
+    # Create temp file for pandiff output
+    TEMP_DIFF=$(mktemp)
+    
+    echo "Stage 1: Generating diff with pandiff..."
+    
+    # Run pandiff to generate HTML diff
+    if ! pandiff --to html "$FILE1" "$FILE2" > "$TEMP_DIFF"; then
+        echo "  ✗ Failed to generate diff"
+        rm -f "$TEMP_DIFF"
+        FAILED=$((FAILED + 1))
+        continue
+    fi
+    
+    echo "  ✓ Diff generated successfully"
+    echo "Stage 2: Adding TOC and styling with pandoc..."
+    
+    # Extract revision info from filenames for metadata
+    REV_A=$(basename "$FILE1" .md | sed 's/.*_\([^_]*\)$/\1/')
+    REV_B=$(basename "$FILE2" .md | sed 's/.*_\([^_]*\)$/\1/')
+    
+    # Extract metadata from both files
+    extract_metadata() {
+        local file="$1"
+        local prefix="$2"
+        
+        # Extract YAML frontmatter
+        awk '/^---$/{if(NR==1){p=1}else{p=0}} p && !/^---$/{print}' "$file" > /tmp/metadata_${prefix}.yaml
+        
+        # Parse key fields
+        eval "${prefix}_tracking_number=\"$(grep '^tracking_number:' /tmp/metadata_${prefix}.yaml | sed 's/^tracking_number: *"\(.*\)"$/\1/')\""
+        eval "${prefix}_title=\"$(grep '^title:' /tmp/metadata_${prefix}.yaml | sed 's/^title: *"\(.*\)"$/\1/')\""
+        eval "${prefix}_revision=\"$(grep '^revision:' /tmp/metadata_${prefix}.yaml | sed 's/^revision: *"\(.*\)"$/\1/')\""
+        eval "${prefix}_status=\"$(grep '^status:' /tmp/metadata_${prefix}.yaml | sed 's/^status: *"\(.*\)"$/\1/')\""
+        eval "${prefix}_project=\"$(grep '^project:' /tmp/metadata_${prefix}.yaml | sed 's/^project: *"\(.*\)"$/\1/')\""
+        eval "${prefix}_date=\"$(grep '^date:' /tmp/metadata_${prefix}.yaml | sed 's/^date: *"\(.*\)"$/\1/')\""
+        
+        rm -f /tmp/metadata_${prefix}.yaml
+    }
+    
+    extract_metadata "$FILE1" "rev1"
+    extract_metadata "$FILE2" "rev2"
+    
+    # Generate diff-aware header HTML with view mode classes
+    generate_diff_header() {
+        local header_html=""
+        
+        # Project title (should be same for both)
+        header_html="<div class=\"header-line client-project\">$rev2_project (AR 28088)</div>"
+        
+        # Document title with diff
+        if [ "$rev1_title" != "$rev2_title" ]; then
+            header_html="$header_html<div class=\"header-line document-title\"><del>$rev1_title</del><ins>$rev2_title</ins></div>"
+        else
+            header_html="$header_html<div class=\"header-line document-title\">$rev2_title</div>"
+        fi
+        
+        # Tracking number and revision with diff
+        local tracking_rev_line=""
+        if [ "$rev1_tracking_number" != "$rev2_tracking_number" ]; then
+            tracking_rev_line="<del>$rev1_tracking_number</del><ins>$rev2_tracking_number</ins>"
+        else
+            tracking_rev_line="$rev1_tracking_number"
+        fi
+        
+        if [ "$rev1_revision" != "$rev2_revision" ]; then
+            tracking_rev_line="$tracking_rev_line Revision: <del>$rev1_revision</del><ins>$rev2_revision</ins>"
+        else
+            tracking_rev_line="$tracking_rev_line Revision: $rev1_revision"
+        fi
+        
+        if [ "$rev1_status" != "$rev2_status" ]; then
+            tracking_rev_line="$tracking_rev_line Status: <del>$rev1_status</del><ins>$rev2_status</ins>"
+        else
+            tracking_rev_line="$tracking_rev_line Status: $rev1_status"
+        fi
+        
+        header_html="$header_html<div class=\"header-line\">$tracking_rev_line</div>"
+        
+        # Add draft marker if revision contains ~
+        if echo "$rev2_revision" | grep -q "~"; then
+            header_html="$header_html<div class=\"header-line metadata-line draft-line\"><span class=\"draft-status\">[DRAFT Generated at $(date '+%B %d, %Y at %I:%M:%S %p %Z')]</span></div>"
+        fi
+        
+        echo "$header_html"
+    }
+    
+    DIFF_HEADER_HTML=$(generate_diff_header)
+    
+    # Generate timestamp for conversion
+    GENERATION_TIME=$(date '+%B %d, %Y at %I:%M:%S %p %Z')
+    
+    # Set resource path to second file directory for resource resolution
+    FILE2_DIR=$(dirname "$FILE2")
+    
+    # Escape HTML for safe shell usage
+    ESCAPED_HEADER_HTML=$(printf '%s' "$DIFF_HEADER_HTML" | sed 's/"/\\"/g')
+    
+    # Determine template to use - ensure absolute path
+    TEMPLATE_TO_USE="/home/user/src/zddc/pandoc/viewer-template.html"
+    if [ -n "$TEMPLATE_ABS" ]; then
+        TEMPLATE_TO_USE="$TEMPLATE_ABS"
+    fi
+    
+    PANDOC_CMD="pandoc \"$TEMP_DIFF\" -o \"$OUTPUT_FILE\" \
+        --from html \
+        --standalone \
+        --template=\"$TEMPLATE_TO_USE\" \
+        --toc \
+        --toc-depth=3 \
+        --css=\"$SCRIPT_DIR/custom.css\" \
+        --resource-path=\"$FILE2_DIR\" \
+        --metadata title=\"$rev2_title\" \
+        --metadata generation_time=\"$GENERATION_TIME\" \
+        --metadata diff_mode=true \
+        --metadata custom_header=\"$ESCAPED_HEADER_HTML\""
+    
+    # Add metadata variables
+    PANDOC_CMD="$PANDOC_CMD --variable generation_time='$GENERATION_TIME'"
+    PANDOC_CMD="$PANDOC_CMD --variable revision_a='$REV_A'"
+    PANDOC_CMD="$PANDOC_CMD --variable revision_b='$REV_B'"
+    PANDOC_CMD="$PANDOC_CMD --variable is_diff=true"
+    
+    # Add ZDDC configuration variables from zddc.conf
+    if [ -n "$client" ]; then
+        PANDOC_CMD="$PANDOC_CMD --variable client='$client'"
+    fi
+    if [ -n "$project" ]; then
+        PANDOC_CMD="$PANDOC_CMD --variable project='$project'"
+    fi
+    if [ -n "$contractor" ]; then
+        PANDOC_CMD="$PANDOC_CMD --variable contractor='$contractor'"
+    fi
+    if [ -n "$project_number" ]; then
+        PANDOC_CMD="$PANDOC_CMD --variable project_number='$project_number'"
+    fi
+    
+    # Pass TOC status to template
+    if [ "$NO_TOC" = "true" ]; then
+        PANDOC_CMD="$PANDOC_CMD --variable no-toc=true"
+    fi
+    
+    PANDOC_CMD="$PANDOC_CMD --section-divs \
+        --id-prefix=\"\" \
+        --html-q-tags"
+    
+    if eval "$PANDOC_CMD"; then
+        echo "  ✓ HTML generated successfully"
+        
+        echo "Stage 3: Adding diff view controls..."
+        inject_diff_controls "$OUTPUT_FILE"
+        
+        echo "  ✓ Successfully created diff HTML: $(basename "$OUTPUT_FILE")"
+        SUCCESSFUL=$((SUCCESSFUL + 1))
+    else
+        echo "  ✗ Failed to convert diff to HTML"
+        FAILED=$((FAILED + 1))
+    fi
+    
+    # Clean up temp file
+    rm -f "$TEMP_DIFF"
+done
+
+echo ""
+echo "=========================================="
+echo "DIFF CONVERSION SUMMARY"
+echo "=========================================="
+echo "Total pairs processed: $TOTAL_PAIRS"
+echo "Successful conversions: $SUCCESSFUL"
+echo "Failed conversions: $FAILED"
+echo "Skipped (existing files): $SKIPPED"
+echo "=========================================="

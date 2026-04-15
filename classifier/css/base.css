@@ -1,0 +1,65 @@
+/* Classifier-specific base overrides
+   Reset, tokens, buttons, and font are provided by shared/base.css */
+
+#app {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Utility */
+.text-muted    { color: var(--text-muted); }
+.text-success  { color: var(--success); }
+.text-warning  { color: var(--warning); }
+.text-danger   { color: var(--danger); }
+
+/* Checkbox label */
+.checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    user-select: none;
+    font-size: 0.875rem;
+}
+
+.checkbox-label input[type="checkbox"] {
+    cursor: pointer;
+}
+
+/* ── Toast notifications (classifier-only) ───────────────────────────────── */
+/* shared/base.css intentionally omits toast CSS; only classifier uses toasts. */
+.toast {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: var(--bg);
+    color: var(--text);
+    padding: 0.875rem 1.25rem;
+    border-radius: var(--radius);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 9000;
+    max-width: 400px;
+    font-size: 0.875rem;
+    animation: zddc-toast-in 0.3s ease-out;
+}
+
+.toast-success { border-left: 4px solid var(--success); }
+.toast-error   { border-left: 4px solid var(--danger); }
+.toast-info    { border-left: 4px solid var(--info); }
+.toast-warning { border-left: 4px solid var(--warning); }
+
+.toast-fade {
+    animation: zddc-toast-out 0.3s ease-out forwards;
+}
+
+@keyframes zddc-toast-in {
+    from { transform: translateX(100%); opacity: 0; }
+    to   { transform: translateX(0);   opacity: 1; }
+}
+
+@keyframes zddc-toast-out {
+    from { transform: translateX(0);   opacity: 1; }
+    to   { transform: translateX(100%); opacity: 0; }
+}

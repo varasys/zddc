@@ -1,0 +1,16 @@
+{
+  "name": "zddc-training-data",
+  "version": "1.0.0",
+  "description": "Training data collection and LoRA fine-tuning pipeline for Qwen3-Coder-Next",
+  "type": "module",
+  "main": "collect-interaction.js",
+  "scripts": {
+    "collect": "node collect-interaction.js",
+    "process": "bash process.sh",
+    "validate": "bash validate.sh",
+    "train": "bash train.sh",
+    "deploy": "bash deploy.sh"
+  },
+  "keywords": ["zddc", "training", "lora", "fine-tuning", "qwen"],
+  "license": "AGPL-3.0"
+}

@@ -1,0 +1,6260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZDDC Classifier</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+/**
+ * Base Styles
+ * Core variables, resets, and typography
+ */
+
+:root {
+    /* Colors */
+    --primary-color: #0066cc;
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --info-color: #17a2b8;
+    
+    /* Backgrounds */
+    --bg-color: #ffffff;
+    --bg-secondary: #f8f9fa;
+    --bg-hover: #f0f0f0;
+    --bg-selected: #e3f2fd;
+    --bg-active: #d4e9ff;
+    --bg-error: #ffebee;
+    --bg-warning: #fff3cd;
+    
+    /* Text */
+    --text-color: #212529;
+    --text-muted: #6c757d;
+    --text-light: #ffffff;
+    
+    /* Borders */
+    --border-color: #dee2e6;
+    --border-dark: #adb5bd;
+    
+    /* Spacing */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    
+    /* Fonts */
+    --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-mono: 'Courier New', Courier, monospace;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--font-family);
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text-color);
+    background-color: var(--bg-secondary);
+    overflow: hidden;
+}
+
+#app {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Utility Classes */
+.hidden {
+    display: none !important;
+}
+
+.text-muted {
+    color: var(--text-muted);
+}
+
+.text-success {
+    color: var(--success-color);
+}
+
+.text-warning {
+    color: var(--warning-color);
+}
+
+.text-danger {
+    color: var(--danger-color);
+}
+
+/* Buttons */
+.btn {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.5;
+    text-align: center;
+    text-decoration: none;
+    white-space: nowrap;
+    vertical-align: middle;
+    cursor: pointer;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    transition: all 0.15s ease-in-out;
+    background-color: var(--bg-secondary);
+    color: var(--text-color);
+}
+
+.btn:hover:not(:disabled) {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: var(--text-light);
+    border-color: var(--primary-color);
+}
+
+.btn-success {
+    background-color: var(--success-color);
+    color: var(--text-light);
+    border-color: var(--success-color);
+}
+
+.btn-secondary {
+    background-color: var(--bg-secondary);
+    color: var(--text-color);
+    border-color: var(--border-color);
+}
+
+.btn-danger {
+    background-color: var(--danger-color);
+    color: var(--text-light);
+    border-color: var(--danger-color);
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 12px;
+}
+
+.btn-large {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+}
+
+/* Checkbox */
+.checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+    cursor: pointer;
+}
+
+/* Links */
+a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Toast Notifications */
+.toast {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    padding: 1rem 1.5rem;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    max-width: 400px;
+    animation: slideIn 0.3s ease-out;
+}
+
+.toast-success {
+    border-left: 4px solid var(--success-color);
+}
+
+.toast-error {
+    border-left: 4px solid var(--danger-color);
+}
+
+.toast-info {
+    border-left: 4px solid var(--info-color);
+}
+
+.toast-fade {
+    animation: slideOut 0.3s ease-out;
+    opacity: 0;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+/**
+ * Layout Styles
+ * Welcome screen, header, folder tree, and main layout
+ */
+
+/* Build timestamp - extremely small and discrete */
+.build-timestamp {
+    font-size: 0.6rem;
+    color: #9ca3af;
+    opacity: 0.7;
+    font-weight: 400;
+    white-space: nowrap;
+    margin-left: 0.5rem;
+}
+
+/* Welcome Screen */
+.welcome-screen {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 2rem);
+    padding: 2rem;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.welcome-content {
+    text-align: center;
+    max-width: 700px;
+    background: white;
+    padding: 3rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.welcome-content h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--primary-color);
+}
+
+.welcome-subtitle {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+}
+
+.welcome-features {
+    margin-top: 2rem;
+    text-align: left;
+}
+
+.welcome-features h3 {
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.welcome-features ul {
+    list-style: none;
+    padding: 0;
+}
+
+.welcome-features li {
+    padding: 0.5rem 0;
+    font-size: 1rem;
+}
+
+.welcome-note {
+    margin-top: 2rem;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.welcome-drop-hint {
+    margin-top: 0.75rem;
+    font-size: 0.95rem;
+    color: var(--text-muted);
+}
+
+.welcome-screen.drag-over .welcome-content {
+    border: 2px dashed var(--primary-color);
+    background-color: #f0f7ff;
+}
+
+.welcome-screen.drag-over .welcome-drop-hint {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.welcome-help {
+    margin-top: 1rem;
+}
+
+.welcome-help a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 1rem;
+}
+
+.welcome-help a:hover {
+    text-decoration: underline;
+}
+
+/* Browser Warning */
+.browser-warning {
+    background-color: #fff3cd;
+    border: 2px solid #ffc107;
+    border-radius: 4px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    text-align: left;
+}
+
+.browser-warning h3 {
+    color: #856404;
+    margin-top: 0;
+}
+
+.browser-warning ul {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+}
+
+/* Main App */
+.main-app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-color: var(--bg-color);
+}
+
+/* Header */
+.app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background-color: var(--bg-color);
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+.header-left,
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.header-divider {
+    color: var(--border-color);
+    margin: 0 0.25rem;
+}
+
+.header-center h1 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+/* Main Content */
+.main-content {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* Folder Tree Pane */
+.folder-tree-pane {
+    width: 300px;
+    min-width: 150px;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-secondary);
+    border-right: 1px solid var(--border-color);
+    flex-shrink: 0;
+    position: relative;
+    transition: width 0.2s ease, min-width 0.2s ease;
+}
+
+.folder-tree-pane.collapsed {
+    width: 40px !important;
+    min-width: 40px !important;
+    max-width: 40px !important;
+    overflow: hidden;
+}
+
+.folder-tree-pane.collapsed .pane-header-controls,
+.folder-tree-pane.collapsed .folder-tree,
+.folder-tree-pane.collapsed .pane-header h3 {
+    display: none;
+}
+
+.folder-tree-pane.collapsed .pane-header {
+    padding: 0.5rem;
+    justify-content: center;
+}
+
+.folder-tree-pane.collapsed .pane-header-title {
+    flex-direction: column;
+}
+
+.pane-header-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.collapse-tree-btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+}
+
+/* Resize Handle */
+.resize-handle {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    cursor: col-resize;
+    background-color: transparent;
+    z-index: 10;
+}
+
+.resize-handle:hover {
+    background-color: var(--primary-color);
+}
+
+.pane-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background-color: var(--bg-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.pane-header-left,
+.pane-header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.pane-header h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.pane-header-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-end;
+}
+
+.folder-stats,
+.file-stats {
+    display: flex;
+    gap: 1rem;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.folder-tree {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.5rem;
+}
+
+/* Folder Item */
+.folder-item {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    cursor: pointer;
+    border-radius: 4px;
+    user-select: none;
+    transition: background-color 0.15s;
+}
+
+.folder-item:hover {
+    background-color: var(--bg-hover);
+}
+
+.folder-item.selected {
+    background-color: var(--bg-selected);
+    font-weight: 500;
+}
+
+.folder-item.folder-hover-highlight {
+    background-color: #fff3cd;
+    border-left: 3px solid #ffc107;
+    transition: background-color 0.2s, border-left 0.2s;
+}
+
+.folder-item.has-unsaved {
+    border-left: 3px solid var(--warning-color);
+}
+
+.folder-toggle {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.folder-icon {
+    margin-right: 0.5rem;
+    color: var(--text-muted);
+}
+
+.folder-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.folder-count {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-left: 0.5rem;
+}
+
+.folder-children {
+    margin-left: 1.5rem;
+}
+
+/* Spreadsheet Pane */
+.spreadsheet-pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.spreadsheet-container {
+    flex: 1;
+    overflow: auto;
+    background-color: var(--bg-color);
+}
+
+
+/* ZIP Extract Button in Tree */
+.zip-extract-btn {
+    margin-left: auto;
+    padding: 0.15rem 0.4rem;
+    font-size: 0.7rem;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+.folder-item:hover .zip-extract-btn {
+    opacity: 1;
+}
+
+.zip-extract-btn:disabled {
+    opacity: 0.5;
+    cursor: wait;
+}
+
+/* ZIP Extract All Button */
+.zip-extract-all-btn {
+    margin-left: auto;
+    padding: 0.15rem 0.4rem;
+    font-size: 0.7rem;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+.folder-item:hover .zip-extract-all-btn {
+    opacity: 1;
+}
+
+.zip-extract-all-btn:disabled {
+    opacity: 0.5;
+    cursor: wait;
+}
+
+
+/**
+ * Spreadsheet Styles
+ * Table, cells, editing, and row states
+ */
+
+.spreadsheet {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+    background-color: var(--bg-color);
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+}
+
+/* Selected cells */
+.selected-cell {
+    background-color: rgba(0, 123, 255, 0.2) !important;
+    outline: 1px solid var(--primary-color);
+}
+
+/* Auto-populated cells (gray background to indicate not manually edited) */
+.cell-editable.auto-populated {
+    background-color: #f0f0f0;
+    color: #666;
+    font-style: italic;
+}
+
+.spreadsheet thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: var(--bg-secondary);
+}
+
+.spreadsheet th {
+    padding: 0.75rem 0.5rem;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid var(--border-color);
+    background-color: var(--bg-secondary);
+    position: relative;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.spreadsheet th:hover:not(.col-row-num) {
+    background-color: var(--border-color);
+}
+
+/* Sort indicator */
+.sort-indicator {
+    display: inline-block;
+    font-size: 0.75rem;
+    color: var(--primary-color);
+    margin-left: 0.25rem;
+    margin-right: 0.25rem;
+    font-weight: bold;
+    vertical-align: middle;
+}
+
+/* Column filter */
+.column-filter {
+    width: calc(100% - 0.5rem);
+    margin-top: 0.25rem;
+    padding: 0.25rem;
+    font-size: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 3px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
+.column-filter:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 0;
+}
+
+.column-filter::placeholder {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.spreadsheet td {
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: top;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 300px;
+}
+
+/* Column resizer */
+.column-resizer {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 5px;
+    height: 100%;
+    cursor: col-resize;
+    user-select: none;
+    z-index: 1;
+}
+
+.column-resizer:hover {
+    background-color: var(--primary-color);
+}
+
+/* Column Widths */
+.col-row-num {
+    width: 50px;
+    text-align: center;
+    background-color: var(--bg-secondary);
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.col-original {
+    min-width: 250px;
+    max-width: 400px;
+}
+
+.col-extension {
+    width: 60px;
+    text-align: center;
+}
+
+.col-new {
+    min-width: 250px;
+    max-width: 400px;
+}
+
+.col-tracking {
+    min-width: 200px;
+    width: 200px;
+}
+
+.col-revision {
+    width: 80px;
+}
+
+.col-status {
+    width: 100px;
+}
+
+.col-title {
+    min-width: 200px;
+}
+
+.col-sha256 {
+    min-width: 150px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+}
+
+.col-actions {
+    width: 100px;
+    text-align: center;
+}
+
+/* Row States */
+.spreadsheet tbody tr {
+    transition: background-color 0.15s;
+}
+
+.spreadsheet tbody tr:hover {
+    background-color: var(--bg-hover);
+}
+
+.spreadsheet tbody tr.modified {
+    border-left: 3px solid var(--warning-color);
+}
+
+.spreadsheet tbody tr.error {
+    border-left: 3px solid var(--danger-color);
+    background-color: var(--bg-error);
+}
+
+.spreadsheet tbody tr.saving {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Cell Content */
+.cell-content {
+    display: block;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cell-link {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.cell-link:hover {
+    text-decoration: underline;
+}
+
+.cell-extension {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.cell-computed {
+    font-style: italic;
+    color: var(--text-muted);
+}
+
+/* Editable Cells */
+.cell-editable {
+    cursor: text;
+    position: relative;
+}
+
+.cell-editable:hover {
+    background-color: var(--bg-hover);
+}
+
+.cell-content[contenteditable="true"] {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 0;
+    background-color: var(--bg-color);
+    min-height: 1.5em;
+}
+
+.cell-content[contenteditable="true"]:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 0;
+}
+
+.cell-content.editing {
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* Computed cells */
+.cell-editable.computed {
+    font-style: italic;
+    color: var(--text-muted);
+}
+
+.cell-editable.computed:hover {
+    font-style: normal;
+    color: var(--text-color);
+}
+
+/* Validation states */
+.validation-error {
+    background-color: rgba(220, 53, 69, 0.1);
+    border-left: 3px solid var(--danger-color);
+}
+
+.validation-warning {
+    background-color: rgba(255, 193, 7, 0.1);
+    border-left: 3px solid #ffc107;
+}
+
+/* Inline Actions */
+.inline-actions {
+    position: absolute;
+    right: 0.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    gap: 0.25rem;
+    background-color: var(--bg-color);
+    padding: 0.125rem;
+    border-radius: 3px;
+}
+
+.cell-editable {
+    position: relative;
+    padding-right: 3.5rem; /* Space for buttons */
+}
+
+.btn-inline {
+    border: none;
+    background: rgba(255, 255, 255, 0.9);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    transition: all 0.15s;
+    font-weight: bold;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.btn-save {
+    color: var(--success-color);
+}
+
+.btn-save:hover {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.btn-cancel {
+    color: var(--danger-color);
+}
+
+.btn-cancel:hover {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+/* Formula Preview */
+.formula-preview {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 0.5rem;
+    font-size: 12px;
+    min-width: 200px;
+    z-index: 100;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.formula-preview-label {
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+}
+
+.formula-preview-value {
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.formula-preview-value.valid {
+    color: var(--success-color);
+}
+
+.formula-preview-value.invalid {
+    color: var(--danger-color);
+}
+
+.preview-check {
+    color: var(--success-color);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 3px;
+    transition: background-color 0.15s;
+}
+
+.preview-check:hover {
+    background-color: rgba(40, 167, 69, 0.1);
+}
+
+.preview-error {
+    color: var(--danger-color);
+    font-size: 16px;
+}
+
+.formula-preview-errors {
+    margin-top: 0.25rem;
+    font-size: 11px;
+    color: var(--danger-color);
+    white-space: normal;
+}
+
+/* Validation States */
+.cell-warning {
+    background-color: var(--bg-warning);
+    border-left: 3px solid var(--warning-color);
+}
+
+.cell-error {
+    background-color: var(--bg-error);
+    border-left: 3px solid var(--danger-color);
+}
+
+.validation-icon {
+    display: inline-block;
+    margin-left: 0.25rem;
+    cursor: help;
+}
+
+/* SHA256 Column */
+.sha256-hash {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.sha256-calculating {
+    font-style: italic;
+    color: var(--text-muted);
+}
+
+/* Action Buttons */
+.row-actions {
+    display: flex;
+    gap: 0.25rem;
+    justify-content: center;
+}
+
+.btn-icon {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: var(--bg-color);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.btn-icon:hover:not(:disabled) {
+    background-color: var(--bg-hover);
+    transform: scale(1.1);
+}
+
+.btn-icon:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.btn-save {
+    color: var(--success-color);
+}
+
+.btn-cancel {
+    color: var(--danger-color);
+}
+
+/* Empty State */
+.empty-state {
+    padding: 3rem;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.empty-state h3 {
+    margin-bottom: 0.5rem;
+}
+
+/* Selection Highlight */
+.cell-selected {
+    outline: 2px solid var(--primary-color);
+    outline-offset: -2px;
+    z-index: 1;
+}
+
+/* Scrollbar Styling */
+.spreadsheet-container::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+.spreadsheet-container::-webkit-scrollbar-track {
+    background-color: var(--bg-secondary);
+}
+
+.spreadsheet-container::-webkit-scrollbar-thumb {
+    background-color: var(--border-dark);
+    border-radius: 6px;
+}
+
+.spreadsheet-container::-webkit-scrollbar-thumb:hover {
+    background-color: var(--text-muted);
+}
+
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- VARASYS site context banner -->
+        <div id="varasys-banner" style="background: #1a1a1a; color: #aaa; font-size: 0.75rem; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 0.35rem 1rem; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; line-height: 1.4;">
+          <span>
+            <a href="/" style="color: #6aaddf; text-decoration: none; font-weight: 600;">VARASYS</a>
+            <span style="margin: 0 0.4rem; color: #444;">·</span>
+            <a href="/zddc.html" style="color: #888; text-decoration: none;">Zero Day Document Control</a>
+            <span style="margin: 0 0.4rem; color: #444;">·</span>
+            <span style="color: #666;">Free offline tool — no install, no account</span>
+          </span>
+          <button onclick="document.getElementById('varasys-banner').style.display='none';" style="background: none; border: none; color: #555; cursor: pointer; font-size: 1.1rem; line-height: 1; padding: 0 0 0 1rem;" title="Dismiss">×</button>
+        </div>
+        <!-- Welcome Screen -->
+        <div id="welcomeScreen" class="welcome-screen">
+            <div class="welcome-content">
+                <h1>ZDDC Classifier</h1>
+                <p class="welcome-subtitle">Spreadsheet-based file renaming for ZDDC compliance</p>
+                
+                <!-- Browser Compatibility Warning -->
+                <div id="browserWarning" class="browser-warning hidden">
+                    <h3>⚠️ Browser Not Supported</h3>
+                    <p>This application requires the File System Access API, which is only available in Chromium-based browsers.</p>
+                    <p><strong>Please use one of the following browsers:</strong></p>
+                    <ul>
+                        <li>Google Chrome (version 86+)</li>
+                        <li>Microsoft Edge (version 86+)</li>
+                        <li>Opera (version 72+)</li>
+                        <li>Brave (version 1.15+)</li>
+                    </ul>
+                </div>
+                
+                <button id="welcomeSelectBtn" class="btn btn-primary btn-large">Select Directory to Get Started</button>
+                <p class="welcome-drop-hint">or drag and drop a folder here</p>
+                
+                <div class="welcome-features">
+                    <h3>Features:</h3>
+                    <ul>
+                        <li>📊 <strong>Excel-like Spreadsheet</strong> - Direct cell editing with formulas</li>
+                        <li>📁 <strong>Multi-Folder Selection</strong> - Work on multiple folders at once</li>
+                        <li>🔄 <strong>RC References</strong> - Reference other cells like Excel</li>
+                        <li>🔍 <strong>Regex Support</strong> - Extract patterns with capture groups</li>
+                        <li>✅ <strong>Auto-Validation</strong> - ZDDC compliance checking</li>
+                        <li>💾 <strong>Batch Operations</strong> - Save all or individual files</li>
+                    </ul>
+                </div>
+                
+                <p class="welcome-note">This application works entirely in your browser. No data is transmitted to any server.</p>
+                
+                <p class="welcome-help">
+                    <a href="https://varasys.github.io/zddc/classifier" target="_blank" rel="noopener noreferrer">📖 View Documentation</a>
+                </p>
+            </div>
+        </div>
+
+        <!-- Main Application (hidden until directory selected) -->
+        <div id="mainApp" class="main-app hidden">
+            <!-- Header -->
+            <header class="app-header">
+                <div class="header-left">
+                    <button id="selectDirectoryBtn" class="btn btn-primary">Select Directory</button>
+                    <button id="refreshBtn" class="btn btn-secondary" disabled title="Refresh and rescan directory">🔄 Refresh</button>
+                </div>
+                <div class="header-center">
+                    <h1>ZDDC Classifier</h1>
+                </div>
+                <div class="header-right">
+                    <button id="togglePreviewBtn" class="btn btn-secondary" title="Toggle file preview panel">👁 Preview</button>
+                    <a href="https://varasys.github.io/zddc/classifier" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">Help</a>
+2026-03-09 18:28:59
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <div class="main-content">
+                <!-- Folder Tree -->
+                <aside class="folder-tree-pane" id="folderTreePane">
+                    <div class="pane-header">
+                        <div class="pane-header-title">
+                            <button class="btn btn-sm collapse-tree-btn" id="collapseTreeBtn" title="Collapse folder tree">◀</button>
+                            <h3>Folder Tree</h3>
+                        </div>
+                        <div class="pane-header-controls">
+                            <label class="checkbox-label" title="Auto-scroll folder tree when hovering files">
+                                <input type="checkbox" id="autoScrollCheckbox" checked>
+                                Auto-scroll
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="hideCompliantCheckbox">
+                                Hide Compliant
+                            </label>
+                            <span id="selectedFoldersCount" class="folder-count">0 folders selected</span>
+                        </div>
+                    </div>
+                    <div id="folderTree" class="folder-tree">
+                        <!-- Dynamically populated -->
+                    </div>
+                    <div class="resize-handle" id="treeResizeHandle"></div>
+                </aside>
+
+                <!-- Spreadsheet Table -->
+                <main class="spreadsheet-pane">
+                    <div class="pane-header">
+                        <div class="pane-header-left">
+                            <h3>Files</h3>
+                            <div class="file-stats">
+                                <span id="totalFiles">0 files</span>
+                                <span id="modifiedFiles">0 modified</span>
+                                <span id="errorFiles" class="hidden">0 errors</span>
+                            </div>
+                        </div>
+                        <div class="pane-header-right">
+                            <button id="saveAllBtn" class="btn btn-success btn-sm" disabled>Save All</button>
+                            <button id="cancelAllBtn" class="btn btn-secondary btn-sm" disabled>Cancel All</button>
+                            <span class="header-divider">|</span>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="sha256Checkbox">
+                                SHA256
+                            </label>
+                            <button id="exportHashesBtn" class="btn btn-secondary btn-sm" disabled title="Export SHA256 hashes in sha256sum format">💾 Export Hashes</button>
+                        </div>
+                    </div>
+                    <div class="spreadsheet-container">
+                        <table id="spreadsheet" class="spreadsheet">
+                            <thead>
+                                <tr>
+                                    <th class="col-row-num">#</th>
+                                    <th class="col-original">Original Filename</th>
+                                    <th class="col-extension">Ext</th>
+                                    <th class="col-new">New Filename</th>
+                                    <th class="col-tracking">Tracking</th>
+                                    <th class="col-revision">Rev</th>
+                                    <th class="col-status">Status</th>
+                                    <th class="col-title">Title</th>
+                                    <th class="col-sha256 hidden" id="sha256Column">SHA256</th>
+                                </tr>
+                            </thead>
+                            <tbody id="spreadsheetBody">
+                                <!-- Dynamically populated -->
+                            </tbody>
+                        </table>
+                    </div>
+                </main>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+/**
+ * ZDDC Classifier - Main Application
+ * Spreadsheet-based file renaming with Excel-like formulas
+ */
+(function() {
+    'use strict';
+
+    // Global application state
+    window.app = {
+        // File System
+        rootHandle: null,
+        
+        // Data
+        folderTree: [],
+        selectedFolders: new Set(), // Multi-select support
+        lastSelectedFolderPath: null,
+        hideCompliant: false,
+        calculateSha256: false,
+        
+        // DOM elements (populated on init)
+        dom: {},
+        
+        // Modules (populated by other files)
+        modules: {}
+    };
+
+    /**
+     * Initialize the application
+     */
+    function init() {
+        console.log('Initializing ZDDC Classifier...');
+        
+        // Check browser compatibility
+        if (!checkBrowserCompatibility()) {
+            showBrowserWarning();
+            return;
+        }
+        
+        // Cache DOM elements
+        cacheDOMElements();
+        
+        // Set up event listeners
+        setupEventListeners();
+        
+        // Show welcome screen
+        showWelcomeScreen();
+        
+        console.log('ZDDC Classifier initialized');
+    }
+
+    /**
+     * Check if browser supports File System Access API
+     */
+    function checkBrowserCompatibility() {
+        return 'showDirectoryPicker' in window;
+    }
+
+    /**
+     * Show browser compatibility warning
+     */
+    function showBrowserWarning() {
+        const warning = document.getElementById('browserWarning');
+        const selectBtn = document.getElementById('welcomeSelectBtn');
+        if (warning) {
+            warning.classList.remove('hidden');
+        }
+        if (selectBtn) {
+            selectBtn.disabled = true;
+            selectBtn.textContent = 'Browser Not Supported';
+        }
+    }
+
+    /**
+     * Cache DOM element references
+     */
+    function cacheDOMElements() {
+        app.dom = {
+            // Screens
+            welcomeScreen: document.getElementById('welcomeScreen'),
+            mainApp: document.getElementById('mainApp'),
+            welcomeSelectBtn: document.getElementById('welcomeSelectBtn'),
+            
+            // Header buttons
+            selectDirectoryBtn: document.getElementById('selectDirectoryBtn'),
+            refreshBtn: document.getElementById('refreshBtn'),
+            saveAllBtn: document.getElementById('saveAllBtn'),
+            cancelAllBtn: document.getElementById('cancelAllBtn'),
+            exportHashesBtn: document.getElementById('exportHashesBtn'),
+            sha256Checkbox: document.getElementById('sha256Checkbox'),
+            hideCompliantCheckbox: document.getElementById('hideCompliantCheckbox'),
+            
+            // Folder tree
+            folderTree: document.getElementById('folderTree'),
+            folderTreePane: document.getElementById('folderTreePane'),
+            collapseTreeBtn: document.getElementById('collapseTreeBtn'),
+            autoScrollCheckbox: document.getElementById('autoScrollCheckbox'),
+            selectedFoldersCount: document.getElementById('selectedFoldersCount'),
+            
+            // Spreadsheet
+            spreadsheet: document.getElementById('spreadsheet'),
+            spreadsheetBody: document.getElementById('spreadsheetBody'),
+            sha256Column: document.getElementById('sha256Column'),
+            
+            // Stats
+            totalFiles: document.getElementById('totalFiles'),
+            modifiedFiles: document.getElementById('modifiedFiles'),
+            errorFiles: document.getElementById('errorFiles'),
+            
+            // Preview
+            togglePreviewBtn: document.getElementById('togglePreviewBtn')
+        };
+    }
+
+    /**
+     * Set up event listeners
+     */
+    function setupEventListeners() {
+        // Directory selection
+        app.dom.welcomeSelectBtn.addEventListener('click', handleSelectDirectory);
+        app.dom.selectDirectoryBtn.addEventListener('click', handleSelectDirectory);
+        app.dom.refreshBtn.addEventListener('click', handleRefresh);
+        
+        // Drag and drop on welcome screen
+        setupWelcomeDragDrop();
+        
+        // Bulk actions
+        app.dom.saveAllBtn.addEventListener('click', handleSaveAll);
+        app.dom.cancelAllBtn.addEventListener('click', handleCancelAll);
+        
+        // Export hashes
+        app.dom.exportHashesBtn.addEventListener('click', handleExportHashes);
+        
+        // SHA256 toggle
+        app.dom.sha256Checkbox.addEventListener('change', handleSha256Toggle);
+        
+        // Hide compliant toggle
+        app.dom.hideCompliantCheckbox.addEventListener('change', handleHideCompliantToggle);
+        
+        // Collapse tree button
+        app.dom.collapseTreeBtn.addEventListener('click', handleCollapseTree);
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', handleKeyDown);
+        
+        // Resize handle
+        setupResizeHandle();
+    }
+    
+    /**
+     * Handle collapse/expand folder tree pane
+     */
+    function handleCollapseTree() {
+        const pane = app.dom.folderTreePane;
+        const btn = app.dom.collapseTreeBtn;
+        
+        pane.classList.toggle('collapsed');
+        
+        if (pane.classList.contains('collapsed')) {
+            // Clear any inline width from resize handle
+            pane.style.width = '';
+            btn.textContent = '▶';
+            btn.title = 'Expand folder tree';
+        } else {
+            btn.textContent = '◀';
+            btn.title = 'Collapse folder tree';
+        }
+    }
+
+    /**
+     * Set up folder tree resize handle
+     */
+    function setupResizeHandle() {
+        const handle = document.getElementById('treeResizeHandle');
+        const pane = document.getElementById('folderTreePane');
+        
+        if (!handle || !pane) return;
+        
+        let isResizing = false;
+        let startX = 0;
+        let startWidth = 0;
+        
+        handle.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            startX = e.clientX;
+            startWidth = pane.offsetWidth;
+            document.body.style.cursor = 'col-resize';
+            e.preventDefault();
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+            
+            const delta = e.clientX - startX;
+            const newWidth = startWidth + delta;
+            
+            // Respect min width only
+            if (newWidth >= 150) {
+                pane.style.width = newWidth + 'px';
+            }
+        });
+        
+        document.addEventListener('mouseup', () => {
+            if (isResizing) {
+                isResizing = false;
+                document.body.style.cursor = '';
+            }
+        });
+    }
+
+    /**
+     * Set up drag-and-drop on the welcome screen
+     */
+    function setupWelcomeDragDrop() {
+        const screen = app.dom.welcomeScreen;
+        if (!screen) return;
+        
+        ['dragenter', 'dragover'].forEach(evt => {
+            screen.addEventListener(evt, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                screen.classList.add('drag-over');
+            });
+        });
+        
+        ['dragleave', 'drop'].forEach(evt => {
+            screen.addEventListener(evt, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                screen.classList.remove('drag-over');
+            });
+        });
+        
+        screen.addEventListener('drop', async (e) => {
+            const item = e.dataTransfer.items && e.dataTransfer.items[0];
+            if (!item) return;
+            
+            const handle = await item.getAsFileSystemHandle();
+            if (!handle || handle.kind !== 'directory') {
+                alert('Please drop a folder, not a file.');
+                return;
+            }
+            
+            await openDirectory(handle);
+        });
+    }
+
+    /**
+     * Handle directory selection via button click
+     */
+    async function handleSelectDirectory() {
+        try {
+            const dirHandle = await window.showDirectoryPicker();
+            await openDirectory(dirHandle);
+        } catch (err) {
+            if (err.name !== 'AbortError') {
+                console.error('Error selecting directory:', err);
+                alert('Error selecting directory: ' + err.message);
+            }
+        }
+    }
+
+    /**
+     * Open a directory handle and initialize the application
+     */
+    async function openDirectory(dirHandle) {
+        app.rootHandle = dirHandle;
+        
+        // Hide welcome screen and show main UI
+        hideWelcomeScreen();
+        showMainUI();
+        
+        // Initialize modules BEFORE scanning (so they're ready for store updates)
+        app.modules.spreadsheet.init();  // Subscribe to store
+        app.modules.selection.init();
+        app.modules.preview.init();  // After selection so it can listen for rowfocused
+        app.modules.resize.init();
+        app.modules.filter.init();
+        app.modules.sort.init();
+        app.modules.tree.setupKeyboardShortcuts();
+        
+        // Now scan directory (this will trigger store updates and renders)
+        await app.modules.scanner.scanDirectory(dirHandle);
+        
+        // Enable refresh button
+        app.dom.refreshBtn.disabled = false;
+    }
+
+    /**
+     * Handle Refresh button - rescan current directory
+     */
+    async function handleRefresh() {
+        if (!app.rootHandle) {
+            alert('No directory selected');
+            return;
+        }
+
+        try {
+            // Clear current data
+            app.folderTree = [];
+            app.selectedFolders.clear();
+            app.lastSelectedFolderPath = null;
+            
+            // Reset store
+            app.modules.store.reset();
+
+            // Rescan directory (modules already initialized, just rescan)
+            await app.modules.scanner.scanDirectory(app.rootHandle);
+
+        } catch (err) {
+            console.error('Error refreshing directory:', err);
+            alert('Error refreshing directory: ' + err.message);
+        }
+    }
+
+    /**
+     * Handle Save All button
+     */
+    async function handleSaveAll() {
+        if (!confirm('Save all modified files?')) return;
+        
+        try {
+            app.dom.saveAllBtn.disabled = true;
+            await app.modules.spreadsheet.saveAllFiles();
+        } catch (err) {
+            console.error('Error saving files:', err);
+            alert('Error saving files: ' + err.message);
+        } finally {
+            app.dom.saveAllBtn.disabled = false;
+        }
+    }
+
+    /**
+     * Handle Cancel All button
+     */
+    function handleCancelAll() {
+        if (!confirm('Cancel all changes?')) return;
+        app.modules.spreadsheet.cancelAllChanges();
+    }
+
+    /**
+     * Handle Export Hashes button
+     */
+    function handleExportHashes() {
+        app.modules.excel.exportHashes();
+    }
+
+    /**
+     * Handle SHA256 checkbox toggle
+     */
+    function handleSha256Toggle() {
+        app.calculateSha256 = app.dom.sha256Checkbox.checked;
+        
+        // Show/hide SHA256 column
+        if (app.calculateSha256) {
+            app.dom.sha256Column.classList.remove('hidden');
+        } else {
+            app.dom.sha256Column.classList.add('hidden');
+        }
+        
+        // Re-render table
+        app.modules.spreadsheet.render();
+    }
+
+    /**
+     * Handle Hide Compliant checkbox toggle
+     */
+    function handleHideCompliantToggle() {
+        app.hideCompliant = app.dom.hideCompliantCheckbox.checked;
+        app.modules.store.setHideCompliant(app.hideCompliant);
+    }
+
+    /**
+     * Handle keyboard shortcuts
+     */
+    function handleKeyDown(e) {
+        // Ctrl+S - Save All
+        if (e.ctrlKey && e.key === 's') {
+            e.preventDefault();
+            if (!app.dom.saveAllBtn.disabled) {
+                handleSaveAll();
+            }
+        }
+        
+        // Escape - Cancel editing
+        if (e.key === 'Escape') {
+            app.modules.spreadsheet.cancelEditing();
+        }
+    }
+
+    /**
+     * Show welcome screen
+     */
+    function showWelcomeScreen() {
+        if (app.dom.welcomeScreen) {
+            app.dom.welcomeScreen.classList.remove('hidden');
+        }
+        if (app.dom.mainApp) {
+            app.dom.mainApp.classList.add('hidden');
+        }
+    }
+
+    /**
+     * Hide welcome screen
+     */
+    function hideWelcomeScreen() {
+        if (app.dom.welcomeScreen) {
+            app.dom.welcomeScreen.classList.add('hidden');
+        }
+    }
+
+    /**
+     * Show main UI
+     */
+    function showMainUI() {
+        if (app.dom.mainApp) {
+            app.dom.mainApp.classList.remove('hidden');
+        }
+    }
+
+    /**
+     * Update stats display
+     */
+    function updateStats() {
+        const files = app.modules.store.getDisplayFiles();
+        const totalFiles = files.length;
+        const modifiedFiles = files.filter(f => f.isDirty).length;
+        const errorFiles = files.filter(f => f.error).length;
+        
+        app.dom.totalFiles.textContent = `${totalFiles} file${totalFiles !== 1 ? 's' : ''}`;
+        app.dom.modifiedFiles.textContent = `${modifiedFiles} modified`;
+        
+        if (errorFiles > 0) {
+            app.dom.errorFiles.textContent = `${errorFiles} error${errorFiles !== 1 ? 's' : ''}`;
+            app.dom.errorFiles.classList.remove('hidden');
+        } else {
+            app.dom.errorFiles.classList.add('hidden');
+        }
+        
+        // Enable/disable bulk action buttons
+        app.dom.saveAllBtn.disabled = modifiedFiles === 0;
+        app.dom.cancelAllBtn.disabled = modifiedFiles === 0;
+        
+        // Enable/disable export hashes button
+        app.dom.exportHashesBtn.disabled = totalFiles === 0 || !app.calculateSha256;
+    }
+
+    // Export functions for use by other modules
+    app.modules.app = {
+        updateStats
+    };
+
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();
+
+/**
+ * Shared Utilities Module
+ * Common functions used across multiple modules
+ */
+(function() {
+    'use strict';
+
+    /**
+     * Compute new filename from file fields
+     * ZDDC format: trackingNumber_revision (status) - title.ext
+     */
+    function computeNewFilename(file) {
+        // If user manually typed a filename, use that
+        if (file.manualFilename) {
+            return file.manualFilename;
+        }
+        
+        // Otherwise, build from fields
+        const tracking = (file.tracking || '').trim();
+        const revision = (file.revision || '').trim();
+        const status = (file.status || '').trim();
+        const title = (file.title || '').trim();
+        
+        // If any required field is missing, return original filename
+        if (!tracking || !revision || !status || !title) {
+            return file.originalFilename + file.extension;
+        }
+        
+        // Build ZDDC compliant filename
+        return `${tracking}_${revision} (${status}) - ${title}${file.extension}`;
+    }
+
+    /**
+     * Get column value from file object
+     */
+    function getColumnValue(file, columnName) {
+        switch (columnName) {
+            case 'original': return file.originalFilename || '';
+            case 'extension': return file.extension || '';
+            case 'new':
+            case 'newFilename': return file.manualFilename || computeNewFilename(file);
+            case 'tracking': return file.tracking || '';
+            case 'revision': return file.revision || '';
+            case 'status': return file.status || '';
+            case 'title': return file.title || '';
+            case 'sha256': return file.sha256 || '';
+            default: return '';
+        }
+    }
+
+    /**
+     * Parse filename to extract ZDDC components
+     * Format: tracking_revision (status) - title.ext
+     */
+    function parseFilename(filename) {
+        const result = {
+            tracking: '',
+            revision: '',
+            status: '',
+            title: ''
+        };
+
+        // Try to match ZDDC pattern: TRACKING_REV (STATUS) - TITLE
+        const match = filename.match(/^([^_]+)_([^\s(]+)\s*\(([^)]+)\)\s*-\s*(.+)$/);
+        
+        if (match) {
+            result.tracking = match[1].trim();
+            result.revision = match[2].trim();
+            result.status = match[3].trim();
+            result.title = match[4].trim();
+        }
+
+        return result;
+    }
+
+    // Export module
+    window.app.modules.utils = {
+        computeNewFilename,
+        getColumnValue,
+        parseFilename
+    };
+})();
+
+/**
+ * Store Module
+ * Single source of truth for all application state
+ * Manages files, folders, sorting, filtering
+ */
+(function() {
+    'use strict';
+
+    // State
+    const state = {
+        // Directory structure
+        rootHandle: null,
+        folderTree: [],
+        selectedFolders: new Set(),
+        
+        // Files
+        allFiles: [],           // All files from selected folders
+        displayFiles: [],       // After sorting and filtering
+        
+        // Sort state
+        sortColumns: [],        // [{column: 'original', direction: 'asc'}]
+        
+        // Filter state
+        filters: {},            // {columnName: filterString}
+        
+        // UI state
+        hideCompliant: false,
+        calculateSha256: false
+    };
+
+    // Listeners for state changes
+    const listeners = {
+        'files': [],
+        'folders': [],
+        'sort': [],
+        'filter': []
+    };
+
+    /**
+     * Subscribe to state changes
+     */
+    function on(event, callback) {
+        if (listeners[event]) {
+            listeners[event].push(callback);
+        }
+    }
+
+    /**
+     * Notify listeners of state change
+     */
+    function notify(event) {
+        if (listeners[event]) {
+            listeners[event].forEach(cb => cb());
+        }
+    }
+
+    /**
+     * Set root directory handle
+     */
+    function setRootHandle(handle) {
+        state.rootHandle = handle;
+    }
+
+    /**
+     * Set folder tree
+     */
+    function setFolderTree(tree) {
+        state.folderTree = tree;
+        notify('folders');
+    }
+
+    /**
+     * Select/deselect folder
+     */
+    function toggleFolder(folderPath) {
+        if (state.selectedFolders.has(folderPath)) {
+            state.selectedFolders.delete(folderPath);
+        } else {
+            state.selectedFolders.add(folderPath);
+        }
+        loadFilesFromSelectedFolders();
+    }
+
+    /**
+     * Select multiple folders
+     */
+    function setSelectedFolders(folderPaths) {
+        state.selectedFolders.clear();
+        folderPaths.forEach(path => state.selectedFolders.add(path));
+        loadFilesFromSelectedFolders();
+    }
+
+    /**
+     * Load files from selected folders
+     */
+    function loadFilesFromSelectedFolders() {
+        state.allFiles = [];
+
+        if (state.selectedFolders.size === 0) {
+            updateDisplayFiles();
+            return;
+        }
+
+        // Collect files from selected folders
+        for (const folderPath of state.selectedFolders) {
+            const folder = findFolderByPath(folderPath);
+            if (folder && folder.files) {
+                const files = folder.files.filter(f => !f.isDirectory);
+                state.allFiles.push(...files);
+            }
+        }
+
+        // Apply default sort if no sort set
+        if (state.sortColumns.length === 0) {
+            state.sortColumns = [{ column: 'original', direction: 'asc' }];
+        }
+
+        updateDisplayFiles();
+    }
+
+    /**
+     * Find folder by path in tree
+     */
+    function findFolderByPath(path) {
+        function search(folders) {
+            for (const folder of folders) {
+                if (folder.path === path) return folder;
+                if (folder.children) {
+                    const found = search(folder.children);
+                    if (found) return found;
+                }
+            }
+            return null;
+        }
+        return search(state.folderTree);
+    }
+
+    /**
+     * Update display files (apply sort, filter, hide compliant)
+     */
+    function updateDisplayFiles() {
+        let files = [...state.allFiles];
+
+        // Apply filters
+        files = applyFilters(files);
+
+        // Apply hide compliant
+        if (state.hideCompliant) {
+            files = files.filter(file => {
+                const newFilename = computeNewFilename(file);
+                const validation = validateFilename(newFilename);
+                return !validation.isValid;
+            });
+        }
+
+        // Apply sort
+        files = applySort(files);
+
+        state.displayFiles = files;
+        notify('files');
+    }
+
+    /**
+     * Apply filters to files
+     */
+    function applyFilters(files) {
+        if (Object.keys(state.filters).length === 0) {
+            return files;
+        }
+
+        return files.filter(file => {
+            for (const [columnName, filterText] of Object.entries(state.filters)) {
+                const value = getColumnValue(file, columnName);
+                if (!matchesFilter(value, filterText)) {
+                    return false;
+                }
+            }
+            return true;
+        });
+    }
+
+    /**
+     * Apply sort to files
+     */
+    function applySort(files) {
+        if (state.sortColumns.length === 0) {
+            return files;
+        }
+
+        return files.sort((a, b) => {
+            for (const sort of state.sortColumns) {
+                const result = compareValues(a, b, sort.column, sort.direction);
+                if (result !== 0) return result;
+            }
+            return 0;
+        });
+    }
+
+    /**
+     * Compare two values for sorting
+     */
+    function compareValues(a, b, columnName, direction) {
+        let aVal = getColumnValue(a, columnName);
+        let bVal = getColumnValue(b, columnName);
+
+        const comparison = String(aVal).localeCompare(String(bVal), undefined, {
+            numeric: true,
+            sensitivity: 'base'
+        });
+
+        return direction === 'asc' ? comparison : -comparison;
+    }
+
+    /**
+     * Get column value from file (delegates to utils)
+     */
+    function getColumnValue(file, columnName) {
+        // Use shared utils if available, otherwise inline
+        if (window.app.modules.utils) {
+            return window.app.modules.utils.getColumnValue(file, columnName);
+        }
+        switch (columnName) {
+            case 'original': return file.originalFilename || '';
+            case 'extension': return file.extension || '';
+            case 'newFilename': return file.manualFilename || computeNewFilename(file);
+            case 'tracking': return file.tracking || '';
+            case 'revision': return file.revision || '';
+            case 'status': return file.status || '';
+            case 'title': return file.title || '';
+            case 'sha256': return file.sha256 || '';
+            default: return '';
+        }
+    }
+
+    /**
+     * Compute new filename from fields (delegates to utils)
+     */
+    function computeNewFilename(file) {
+        // Use shared utils if available
+        if (window.app.modules.utils) {
+            return window.app.modules.utils.computeNewFilename(file);
+        }
+        
+        if (file.manualFilename) {
+            return file.manualFilename;
+        }
+
+        const tracking = (file.tracking || '').trim();
+        const revision = (file.revision || '').trim();
+        const status = (file.status || '').trim();
+        const title = (file.title || '').trim();
+
+        if (!tracking || !revision || !status || !title) {
+            return file.originalFilename + file.extension;
+        }
+
+        return `${tracking}_${revision} (${status}) - ${title}${file.extension}`;
+    }
+
+    /**
+     * Validate filename
+     */
+    function validateFilename(filename) {
+        // Use existing validator module
+        if (window.app.modules.validator) {
+            return window.app.modules.validator.validateFilename(filename);
+        }
+        return { isValid: true, errors: [], warnings: [] };
+    }
+
+    /**
+     * Match filter text against value
+     */
+    function matchesFilter(value, filterText) {
+        // Simple contains for now - can enhance later
+        return String(value).toLowerCase().includes(filterText.toLowerCase());
+    }
+
+    /**
+     * Set sort columns
+     */
+    function setSortColumns(columns) {
+        state.sortColumns = columns;
+        updateDisplayFiles();
+    }
+
+    /**
+     * Toggle sort on column
+     */
+    function toggleSort(columnName, multiSort) {
+        if (!multiSort) {
+            state.sortColumns = [];
+        }
+
+        const existingIndex = state.sortColumns.findIndex(s => s.column === columnName);
+
+        if (existingIndex >= 0) {
+            const current = state.sortColumns[existingIndex];
+            if (current.direction === 'asc') {
+                current.direction = 'desc';
+            } else {
+                state.sortColumns.splice(existingIndex, 1);
+            }
+        } else {
+            state.sortColumns.push({ column: columnName, direction: 'asc' });
+        }
+
+        updateDisplayFiles();
+        notify('sort');
+    }
+
+    /**
+     * Set filter for column
+     */
+    function setFilter(columnName, filterText) {
+        if (filterText) {
+            state.filters[columnName] = filterText;
+        } else {
+            delete state.filters[columnName];
+        }
+        updateDisplayFiles();
+    }
+
+    /**
+     * Set hide compliant flag
+     */
+    function setHideCompliant(hide) {
+        state.hideCompliant = hide;
+        updateDisplayFiles();
+    }
+
+    /**
+     * Update file data
+     */
+    function updateFile(index, updates) {
+        const file = state.displayFiles[index];
+        if (!file) return;
+
+        // Apply updates
+        Object.assign(file, updates);
+        
+        // Mark as dirty unless explicitly set to false
+        if (updates.isDirty !== false) {
+            file.isDirty = true;
+        }
+
+        // Notify listeners (will trigger re-render)
+        notify('files');
+    }
+    
+    /**
+     * Update file field (for editing)
+     */
+    function updateFileField(index, fieldName, value) {
+        const file = state.displayFiles[index];
+        if (!file) return;
+        
+        file[fieldName] = value;
+        file.isDirty = true;
+        file.autoPopulated = false; // Clear auto-populated flag
+        
+        // Notify listeners
+        notify('files');
+    }
+
+    /**
+     * Get display files (what should be shown in table)
+     */
+    function getDisplayFiles() {
+        return state.displayFiles;
+    }
+
+    /**
+     * Get all files (unfiltered)
+     */
+    function getAllFiles() {
+        return state.allFiles;
+    }
+
+    /**
+     * Get sort columns
+     */
+    function getSortColumns() {
+        return state.sortColumns;
+    }
+
+    /**
+     * Get selected folder count
+     */
+    function getSelectedFolderCount() {
+        return state.selectedFolders.size;
+    }
+
+    /**
+     * Get state (read-only)
+     */
+    function getState() {
+        return {
+            rootHandle: state.rootHandle,
+            folderTree: state.folderTree,
+            selectedFolders: Array.from(state.selectedFolders),
+            allFiles: state.allFiles,
+            displayFiles: state.displayFiles,
+            sortColumns: state.sortColumns,
+            filters: state.filters,
+            hideCompliant: state.hideCompliant
+        };
+    }
+
+    /**
+     * Reset all state
+     */
+    function reset() {
+        state.rootHandle = null;
+        state.folderTree = [];
+        state.selectedFolders.clear();
+        state.allFiles = [];
+        state.displayFiles = [];
+        state.sortColumns = [];
+        state.filters = {};
+        state.hideCompliant = false;
+        
+        notify('files');
+        notify('folders');
+    }
+
+    // Export
+    window.app.modules.store = {
+        on,
+        notify,
+        setRootHandle,
+        setFolderTree,
+        toggleFolder,
+        setSelectedFolders,
+        toggleSort,
+        setFilter,
+        setHideCompliant,
+        updateFile,
+        updateFileField,
+        getDisplayFiles,
+        getAllFiles,
+        getSortColumns,
+        getSelectedFolderCount,
+        getState,
+        reset
+    };
+})();
+
+/**
+ * ZDDC Validation Module
+ * Validates file and folder names against ZDDC conventions
+ */
+
+(function() {
+    'use strict';
+
+    /**
+     * Check if a filename is ZDDC compliant
+     * Format: trackingNumber_revision (status) - title.extension
+     * Example: CE-BYR-ALL-EL-SPC-0001_A (IFC) - Cable Specification.pdf
+     */
+    function isZDDCCompliant(filename) {
+        // Remove extension
+        const lastDot = filename.lastIndexOf('.');
+        if (lastDot === -1) return false;
+        
+        const nameWithoutExt = filename.substring(0, lastDot);
+        
+        // Pattern: trackingNumber_revision (status) - title
+        // More flexible: status can be any uppercase letters (not just 3)
+        const pattern = /^[^_\s]+_[^\s]+ \([A-Z0-9]+\) - .+$/;
+        
+        return pattern.test(nameWithoutExt);
+    }
+
+    /**
+     * Check if a folder name is a transmittal folder
+     * Format: YYYY-MM-DD_trackingNumber (status) - title
+     * Example: 2024-10-15_CE-BYR-ALL (IFC) - October Specifications
+     */
+    function isTransmittalFolder(foldername) {
+        // Pattern: YYYY-MM-DD_trackingNumber (status) - title
+        const pattern = /^\d{4}-\d{2}-\d{2}_[^\s]+ \([A-Z0-9]+\) - .+$/;
+        return pattern.test(foldername);
+    }
+
+    /**
+     * Parse a ZDDC filename into components
+     */
+    function parseZDDCFilename(filename) {
+        if (!isZDDCCompliant(filename)) {
+            return null;
+        }
+
+        const lastDot = filename.lastIndexOf('.');
+        const extension = filename.substring(lastDot + 1);
+        const nameWithoutExt = filename.substring(0, lastDot);
+
+        // Split on first underscore
+        const underscoreIdx = nameWithoutExt.indexOf('_');
+        const trackingNumber = nameWithoutExt.substring(0, underscoreIdx);
+        
+        // Rest of the string
+        const rest = nameWithoutExt.substring(underscoreIdx + 1);
+        
+        // Extract revision (everything before first space)
+        const spaceIdx = rest.indexOf(' ');
+        const revision = rest.substring(0, spaceIdx);
+        
+        // Extract status (between parentheses)
+        const statusMatch = rest.match(/\(([A-Z0-9]+)\)/);
+        const status = statusMatch ? statusMatch[1] : '';
+        
+        // Extract title (after " - ")
+        const titleMatch = rest.match(/ - (.+)$/);
+        const title = titleMatch ? titleMatch[1] : '';
+
+        return {
+            trackingNumber,
+            revision,
+            status,
+            title,
+            extension
+        };
+    }
+
+    /**
+     * Parse a transmittal folder name into components
+     */
+    function parseTransmittalFolder(foldername) {
+        if (!isTransmittalFolder(foldername)) {
+            return null;
+        }
+
+        // Extract date (first 10 characters)
+        const date = foldername.substring(0, 10);
+        
+        // Rest of the string after date and underscore
+        const rest = foldername.substring(11);
+        
+        // Extract tracking number (everything before first space)
+        const spaceIdx = rest.indexOf(' ');
+        const trackingNumber = rest.substring(0, spaceIdx);
+        
+        // Extract status (between parentheses)
+        const statusMatch = rest.match(/\(([A-Z0-9]+)\)/);
+        const status = statusMatch ? statusMatch[1] : '';
+        
+        // Extract title (after " - ")
+        const titleMatch = rest.match(/ - (.+)$/);
+        const title = titleMatch ? titleMatch[1] : '';
+
+        return {
+            date,
+            trackingNumber,
+            status,
+            title
+        };
+    }
+
+    /**
+     * Build a ZDDC filename from components
+     */
+    function buildZDDCFilename(components) {
+        const { trackingNumber, revision, status, title, extension } = components;
+        return `${trackingNumber}_${revision} (${status}) - ${title}.${extension}`;
+    }
+
+    /**
+     * Build a transmittal folder name from components
+     */
+    function buildTransmittalFolder(components) {
+        const { date, trackingNumber, status, title } = components;
+        return `${date}_${trackingNumber} (${status}) - ${title}`;
+    }
+
+    /**
+     * Validate a filename and return detailed result
+     */
+    function validateFilename(filename) {
+        const isValid = isZDDCCompliant(filename);
+        const warnings = [];
+        const errors = [];
+
+        if (!isValid) {
+            errors.push('Filename does not match ZDDC format: trackingNumber_revision (status) - title.ext');
+        }
+
+        // Additional validation rules
+        if (filename.length > 255) {
+            warnings.push('Filename is very long (>255 characters)');
+        }
+
+        // Check for invalid characters
+        const invalidChars = /[<>:"|?*]/;
+        if (invalidChars.test(filename)) {
+            errors.push('Filename contains invalid characters: < > : " | ? *');
+        }
+
+        return {
+            isValid: errors.length === 0,
+            warnings,
+            errors
+        };
+    }
+
+    // Export module
+    window.app.modules.validator = {
+        isZDDCCompliant,
+        isTransmittalFolder,
+        parseZDDCFilename,
+        parseTransmittalFolder,
+        buildZDDCFilename,
+        buildTransmittalFolder,
+        validateFilename
+    };
+})();
+
+/**
+ * Directory Scanner Module
+ * Scans directories and collects files
+ */
+(function() {
+    'use strict';
+    
+    // Store ZIP data for later access
+    const zipCache = new Map();  // path -> { zip: JSZip, fileHandle: FileSystemFileHandle }
+
+    /**
+     * Scan directory and build folder tree with files
+     */
+    async function scanDirectory(dirHandle, preserveState = false) {
+        console.log('Scanning directory:', dirHandle.name);
+        
+        // Save current state if preserving
+        let savedExpanded = new Set();
+        let savedSelected = new Set();
+        if (preserveState) {
+            savedExpanded = getExpandedPaths(window.app.folderTree);
+            savedSelected = new Set(window.app.selectedFolders);
+        }
+        
+        // Clear ZIP cache
+        zipCache.clear();
+        
+        // Map to store files by folder handle (or ZIP path for virtual folders)
+        const foldersMap = new Map();
+        
+        // Recursively scan
+        await scanFolder(dirHandle, foldersMap, dirHandle.name);
+        
+        // Build tree structure
+        window.app.folderTree = window.app.modules.tree.buildTree(dirHandle, foldersMap);
+        
+        // Set in store
+        window.app.modules.store.setFolderTree(window.app.folderTree);
+        
+        if (preserveState) {
+            // Restore expanded state
+            restoreExpandedPaths(window.app.folderTree, savedExpanded);
+            // Restore selection
+            window.app.selectedFolders = savedSelected;
+            // Render without changing selection
+            window.app.modules.tree.render();
+            window.app.modules.store.setSelectedFolders(savedSelected);
+        } else {
+            // Render tree
+            window.app.modules.tree.render();
+            // Auto-expand and select all folders
+            window.app.modules.tree.expandAll();
+            window.app.modules.tree.selectAll();
+        }
+        
+        console.log('Scan complete. Found', foldersMap.size, 'folders');
+    }
+    
+    /**
+     * Get all expanded folder paths from tree
+     */
+    function getExpandedPaths(folders, paths = new Set()) {
+        for (const folder of folders) {
+            if (folder.expanded) {
+                paths.add(folder.path);
+            }
+            if (folder.children) {
+                getExpandedPaths(folder.children, paths);
+            }
+        }
+        return paths;
+    }
+    
+    /**
+     * Restore expanded state to tree
+     */
+    function restoreExpandedPaths(folders, expandedPaths) {
+        for (const folder of folders) {
+            folder.expanded = expandedPaths.has(folder.path);
+            if (folder.children) {
+                restoreExpandedPaths(folder.children, expandedPaths);
+            }
+        }
+    }
+
+    /**
+     * Recursively scan a folder
+     */
+    async function scanFolder(dirHandle, foldersMap, currentPath) {
+        const items = [];
+        
+        try {
+            for await (const entry of dirHandle.values()) {
+                if (entry.kind === 'file') {
+                    // Create file object
+                    const file = await createFileObject(entry, dirHandle);
+                    if (file) {
+                        items.push(file);
+                        
+                        // Check if it's a ZIP file - scan its contents
+                        if (file.extension.toLowerCase() === '.zip' && typeof JSZip !== 'undefined') {
+                            await scanZipFile(file, foldersMap, currentPath, items);
+                        }
+                    }
+                } else if (entry.kind === 'directory') {
+                    // Add directory reference
+                    items.push({
+                        handle: entry,
+                        isDirectory: true
+                    });
+                    
+                    // Recursively scan subdirectory
+                    const childPath = currentPath + '/' + entry.name;
+                    await scanFolder(entry, foldersMap, childPath);
+                }
+            }
+        } catch (err) {
+            console.error('Error scanning folder:', dirHandle.name, err);
+        }
+        
+        // Store files for this folder
+        foldersMap.set(dirHandle, items);
+    }
+    
+    /**
+     * Scan a ZIP file and add its contents as virtual folders
+     */
+    async function scanZipFile(zipFileObj, foldersMap, parentPath, parentItems) {
+        try {
+            const fileObj = await zipFileObj.handle.getFile();
+            const arrayBuffer = await fileObj.arrayBuffer();
+            const zip = await JSZip.loadAsync(arrayBuffer);
+            
+            const zipPath = parentPath + '/' + zipFileObj.originalFilename + zipFileObj.extension;
+            
+            // Cache the ZIP for later extraction
+            zipCache.set(zipPath, {
+                zip: zip,
+                fileHandle: zipFileObj.handle,
+                folderHandle: zipFileObj.folderHandle
+            });
+            
+            // Mark the file as a ZIP container
+            zipFileObj.isZipContainer = true;
+            zipFileObj.zipPath = zipPath;
+            
+            // Build virtual folder structure from ZIP contents
+            const virtualFolders = new Map();  // path -> { files: [], subdirs: Set }
+            virtualFolders.set(zipPath, { files: [], subdirs: new Set() });
+            
+            zip.forEach((relativePath, zipEntry) => {
+                if (zipEntry.dir) {
+                    // It's a directory
+                    const dirPath = zipPath + '/' + relativePath.replace(/\/$/, '');
+                    if (!virtualFolders.has(dirPath)) {
+                        virtualFolders.set(dirPath, { files: [], subdirs: new Set() });
+                    }
+                    // Add to parent's subdirs
+                    const parentDir = dirPath.substring(0, dirPath.lastIndexOf('/'));
+                    if (virtualFolders.has(parentDir)) {
+                        virtualFolders.get(parentDir).subdirs.add(dirPath);
+                    }
+                } else {
+                    // It's a file
+                    const fileName = relativePath.split('/').pop();
+                    const fileDir = relativePath.includes('/') 
+                        ? zipPath + '/' + relativePath.substring(0, relativePath.lastIndexOf('/'))
+                        : zipPath;
+                    
+                    // Ensure parent directories exist
+                    ensureVirtualPath(virtualFolders, zipPath, fileDir);
+                    
+                    // Create virtual file object
+                    const ext = fileName.includes('.') ? '.' + fileName.split('.').pop() : '';
+                    const nameWithoutExt = ext ? fileName.substring(0, fileName.length - ext.length) : fileName;
+                    
+                    const virtualFile = {
+                        originalFilename: nameWithoutExt,
+                        extension: ext,
+                        size: zipEntry._data ? zipEntry._data.uncompressedSize : 0,
+                        lastModified: zipEntry.date ? zipEntry.date.getTime() : Date.now(),
+                        
+                        // Virtual file markers
+                        isVirtual: true,
+                        zipPath: zipPath,
+                        zipEntryPath: relativePath,
+                        
+                        // Editable fields
+                        tracking: '',
+                        revision: '',
+                        status: '',
+                        title: '',
+                        
+                        // State
+                        isDirty: false,
+                        error: false,
+                        errorMessage: '',
+                        validation: null,
+                        sha256: null
+                    };
+                    
+                    virtualFolders.get(fileDir).files.push(virtualFile);
+                }
+            });
+            
+            // Convert virtual folders to format compatible with tree builder
+            // Create a virtual handle for the ZIP root
+            const zipVirtualHandle = {
+                name: zipFileObj.originalFilename + zipFileObj.extension,
+                kind: 'directory',
+                isZipRoot: true,
+                zipPath: zipPath
+            };
+            
+            // Store virtual folder data
+            buildVirtualFolderMap(virtualFolders, zipPath, foldersMap, zipVirtualHandle);
+            
+            // Add ZIP as a virtual directory in parent
+            parentItems.push({
+                handle: zipVirtualHandle,
+                isDirectory: true,
+                isZipRoot: true
+            });
+            
+        } catch (err) {
+            console.error('Error scanning ZIP file:', zipFileObj.originalFilename, err);
+        }
+    }
+    
+    /**
+     * Ensure all parent directories exist in virtual folder map
+     */
+    function ensureVirtualPath(virtualFolders, zipPath, targetPath) {
+        if (virtualFolders.has(targetPath)) return;
+        
+        const parts = targetPath.substring(zipPath.length + 1).split('/').filter(p => p);
+        let currentPath = zipPath;
+        
+        for (const part of parts) {
+            const parentPath = currentPath;
+            currentPath = currentPath + '/' + part;
+            
+            if (!virtualFolders.has(currentPath)) {
+                virtualFolders.set(currentPath, { files: [], subdirs: new Set() });
+            }
+            
+            if (virtualFolders.has(parentPath)) {
+                virtualFolders.get(parentPath).subdirs.add(currentPath);
+            }
+        }
+    }
+    
+    /**
+     * Build virtual folder entries for the foldersMap
+     * Uses path strings as keys for virtual folders to avoid object reference issues
+     */
+    function buildVirtualFolderMap(virtualFolders, zipPath, foldersMap, zipVirtualHandle) {
+        const rootData = virtualFolders.get(zipPath);
+        if (!rootData) return;
+        
+        // Create items array for ZIP root
+        const rootItems = [...rootData.files];
+        
+        // Add subdirectories
+        for (const subdirPath of rootData.subdirs) {
+            const subdirName = subdirPath.split('/').pop();
+            const subdirHandle = {
+                name: subdirName,
+                kind: 'directory',
+                isVirtualDir: true,
+                virtualPath: subdirPath,
+                zipPath: zipPath
+            };
+            rootItems.push({
+                handle: subdirHandle,
+                isDirectory: true,
+                isVirtualDir: true
+            });
+            
+            // Recursively add subdir contents
+            buildVirtualSubfolder(virtualFolders, subdirPath, foldersMap, zipPath);
+        }
+        
+        // Store with both the handle object AND the path string as keys
+        // This ensures lookup works regardless of which reference is used
+        foldersMap.set(zipVirtualHandle, rootItems);
+        foldersMap.set(zipPath, rootItems);  // Path-based key for tree building
+    }
+    
+    /**
+     * Recursively build virtual subfolder entries
+     */
+    function buildVirtualSubfolder(virtualFolders, folderPath, foldersMap, zipPath) {
+        const folderData = virtualFolders.get(folderPath);
+        if (!folderData) return;
+        
+        const folderName = folderPath.split('/').pop();
+        const folderHandle = {
+            name: folderName,
+            kind: 'directory',
+            isVirtualDir: true,
+            virtualPath: folderPath,
+            zipPath: zipPath
+        };
+        
+        const items = [...folderData.files];
+        
+        // Store with path string key for tree building lookup
+        foldersMap.set(folderPath, items);
+        
+        // Add subdirectories
+        for (const subdirPath of folderData.subdirs) {
+            const subdirName = subdirPath.split('/').pop();
+            const subdirHandle = {
+                name: subdirName,
+                kind: 'directory',
+                isVirtualDir: true,
+                virtualPath: subdirPath,
+                zipPath: zipPath
+            };
+            items.push({
+                handle: subdirHandle,
+                isDirectory: true,
+                isVirtualDir: true
+            });
+            
+            // Recursively add subdir contents
+            buildVirtualSubfolder(virtualFolders, subdirPath, foldersMap, zipPath);
+        }
+        
+        foldersMap.set(folderHandle, items);
+    }
+    
+    /**
+     * Get cached ZIP data
+     */
+    function getZipCache(zipPath) {
+        return zipCache.get(zipPath);
+    }
+    
+    /**
+     * Extract a ZIP file to its parent directory
+     */
+    async function extractZip(zipPath) {
+        const cached = zipCache.get(zipPath);
+        if (!cached) {
+            throw new Error('ZIP not found in cache');
+        }
+        
+        const { zip, folderHandle } = cached;
+        
+        // Get the ZIP filename without extension for the extract folder name
+        const zipName = zipPath.split('/').pop();
+        const extractFolderName = zipName.replace(/\.zip$/i, '');
+        
+        // Create extraction folder
+        const extractFolder = await folderHandle.getDirectoryHandle(extractFolderName, { create: true });
+        
+        // Extract all files
+        const entries = [];
+        zip.forEach((relativePath, zipEntry) => {
+            if (!zipEntry.dir) {
+                entries.push({ path: relativePath, entry: zipEntry });
+            }
+        });
+        
+        for (const { path, entry } of entries) {
+            try {
+                // Create subdirectories if needed
+                const parts = path.split('/');
+                const fileName = parts.pop();
+                
+                let currentDir = extractFolder;
+                for (const part of parts) {
+                    if (part) {
+                        currentDir = await currentDir.getDirectoryHandle(part, { create: true });
+                    }
+                }
+                
+                // Write file
+                const content = await entry.async('arraybuffer');
+                const fileHandle = await currentDir.getFileHandle(fileName, { create: true });
+                const writable = await fileHandle.createWritable();
+                await writable.write(content);
+                await writable.close();
+            } catch (err) {
+                console.error('Error extracting file:', path, err);
+            }
+        }
+        
+        return extractFolderName;
+    }
+
+    /**
+     * Create file object with metadata
+     */
+    async function createFileObject(fileHandle, folderHandle) {
+        try {
+            const file = await fileHandle.getFile();
+            const filename = file.name;
+            const extension = filename.includes('.') ? 
+                '.' + filename.split('.').pop() : '';
+            const nameWithoutExt = extension ? 
+                filename.substring(0, filename.length - extension.length) : filename;
+            
+            return {
+                handle: fileHandle,
+                folderHandle: folderHandle,
+                originalFilename: nameWithoutExt,
+                extension: extension,
+                size: file.size,
+                lastModified: file.lastModified,
+                
+                // Editable fields
+                tracking: '',
+                revision: '',
+                status: '',
+                title: '',
+                
+                // State
+                isDirty: false,
+                error: false,
+                errorMessage: '',
+                validation: null,
+                sha256: null
+                // folderPath will be added later in buildTree
+            };
+        } catch (err) {
+            console.error('Error reading file:', fileHandle.name, err);
+            return null;
+        }
+    }
+
+    // Export module
+    window.app.modules.scanner = {
+        scanDirectory,
+        getZipCache,
+        extractZip
+    };
+})();
+
+
+/**
+ * Folder Tree Module
+ * Handles folder tree rendering and multi-select
+ */
+(function() {
+    'use strict';
+
+    /**
+     * Render the folder tree
+     */
+    function render() {
+        const container = window.app.dom.folderTree;
+        container.innerHTML = '';
+
+        if (window.app.folderTree.length === 0) {
+            container.innerHTML = '<div class="empty-state">No folders found</div>';
+            return;
+        }
+
+        window.app.folderTree.forEach(folder => {
+            const element = createFolderElement(folder);
+            container.appendChild(element);
+        });
+
+        updateSelectedCount();
+    }
+
+    /**
+     * Create a folder element
+     */
+    function createFolderElement(folder, level = 0) {
+        const div = document.createElement('div');
+        
+        const item = document.createElement('div');
+        item.className = 'folder-item';
+        item.dataset.path = folder.path;
+        item.style.paddingLeft = `${level * 1.5}rem`;
+
+        // Check if selected
+        if (window.app.selectedFolders.has(folder.path)) {
+            item.classList.add('selected');
+        }
+
+        // Toggle button (if has children)
+        const toggle = document.createElement('span');
+        toggle.className = 'folder-toggle';
+        if (folder.children && folder.children.length > 0) {
+            toggle.textContent = folder.expanded ? '▼' : '▶';
+            toggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const recursive = e.ctrlKey || e.metaKey;
+                toggleFolder(folder, recursive);
+            });
+        } else {
+            toggle.textContent = ' ';
+        }
+        item.appendChild(toggle);
+
+        // Folder icon (different for ZIP files)
+        const icon = document.createElement('span');
+        icon.className = 'folder-icon';
+        if (folder.isZipRoot) {
+            icon.innerHTML = '&#128230;';  // 📦
+        } else if (folder.isVirtualDir) {
+            icon.innerHTML = '&#128194;';  // 📂
+        } else {
+            icon.innerHTML = '&#128193;';  // 📁
+        }
+        item.appendChild(icon);
+
+        // Folder name
+        const name = document.createElement('span');
+        name.className = 'folder-name';
+        name.textContent = folder.name;
+        item.appendChild(name);
+
+        // File count
+        const count = document.createElement('span');
+        count.className = 'folder-count';
+        count.textContent = `(${folder.fileCount || 0})`;
+        item.appendChild(count);
+        
+        // Extract button for ZIP roots
+        if (folder.isZipRoot) {
+            const extractBtn = document.createElement('button');
+            extractBtn.className = 'btn btn-sm zip-extract-btn';
+            extractBtn.textContent = '📤 Extract';
+            extractBtn.title = 'Extract ZIP contents to folder';
+            extractBtn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                await handleExtractZip(folder);
+            });
+            item.appendChild(extractBtn);
+        }
+        
+        // Extract All button for folders with ZIP descendants (but not ZIP roots themselves)
+        if (!folder.isZipRoot && !folder.isVirtualDir) {
+            const zipCount = countZipDescendants(folder);
+            if (zipCount > 0) {
+                const extractAllBtn = document.createElement('button');
+                extractAllBtn.className = 'btn btn-sm zip-extract-all-btn';
+                extractAllBtn.textContent = `📤 Extract All (${zipCount})`;
+                extractAllBtn.title = `Extract all ${zipCount} ZIP file(s) in this folder`;
+                extractAllBtn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    await handleExtractAllZips(folder);
+                });
+                item.appendChild(extractAllBtn);
+            }
+        }
+
+        // Click handler for selection
+        item.addEventListener('click', (e) => {
+            handleFolderClick(folder, e);
+        });
+
+        div.appendChild(item);
+
+        // Children (if expanded)
+        if (folder.expanded && folder.children && folder.children.length > 0) {
+            const childrenDiv = document.createElement('div');
+            childrenDiv.className = 'folder-children';
+            folder.children.forEach(child => {
+                const childElement = createFolderElement(child, level + 1);
+                childrenDiv.appendChild(childElement);
+            });
+            div.appendChild(childrenDiv);
+        }
+
+        return div;
+    }
+
+    /**
+     * Handle folder click with multi-select support
+     */
+    function handleFolderClick(folder, event) {
+        if (event.ctrlKey || event.metaKey) {
+            // Ctrl+Click: Toggle selection
+            if (window.app.selectedFolders.has(folder.path)) {
+                window.app.selectedFolders.delete(folder.path);
+            } else {
+                window.app.selectedFolders.add(folder.path);
+            }
+        } else if (event.shiftKey) {
+            // Shift+Click: Range selection
+            const visibleFolders = getVisibleFolders();
+            const currentIndex = visibleFolders.findIndex(f => f.path === folder.path);
+            
+            if (currentIndex >= 0 && window.app.lastSelectedFolderPath) {
+                const lastIndex = visibleFolders.findIndex(f => f.path === window.app.lastSelectedFolderPath);
+                
+                if (lastIndex >= 0) {
+                    const start = Math.min(currentIndex, lastIndex);
+                    const end = Math.max(currentIndex, lastIndex);
+                    
+                    // Select range
+                    for (let i = start; i <= end; i++) {
+                        window.app.selectedFolders.add(visibleFolders[i].path);
+                    }
+                }
+            } else {
+                window.app.selectedFolders.add(folder.path);
+            }
+        } else {
+            // Normal click: Single selection
+            window.app.selectedFolders.clear();
+            window.app.selectedFolders.add(folder.path);
+        }
+
+        // Remember last selected for shift-click
+        window.app.lastSelectedFolderPath = folder.path;
+
+        // Re-render tree
+        render();
+
+        // Load files from selected folders
+        loadFilesFromSelectedFolders();
+    }
+
+    /**
+     * Handle ZIP extraction
+     */
+    async function handleExtractZip(folder) {
+        if (!folder.isZipRoot || !folder.zipPath) return;
+        
+        try {
+            const confirmed = confirm(`Extract "${folder.name}" to a new folder?\n\nThis will create a folder named "${folder.name.replace(/\.zip$/i, '')}" with the ZIP contents.`);
+            if (!confirmed) return;
+            
+            // Show extracting state
+            const btn = document.querySelector(`.folder-item[data-path="${folder.path}"] .zip-extract-btn`);
+            if (btn) {
+                btn.textContent = '⏳ Extracting...';
+                btn.disabled = true;
+            }
+            
+            await window.app.modules.scanner.extractZip(folder.zipPath);
+            
+            // Auto-refresh preserving tree state
+            await window.app.modules.scanner.scanDirectory(window.app.rootHandle, true);
+        } catch (err) {
+            console.error('Error extracting ZIP:', err);
+            alert('Error extracting ZIP: ' + err.message);
+            
+            // Reset button
+            const btn = document.querySelector(`.folder-item[data-path="${folder.path}"] .zip-extract-btn`);
+            if (btn) {
+                btn.textContent = '📤 Extract';
+                btn.disabled = false;
+            }
+        }
+    }
+    
+    /**
+     * Count ZIP descendants in a folder
+     */
+    function countZipDescendants(folder) {
+        let count = 0;
+        if (folder.children) {
+            for (const child of folder.children) {
+                if (child.isZipRoot) {
+                    count++;
+                }
+                count += countZipDescendants(child);
+            }
+        }
+        return count;
+    }
+    
+    /**
+     * Get all ZIP folders as flat list
+     */
+    function getZipDescendants(folder, zips = []) {
+        if (folder.children) {
+            for (const child of folder.children) {
+                if (child.isZipRoot) {
+                    zips.push(child);
+                }
+                getZipDescendants(child, zips);
+            }
+        }
+        return zips;
+    }
+    
+    /**
+     * Handle extracting all ZIPs in a folder
+     */
+    async function handleExtractAllZips(folder) {
+        const zips = getZipDescendants(folder);
+        if (zips.length === 0) return;
+        
+        const confirmed = confirm(`Extract ${zips.length} ZIP file(s)?\n\nThis will create folders for each ZIP with their contents.`);
+        if (!confirmed) return;
+        
+        try {
+            // Show extracting state on button
+            const btn = document.querySelector(`.folder-item[data-path="${folder.path}"] .zip-extract-all-btn`);
+            if (btn) {
+                btn.textContent = '⏳ Extracting...';
+                btn.disabled = true;
+            }
+            
+            // Extract all ZIPs
+            for (const zip of zips) {
+                if (zip.zipPath) {
+                    await window.app.modules.scanner.extractZip(zip.zipPath);
+                }
+            }
+            
+            // Auto-refresh preserving tree state
+            await window.app.modules.scanner.scanDirectory(window.app.rootHandle, true);
+        } catch (err) {
+            console.error('Error extracting ZIPs:', err);
+            alert('Error extracting ZIPs: ' + err.message);
+            
+            // Reset button
+            const btn = document.querySelector(`.folder-item[data-path="${folder.path}"] .zip-extract-all-btn`);
+            if (btn) {
+                btn.textContent = `📤 Extract All (${zips.length})`;
+                btn.disabled = false;
+            }
+        }
+    }
+
+    /**
+     * Toggle folder expansion
+     */
+    function toggleFolder(folder, recursive = false) {
+        folder.expanded = !folder.expanded;
+        
+        if (recursive && folder.children) {
+            // Recursively expand/collapse all children
+            const newState = folder.expanded;
+            function setAllExpanded(f) {
+                f.expanded = newState;
+                if (f.children) {
+                    f.children.forEach(setAllExpanded);
+                }
+            }
+            folder.children.forEach(setAllExpanded);
+        }
+        
+        render();
+    }
+
+    /**
+     * Load files from all selected folders
+     */
+    async function loadFilesFromSelectedFolders() {
+        // Use store to manage files
+        window.app.modules.store.setSelectedFolders(Array.from(window.app.selectedFolders));
+    }
+
+    /**
+     * Find folder by path in tree
+     */
+    function findFolderByPath(path) {
+        function search(folders) {
+            for (const folder of folders) {
+                if (folder.path === path) {
+                    return folder;
+                }
+                if (folder.children) {
+                    const found = search(folder.children);
+                    if (found) return found;
+                }
+            }
+            return null;
+        }
+        return search(window.app.folderTree);
+    }
+
+    /**
+     * Update selected folders count
+     */
+    function updateSelectedCount() {
+        const count = window.app.selectedFolders.size;
+        window.app.dom.selectedFoldersCount.textContent = 
+            `${count} folder${count !== 1 ? 's' : ''} selected`;
+    }
+
+    /**
+     * Build folder tree from scanned data
+     */
+    function buildTree(rootHandle, foldersMap) {
+        const tree = [];
+        
+        // Convert flat map to tree structure
+        function buildNode(handle, path) {
+            // For virtual folders, look up by path string; for real folders, use handle
+            let files;
+            if (handle.isVirtualDir || handle.isZipRoot) {
+                files = foldersMap.get(handle.virtualPath || handle.zipPath) || [];
+            } else {
+                files = foldersMap.get(handle) || [];
+            }
+            
+            // Add folderPath to each file for folder highlighting (filter out null files)
+            files.filter(file => file !== null).forEach(file => {
+                if (!file.isDirectory) {
+                    file.folderPath = path;
+                }
+            });
+            
+            // Filter out null files for the node
+            const validFiles = files.filter(f => f !== null);
+            
+            const node = {
+                name: handle.name,
+                path: path,
+                handle: handle,
+                files: validFiles,
+                fileCount: validFiles.length,
+                children: [],
+                expanded: false
+            };
+            
+            // Mark ZIP-related nodes
+            if (handle.isZipRoot) {
+                node.isZipRoot = true;
+                node.zipPath = handle.zipPath;
+            }
+            if (handle.isVirtualDir) {
+                node.isVirtualDir = true;
+                node.zipPath = handle.zipPath;
+            }
+            
+            return node;
+        }
+
+        // Recursively build tree
+        function addChildren(node) {
+            // Get subdirectories (filter out null files first)
+            // For virtual folders, look up by path string
+            let files;
+            if (node.handle.isVirtualDir || node.handle.isZipRoot) {
+                files = foldersMap.get(node.handle.virtualPath || node.handle.zipPath) || [];
+            } else {
+                files = foldersMap.get(node.handle) || [];
+            }
+            const validFiles = files.filter(f => f !== null);
+            const subdirs = validFiles.filter(f => f.isDirectory);
+            
+            subdirs.forEach(subdir => {
+                const childPath = node.path + '/' + subdir.handle.name;
+                const childNode = buildNode(subdir.handle, childPath);
+                addChildren(childNode);
+                node.children.push(childNode);
+            });
+            
+            // Update file count to exclude directories and null files
+            node.files = validFiles.filter(f => !f.isDirectory);
+            node.fileCount = node.files.length;
+        }
+
+        // Build root
+        const root = buildNode(rootHandle, rootHandle.name);
+        addChildren(root);
+        
+        // Expand root by default
+        root.expanded = true;
+        
+        tree.push(root);
+        return tree;
+    }
+
+    /**
+     * Get all currently visible folders (expanded tree)
+     */
+    function getVisibleFolders() {
+        const visible = [];
+        
+        function traverse(folders) {
+            for (const folder of folders) {
+                visible.push(folder);
+                if (folder.expanded && folder.children) {
+                    traverse(folder.children);
+                }
+            }
+        }
+        
+        traverse(window.app.folderTree);
+        return visible;
+    }
+
+    /**
+     * Select all visible folders
+     */
+    function selectAllVisible() {
+        const visible = getVisibleFolders();
+        window.app.selectedFolders.clear();
+        visible.forEach(f => window.app.selectedFolders.add(f.path));
+        render();
+        loadFilesFromSelectedFolders();
+    }
+
+    /**
+     * Expand all folders in tree
+     */
+    function expandAll() {
+        function setAllExpanded(folder) {
+            folder.expanded = true;
+            if (folder.children) {
+                folder.children.forEach(setAllExpanded);
+            }
+        }
+        
+        window.app.folderTree.forEach(setAllExpanded);
+        render();
+    }
+
+    /**
+     * Select all folders in tree
+     */
+    function selectAll() {
+        function collectAllPaths(folders, paths = []) {
+            folders.forEach(folder => {
+                paths.push(folder.path);
+                if (folder.children) {
+                    collectAllPaths(folder.children, paths);
+                }
+            });
+            return paths;
+        }
+        
+        const allPaths = collectAllPaths(window.app.folderTree);
+        allPaths.forEach(path => window.app.selectedFolders.add(path));
+        
+        render();
+        loadFilesFromSelectedFolders();
+    }
+
+    /**
+     * Set up keyboard shortcuts for folder tree
+     */
+    function setupKeyboardShortcuts() {
+        const container = window.app.dom.folderTree;
+        
+        container.addEventListener('keydown', (e) => {
+            // Ctrl+A: Select all visible
+            if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+                e.preventDefault();
+                selectAllVisible();
+            }
+        });
+        
+        // Make container focusable
+        container.tabIndex = 0;
+    }
+
+    // Export module
+    window.app.modules.tree = {
+        render,
+        buildTree,
+        loadFilesFromSelectedFolders,
+        setupKeyboardShortcuts,
+        expandAll,
+        selectAll
+    };
+})();
+
+/**
+ * Spreadsheet Module
+ * Handles table rendering, cell editing, and file operations
+ */
+(function() {
+    'use strict';
+
+    let editingCell = null;
+    let editingInput = null;
+
+    /**
+     * Render spreadsheet from store
+     */
+    function render() {
+        const tbody = window.app.dom.spreadsheetBody;
+        tbody.innerHTML = '';
+
+        // Get files from store (already filtered and sorted)
+        const files = window.app.modules.store.getDisplayFiles();
+
+        // Render rows
+        if (files.length === 0) {
+            const message = window.app.modules.store.getDisplayFiles().length === 0 
+                ? '<h3>No files to display</h3><p>Select one or more folders from the tree to view files</p>'
+                : '<h3>No files match filters</h3><p>Adjust or clear filters to see files</p>';
+            
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="10" class="empty-state">
+                        ${message}
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        files.forEach((file, index) => {
+            const row = createRow(file, index);
+            tbody.appendChild(row);
+        });
+
+        // Update UI
+        window.app.modules.app.updateStats();
+        updateSortIndicators();
+
+        // Calculate SHA256 if enabled
+        if (window.app.calculateSha256) {
+            calculateSha256ForAll();
+        }
+    }
+
+    /**
+     * Update sort indicators
+     */
+    function updateSortIndicators() {
+        const sortColumns = window.app.modules.store.getSortColumns();
+        const headers = window.app.dom.spreadsheet.querySelectorAll('thead th');
+
+        headers.forEach(th => {
+            const indicator = th.querySelector('.sort-indicator');
+            if (!indicator) return;
+
+            const columnName = th.className.replace('col-', '');
+            const sortIndex = sortColumns.findIndex(s => s.column === columnName);
+
+            if (sortIndex >= 0) {
+                const sort = sortColumns[sortIndex];
+                const arrow = sort.direction === 'asc' ? '▲' : '▼';
+                const priority = sortColumns.length > 1 ? (sortIndex + 1) : '';
+                indicator.textContent = ` ${arrow}${priority}`;
+                indicator.style.display = 'inline';
+            } else {
+                indicator.textContent = '';
+                indicator.style.display = 'none';
+            }
+        });
+    }
+
+    /**
+     * Parse filename to extract ZDDC components (delegates to utils)
+     */
+    function parseFilename(filename) {
+        if (window.app.modules.utils) {
+            return window.app.modules.utils.parseFilename(filename);
+        }
+        
+        const result = {
+            tracking: '',
+            revision: '',
+            status: '',
+            title: ''
+        };
+
+        // Try to match ZDDC pattern: TRACKING_REV (STATUS) - TITLE
+        const match = filename.match(/^([^_]+)_([^\s(]+)\s*\(([^)]+)\)\s*-\s*(.+)$/);
+        
+        if (match) {
+            result.tracking = match[1].trim();
+            result.revision = match[2].trim();
+            result.status = match[3].trim();
+            result.title = match[4].trim();
+        }
+
+        return result;
+    }
+
+    /**
+     * Create a table row for a file
+     */
+    function createRow(file, index) {
+        const row = document.createElement('tr');
+        row.dataset.index = index;
+        row.dataset.folderPath = file.folderPath; // Store folder path for highlighting
+
+        // Add state classes
+        if (file.isDirty) row.classList.add('modified');
+        if (file.error) row.classList.add('error');
+        
+        // Highlight folder on hover
+        row.addEventListener('mouseenter', () => {
+            highlightFolder(file.folderPath);
+        });
+        
+        row.addEventListener('mouseleave', () => {
+            clearFolderHighlight();
+        });
+
+        // Row number
+        row.appendChild(createCell('row-num', index + 1, false));
+
+        // Original filename (with link to open)
+        const originalCell = createCell('original', '', false);
+        const link = document.createElement('a');
+        link.className = 'cell-link';
+        link.textContent = file.originalFilename;
+        link.title = 'Click to open file';
+        link.style.cursor = 'pointer';
+        
+        // Handle any click (left or middle or from context menu)
+        link.addEventListener('click', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            openFile(file);
+        });
+        
+        originalCell.appendChild(link);
+        row.appendChild(originalCell);
+
+        // Extension
+        row.appendChild(createCell('extension', file.extension, false));
+
+        // New filename (computed unless manually set) with inline actions
+        const newFilename = file.manualFilename || computeNewFilename(file, index);
+        const newFilenameCell = createEditableCell('newFilename', newFilename, index);
+        if (!file.manualFilename) {
+            newFilenameCell.classList.add('computed');
+        }
+        
+        // Validate and show errors
+        const validation = window.app.modules.validator.validateFilename(newFilename);
+        if (!validation.isValid) {
+            newFilenameCell.classList.add('validation-error');
+            newFilenameCell.title = validation.errors.join('; ');
+        } else if (validation.warnings.length > 0) {
+            newFilenameCell.classList.add('validation-warning');
+            newFilenameCell.title = validation.warnings.join('; ');
+        }
+        
+        // Only show action buttons if row is dirty
+        if (file.isDirty) {
+            const actions = document.createElement('span');
+            actions.className = 'inline-actions';
+            
+            const saveBtn = document.createElement('button');
+            saveBtn.className = 'btn-inline btn-save';
+            saveBtn.textContent = '✓';
+            saveBtn.title = 'Save';
+            saveBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                saveFile(index);
+            });
+            
+            const cancelBtn = document.createElement('button');
+            cancelBtn.className = 'btn-inline btn-cancel';
+            cancelBtn.textContent = '✗';
+            cancelBtn.title = 'Clear all fields';
+            cancelBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                cancelFile(index);
+            });
+            
+            actions.appendChild(saveBtn);
+            actions.appendChild(cancelBtn);
+            newFilenameCell.appendChild(actions);
+        }
+        
+        row.appendChild(newFilenameCell);
+
+        // Auto-populate fields from filename if empty
+        if (!file.tracking && !file.revision && !file.status && !file.title) {
+            const parsed = parseFilename(file.originalFilename);
+            file.tracking = parsed.tracking || '';
+            file.revision = parsed.revision || '';
+            file.status = parsed.status || '';
+            file.title = parsed.title || '';
+            file.autoPopulated = true;  // Mark as auto-populated
+        }
+
+        // Editable columns (with gray styling if auto-populated)
+        const trackingCell = createEditableCell('tracking', file.tracking || '', index);
+        const revisionCell = createEditableCell('revision', file.revision || '', index);
+        const statusCell = createEditableCell('status', file.status || '', index);
+        const titleCell = createEditableCell('title', file.title || '', index);
+        
+        if (file.autoPopulated && !file.isDirty) {
+            trackingCell.classList.add('auto-populated');
+            revisionCell.classList.add('auto-populated');
+            statusCell.classList.add('auto-populated');
+            titleCell.classList.add('auto-populated');
+        }
+        
+        row.appendChild(trackingCell);
+        row.appendChild(revisionCell);
+        row.appendChild(statusCell);
+        row.appendChild(titleCell);
+
+        // SHA256 (if enabled)
+        if (window.app.calculateSha256) {
+            const sha256Cell = createCell('sha256', file.sha256 || 'calculating...', false);
+            if (!file.sha256) {
+                sha256Cell.classList.add('sha256-calculating');
+            }
+            row.appendChild(sha256Cell);
+        }
+
+        return row;
+    }
+
+    /**
+     * Create a table cell
+     */
+    function createCell(className, content, editable = false) {
+        const td = document.createElement('td');
+        td.className = `col-${className}`;
+        td.textContent = content;
+        return td;
+    }
+
+    /**
+     * Create an editable cell
+     */
+    function createEditableCell(columnName, value, rowIndex) {
+        const td = document.createElement('td');
+        td.className = `col-${columnName} cell-editable`;
+        td.textContent = value;
+        
+        // Double-click to edit
+        td.addEventListener('dblclick', (e) => {
+            e.stopPropagation();
+            startEditing(td, columnName, rowIndex);
+        });
+        
+        return td;
+    }
+
+
+    /**
+     * Start editing a cell
+     */
+    function startEditing(cell, columnName, rowIndex) {
+        // Cancel any existing edit
+        if (editingCell) {
+            cancelEditing();
+        }
+
+        const files = window.app.modules.store.getDisplayFiles();
+        const file = files[rowIndex];
+        if (!file) return;
+        
+        const currentValue = file[columnName] || '';
+
+        // Clear any cell selection
+        if (window.app.modules.selection) {
+            window.app.modules.selection.clearSelection();
+        }
+
+        // Store references
+        editingCell = { cell, columnName, rowIndex, originalValue: currentValue };
+
+        // Save original content and make cell contenteditable
+        cell.dataset.originalContent = cell.innerHTML;
+        cell.contentEditable = 'true';
+        cell.classList.add('editing');
+        editingInput = cell;
+
+        // Set content (text only for editing)
+        cell.textContent = currentValue;
+
+        // Focus and select all
+        cell.focus();
+        
+        // Select all text
+        const range = document.createRange();
+        range.selectNodeContents(cell);
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+
+        // Event listeners
+        cell.addEventListener('blur', handleBlur, { once: true });
+        cell.addEventListener('keydown', handleKeyDown);
+    }
+
+    /**
+     * Handle blur event
+     */
+    function handleBlur() {
+        // Small delay to allow click events to fire first
+        setTimeout(() => finishEditing(), 100);
+    }
+
+    /**
+     * Handle keydown in contenteditable
+     */
+    function handleKeyDown(e) {
+        if (e.key === 'Enter') {
+            // Enter exits edit mode
+            e.preventDefault();
+            finishEditing();
+        } else if (e.key === 'Escape') {
+            // Escape undoes and exits edit mode
+            e.preventDefault();
+            cancelEditing();
+        } else if (e.key === 'Tab') {
+            // Tab/Shift+Tab moves to next/prev cell
+            e.preventDefault();
+            const { rowIndex, columnName } = editingCell || {};
+            const shiftKey = e.shiftKey;
+            finishEditingQuiet();  // Don't trigger store update
+            if (rowIndex !== undefined) {
+                if (shiftKey) {
+                    moveToPreviousCell(rowIndex, columnName);
+                } else {
+                    moveToNextCell(rowIndex, columnName);
+                }
+            }
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            const { rowIndex, columnName } = editingCell || {};
+            finishEditingQuiet();
+            if (rowIndex !== undefined) {
+                moveUpRow(rowIndex, columnName);
+            }
+        } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            const { rowIndex, columnName } = editingCell || {};
+            finishEditingQuiet();
+            if (rowIndex !== undefined) {
+                moveDownRow(rowIndex, columnName);
+            }
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+            // Allow normal cursor movement within cell
+            e.stopPropagation();
+        }
+    }
+
+    /**
+     * Finish editing and save value
+     */
+    function finishEditing() {
+        if (!editingCell || !editingInput) return;
+
+        const { cell, columnName, rowIndex } = editingCell;
+        const newValue = editingInput.textContent.trim();
+        const files = window.app.modules.store.getDisplayFiles();
+        const file = files[rowIndex];
+        if (!file) return;
+        
+        const oldValue = file[columnName] || '';
+
+        // Remove contenteditable
+        editingInput.contentEditable = 'false';
+        editingInput.classList.remove('editing');
+        editingInput.removeEventListener('keydown', handleKeyDown);
+
+        // Update file data if changed
+        if (newValue !== oldValue) {
+            // Special handling for newFilename column
+            if (columnName === 'newFilename') {
+                if (newValue) {
+                    window.app.modules.store.updateFileField(rowIndex, 'manualFilename', newValue);
+                } else {
+                    window.app.modules.store.updateFile(rowIndex, { manualFilename: null });
+                }
+            } else {
+                window.app.modules.store.updateFileField(rowIndex, columnName, newValue);
+            }
+
+            const updatedFile = window.app.modules.store.getDisplayFiles()[rowIndex];
+            validateFile(updatedFile);
+        }
+
+        editingCell = null;
+        editingInput = null;
+    }
+    
+    /**
+     * Finish editing without triggering store update (for Tab/Arrow navigation)
+     */
+    function finishEditingQuiet() {
+        if (!editingCell || !editingInput) return;
+
+        const { columnName, rowIndex } = editingCell;
+        const newValue = editingInput.textContent.trim();
+        const files = window.app.modules.store.getDisplayFiles();
+        const file = files[rowIndex];
+        
+        // Remove contenteditable
+        editingInput.contentEditable = 'false';
+        editingInput.classList.remove('editing');
+        editingInput.removeEventListener('keydown', handleKeyDown);
+
+        // Update file object directly (no store notification)
+        if (file) {
+            if (columnName === 'newFilename') {
+                file.manualFilename = newValue || null;
+            } else {
+                file[columnName] = newValue;
+            }
+            file.isDirty = true;
+        }
+
+        editingCell = null;
+        editingInput = null;
+    }
+
+    /**
+     * Cancel editing without saving
+     */
+    function cancelEditing() {
+        if (!editingCell) return;
+
+        const { rowIndex } = editingCell;
+        const files = window.app.modules.store.getDisplayFiles();
+        const file = files[rowIndex];
+        if (!file) return;
+
+        // Clear editing state
+        editingCell = null;
+        editingInput = null;
+
+        // Re-render the row
+        const row = window.app.dom.spreadsheetBody.querySelector(`tr[data-index="${rowIndex}"]`);
+        if (row) {
+            const newRow = createRow(file, rowIndex);
+            row.replaceWith(newRow);
+        }
+    }
+
+    /**
+     * Move to next editable cell
+     */
+    function moveToNextCell(rowIndex, currentColumn) {
+        const columns = ['newFilename', 'tracking', 'revision', 'status', 'title'];
+        const currentIndex = columns.indexOf(currentColumn);
+        
+        if (currentIndex < columns.length - 1) {
+            // Next column in same row
+            const nextColumn = columns[currentIndex + 1];
+            const row = window.app.dom.spreadsheetBody.querySelector(`tr[data-index="${rowIndex}"]`);
+            const nextCell = row.querySelector(`.col-${nextColumn}`);
+            if (nextCell) {
+                startEditing(nextCell, nextColumn, rowIndex);
+            }
+        } else if (rowIndex < window.app.modules.store.getDisplayFiles().length - 1) {
+            // First column of next row
+            const nextColumn = columns[0];
+            const nextRow = window.app.dom.spreadsheetBody.querySelector(`tr[data-index="${rowIndex + 1}"]`);
+            const nextCell = nextRow.querySelector(`.col-${nextColumn}`);
+            if (nextCell) {
+                startEditing(nextCell, nextColumn, rowIndex + 1);
+            }
+        }
+    }
+
+    /**
+     * Move to previous editable cell
+     */
+    function moveToPreviousCell(rowIndex, currentColumn) {
+        const columns = ['newFilename', 'tracking', 'revision', 'status', 'title'];
+        const currentIndex = columns.indexOf(currentColumn);
+        
+        if (currentIndex > 0) {
+            // Previous column in same row
+            const prevColumn = columns[currentIndex - 1];
+            const row = window.app.dom.spreadsheetBody.querySelector(`tr[data-index="${rowIndex}"]`);
+            const prevCell = row.querySelector(`.col-${prevColumn}`);
+            if (prevCell) {
+                startEditing(prevCell, prevColumn, rowIndex);
+            }
+        } else if (rowIndex > 0) {
+            // Last column of previous row
+            const prevColumn = columns[columns.length - 1];
+            const prevRow = window.app.dom.spreadsheetBody.querySelector(`tr[data-index="${rowIndex - 1}"]`);
+            const prevCell = prevRow.querySelector(`.col-${prevColumn}`);
+            if (prevCell) {
+                startEditing(prevCell, prevColumn, rowIndex - 1);
+            }
+        }
+    }
+
+    /**
+     * Move up one row, same column
+     */
+    function moveUpRow(rowIndex, currentColumn) {
+        if (rowIndex > 0) {
+            const prevRow = window.app.dom.spreadsheetBody.querySelector(`tr[data-index="${rowIndex - 1}"]`);
+            const cell = prevRow.querySelector(`.col-${currentColumn}`);
+            if (cell) {
+                startEditing(cell, currentColumn, rowIndex - 1);
+            }
+        }
+    }
+
+    /**
+     * Move down one row, same column
+     */
+    function moveDownRow(rowIndex, currentColumn) {
+        if (rowIndex < window.app.modules.store.getDisplayFiles().length - 1) {
+            const nextRow = window.app.dom.spreadsheetBody.querySelector(`tr[data-index="${rowIndex + 1}"]`);
+            const cell = nextRow.querySelector(`.col-${currentColumn}`);
+            if (cell) {
+                startEditing(cell, currentColumn, rowIndex + 1);
+            }
+        }
+    }
+
+    /**
+     * Compute new filename from formula or template (delegates to utils)
+     */
+    function computeNewFilename(file, index) {
+        if (window.app.modules.utils) {
+            return window.app.modules.utils.computeNewFilename(file);
+        }
+        
+        // Fallback if utils not loaded
+        if (file.manualFilename) {
+            return file.manualFilename;
+        }
+        
+        const tracking = (file.tracking || '').trim();
+        const revision = (file.revision || '').trim();
+        const status = (file.status || '').trim();
+        const title = (file.title || '').trim();
+        
+        if (!tracking || !revision || !status || !title) {
+            return file.originalFilename + file.extension;
+        }
+        
+        return `${tracking}_${revision} (${status}) - ${title}${file.extension}`;
+    }
+
+    /**
+     * Validate a file
+     */
+    function validateFile(file) {
+        const newFilename = computeNewFilename(file, 0);
+        const validation = window.app.modules.validator.validateFilename(newFilename);
+        
+        file.validation = validation;
+        file.error = !validation.isValid;
+    }
+
+    /**
+     * Open file in new tab
+     */
+    async function openFile(file) {
+        try {
+            let blob;
+            if (file.isVirtual) {
+                // Virtual file from ZIP - get from cache
+                const cached = window.app.modules.scanner.getZipCache(file.zipPath);
+                if (!cached) throw new Error('ZIP not found in cache');
+                const zipEntry = cached.zip.file(file.zipEntryPath);
+                if (!zipEntry) throw new Error('File not found in ZIP');
+                const arrayBuffer = await zipEntry.async('arraybuffer');
+                const mimeType = getMimeType(file.extension);
+                blob = new Blob([arrayBuffer], { type: mimeType });
+            } else {
+                blob = await file.handle.getFile();
+            }
+            const url = URL.createObjectURL(blob);
+            window.open(url, '_blank');
+            
+            // Clean up URL after a delay
+            setTimeout(() => URL.revokeObjectURL(url), 60000);
+        } catch (err) {
+            console.error('Error opening file:', err);
+            alert('Cannot open file: ' + err.message);
+        }
+    }
+    
+    /**
+     * Get MIME type from file extension
+     */
+    function getMimeType(extension) {
+        const ext = extension.toLowerCase();
+        const mimeTypes = {
+            '.pdf': 'application/pdf',
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.png': 'image/png',
+            '.gif': 'image/gif',
+            '.svg': 'image/svg+xml',
+            '.webp': 'image/webp',
+            '.txt': 'text/plain',
+            '.html': 'text/html',
+            '.css': 'text/css',
+            '.js': 'text/javascript',
+            '.json': 'application/json',
+            '.xml': 'application/xml',
+            '.csv': 'text/csv',
+            '.md': 'text/markdown'
+        };
+        return mimeTypes[ext] || 'application/octet-stream';
+    }
+
+    /**
+     * Save a single file
+     */
+    async function saveFile(index, skipValidation = false) {
+        const files = window.app.modules.store.getDisplayFiles();
+        const file = files[index];
+        if (!file.isDirty) {
+            console.log(`File ${index} not dirty, skipping save`);
+            return;
+        }
+        
+        // Virtual files (from ZIPs) cannot be renamed - must extract first
+        if (file.isVirtual) {
+            alert('Cannot rename files inside ZIP archives.\nExtract the ZIP first to rename files.');
+            return;
+        }
+
+        const row = window.app.dom.spreadsheetBody.querySelector(`tr[data-index="${index}"]`);
+        if (!row) {
+            console.error(`Row not found for index ${index}`);
+            return;
+        }
+        row.classList.add('saving');
+
+        try {
+            const newFilename = computeNewFilename(file, index);
+            const currentFilename = file.originalFilename + file.extension;
+            
+            // Check if already has correct name
+            if (currentFilename === newFilename) {
+                console.log('File already has correct name:', newFilename);
+                row.classList.remove('saving');
+                
+                // Just clear dirty flag and fields
+                file.isDirty = false;
+                file.error = false;
+                delete file.manualFilename;
+                file.tracking = '';
+                file.revision = '';
+                file.status = '';
+                file.title = '';
+                
+                const newRow = createRow(file, index);
+                row.replaceWith(newRow);
+                window.app.modules.app.updateStats();
+                return;
+            }
+            
+            // Validate filename
+            if (!skipValidation) {
+                const validation = window.app.modules.validator.validateFilename(newFilename);
+                if (!validation.isValid) {
+                    const errors = validation.errors.join('\n');
+                    const confirmed = confirm(
+                        `⚠️ Warning: Filename is not ZDDC compliant!\n\n` +
+                        `Errors:\n${errors}\n\n` +
+                        `Current filename: ${newFilename}\n\n` +
+                        `Do you want to save it anyway?`
+                    );
+                    
+                    if (!confirmed) {
+                        row.classList.remove('saving');
+                        return;
+                    }
+                }
+            }
+            
+            // Request write permission for the folder
+            const folderPermission = await file.folderHandle.queryPermission({ mode: 'readwrite' });
+            if (folderPermission !== 'granted') {
+                const granted = await file.folderHandle.requestPermission({ mode: 'readwrite' });
+                if (granted !== 'granted') {
+                    throw new Error('Write permission denied');
+                }
+            }
+            
+            // Rename by copying to new name and deleting old (more reliable than move)
+            const oldFilename = file.originalFilename + file.extension;
+            console.log(`Renaming: "${oldFilename}" -> "${newFilename}"`);
+            
+            try {
+                // Get fresh handle for old file
+                const oldHandle = await file.folderHandle.getFileHandle(oldFilename);
+                
+                // Read the file content
+                const fileData = await oldHandle.getFile();
+                
+                // Create new file with new name
+                const newHandle = await file.folderHandle.getFileHandle(newFilename, { create: true });
+                const writable = await newHandle.createWritable();
+                await writable.write(fileData);
+                await writable.close();
+                
+                // Delete old file
+                await file.folderHandle.removeEntry(oldFilename);
+                
+                // Update file handle
+                file.handle = newHandle;
+                console.log(`Successfully renamed to: "${newFilename}"`);
+            } catch (err) {
+                console.error(`Failed to rename file:`, err);
+                throw err;
+            }
+            
+            // Update file data directly (don't trigger store notification during batch save)
+            file.originalFilename = newFilename.substring(0, newFilename.length - file.extension.length);
+            file.isDirty = false;
+            file.error = false;
+            file.manualFilename = null;
+            file.tracking = '';
+            file.revision = '';
+            file.status = '';
+            file.title = '';
+            file.autoPopulated = false;
+            
+            // Update row UI
+            row.classList.remove('saving');
+            const newRow = createRow(file, index);
+            row.replaceWith(newRow);
+            
+        } catch (err) {
+            console.error('Error saving file:', err);
+            file.error = true;
+            file.errorMessage = err.message;
+            row.classList.remove('saving');
+            row.classList.add('error');
+            // Re-throw so caller can handle
+            throw err;
+        }
+    }
+
+    /**
+     * Cancel/Clear all fields for a single file
+     */
+    function cancelFile(index) {
+        // Clear all fields through store
+        window.app.modules.store.updateFile(index, {
+            tracking: '',
+            revision: '',
+            status: '',
+            title: '',
+            manualFilename: null,
+            isDirty: false,
+            error: false,
+            validation: null,
+            autoPopulated: false
+        });
+    }
+
+    /**
+     * Save all modified files (only ZDDC-compliant ones)
+     */
+    async function saveAllFiles() {
+        const files = window.app.modules.store.getDisplayFiles();
+        const modifiedFiles = files
+            .map((file, index) => ({ file, index }))
+            .filter(({ file }) => file.isDirty);
+
+        if (modifiedFiles.length === 0) {
+            alert('No modified files to save.');
+            return;
+        }
+
+        let successCount = 0;
+        let skippedCount = 0;
+        let errorCount = 0;
+        const errors = [];
+        const skipped = [];
+
+        for (let i = 0; i < modifiedFiles.length; i++) {
+            const { file, index } = modifiedFiles[i];
+            
+            try {
+                // Add small delay between operations to prevent race conditions
+                if (i > 0) {
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                }
+                
+                // Validate before saving
+                const newFilename = computeNewFilename(file, index);
+                const currentFilename = file.originalFilename + file.extension;
+                
+                console.log(`Processing file ${index}: ${currentFilename} -> ${newFilename}`);
+                
+                const validation = window.app.modules.validator.validateFilename(newFilename);
+                
+                if (!validation.isValid) {
+                    // Skip non-compliant files in Save All
+                    skippedCount++;
+                    skipped.push(`${file.originalFilename}${file.extension}: ${validation.errors[0]}`);
+                    console.log(`Skipped non-compliant: ${currentFilename}`);
+                    continue;
+                }
+                
+                // Check if already has correct name
+                if (currentFilename === newFilename) {
+                    console.log(`File already correct: ${newFilename}`);
+                    // Just clear dirty flag
+                    file.isDirty = false;
+                    file.error = false;
+                    delete file.manualFilename;
+                    file.tracking = '';
+                    file.revision = '';
+                    file.status = '';
+                    file.title = '';
+                    successCount++;
+                    continue;
+                }
+                
+                // Save with validation already done - ensure properly awaited
+                try {
+                    await saveFile(index, true);
+                    successCount++;
+                    console.log(`Saved successfully: ${newFilename}`);
+                } catch (saveErr) {
+                    console.error(`Error saving file ${index}:`, saveErr);
+                    errorCount++;
+                    errors.push(`${file.originalFilename}${file.extension}: ${saveErr.message}`);
+                    
+                    // Add delay after errors to let filesystem stabilize
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                }
+            } catch (err) {
+                console.error(`Error processing file ${index}:`, err);
+                errorCount++;
+                errors.push(`${file.originalFilename}${file.extension}: ${err.message}`);
+            }
+        }
+
+        // Trigger store notification to update UI after all saves
+        window.app.modules.store.notify('files');
+        
+        let message = `Saved ${successCount} compliant file(s).`;
+        
+        if (skippedCount > 0) {
+            message += `\n\n⚠️ Skipped ${skippedCount} non-compliant file(s):`;
+            message += `\n${skipped.slice(0, 3).join('\n')}`;
+            if (skipped.length > 3) {
+                message += `\n... and ${skipped.length - 3} more`;
+            }
+            message += `\n\nUse individual save buttons (✓) to save non-compliant files.`;
+        }
+        
+        if (errorCount > 0) {
+            message += `\n\n❌ ${errorCount} error(s):`;
+            message += `\n${errors.slice(0, 3).join('\n')}`;
+            if (errors.length > 3) {
+                message += `\n... and ${errors.length - 3} more`;
+            }
+        }
+        
+        alert(message);
+    }
+
+    /**
+     * Cancel all changes
+     */
+    function cancelAllChanges() {
+        const files = window.app.modules.store.getDisplayFiles();
+        files.forEach((file, index) => {
+            if (file.isDirty) {
+                cancelFile(index);
+            }
+        });
+    }
+
+    /**
+     * Calculate SHA256 for all files
+     */
+    async function calculateSha256ForAll() {
+        const files = window.app.modules.store.getDisplayFiles();
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            if (!file.sha256) {
+                calculateSha256(file, i);
+            }
+        }
+    }
+
+    /**
+     * Calculate SHA256 for a single file
+     */
+    async function calculateSha256(file, index) {
+        try {
+            let buffer;
+            if (file.isVirtual) {
+                // Virtual file from ZIP
+                const cached = window.app.modules.scanner.getZipCache(file.zipPath);
+                if (!cached) throw new Error('ZIP not found in cache');
+                const zipEntry = cached.zip.file(file.zipEntryPath);
+                if (!zipEntry) throw new Error('File not found in ZIP');
+                buffer = await zipEntry.async('arraybuffer');
+            } else {
+                const fileObj = await file.handle.getFile();
+                buffer = await fileObj.arrayBuffer();
+            }
+            const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            
+            file.sha256 = hashHex;
+            
+            // Update cell
+            const row = window.app.dom.spreadsheetBody.querySelector(`tr[data-index="${index}"]`);
+            if (row) {
+                const sha256Cell = row.querySelector('.col-sha256');
+                if (sha256Cell) {
+                    sha256Cell.textContent = hashHex.substring(0, 16) + '...';
+                    sha256Cell.title = hashHex;
+                    sha256Cell.classList.remove('sha256-calculating');
+                }
+            }
+        } catch (err) {
+            console.error('Error calculating SHA256:', err);
+        }
+    }
+
+    /**
+     * Highlight folder in tree when hovering over file
+     */
+    function highlightFolder(folderPath) {
+        if (!folderPath) return;
+        
+        // Find folder in tree
+        const folderTree = document.getElementById('folderTree');
+        if (!folderTree) return;
+        
+        // Find the folder item by data-path attribute
+        const folderItem = folderTree.querySelector(`[data-path="${folderPath}"]`);
+        if (!folderItem) return;
+        
+        // Add highlight class
+        folderItem.classList.add('folder-hover-highlight');
+        
+        // Scroll into view if autoscroll is enabled
+        const autoScrollCheckbox = document.getElementById('autoScrollCheckbox');
+        if (autoScrollCheckbox && autoScrollCheckbox.checked) {
+            folderItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    }
+    
+    /**
+     * Clear folder highlight
+     */
+    function clearFolderHighlight() {
+        const folderTree = document.getElementById('folderTree');
+        if (!folderTree) return;
+        
+        // Remove all highlights
+        const highlighted = folderTree.querySelectorAll('.folder-hover-highlight');
+        highlighted.forEach(el => el.classList.remove('folder-hover-highlight'));
+    }
+
+    /**
+     * Initialize spreadsheet - subscribe to store
+     */
+    function init() {
+        // Subscribe to store changes (only call this after DOM is ready)
+        window.app.modules.store.on('files', render);
+    }
+
+    // Export module
+    window.app.modules.spreadsheet = {
+        init,
+        render,
+        computeNewFilename,
+        saveAllFiles,
+        cancelAllChanges,
+        cancelEditing
+    };
+})();
+
+/**
+ * Selection Module
+ * Handles Excel-style cell selection and copy/paste
+ */
+(function() {
+    'use strict';
+
+    let selectionStart = null;
+    let selectionEnd = null;
+    let isSelecting = false;
+    let initialized = false;
+    let autoScrollInterval = null;
+    let lastMouseY = 0;
+
+    /**
+     * Initialize selection handlers
+     */
+    function init() {
+        // Only initialize once
+        if (initialized) return;
+        initialized = true;
+        
+        const table = window.app.dom.spreadsheet;
+        
+        // Make table focusable so clipboard events fire
+        if (!table.hasAttribute('tabindex')) {
+            table.setAttribute('tabindex', '-1');
+            table.style.outline = 'none';
+        }
+        
+        // Mouse down on cell - start selection
+        table.addEventListener('mousedown', handleMouseDown);
+        
+        // Mouse move - extend selection
+        document.addEventListener('mousemove', handleMouseMove);
+        
+        // Mouse up - end selection
+        document.addEventListener('mouseup', handleMouseUp);
+        
+        // Copy/paste handlers
+        document.addEventListener('copy', handleCopy);
+        document.addEventListener('paste', handlePaste);
+        document.addEventListener('cut', handleCut);
+    }
+
+    /**
+     * Handle mouse down on cell
+     */
+    function handleMouseDown(e) {
+        const cell = e.target.closest('td');
+        if (!cell) return;
+        
+        // Ignore if clicking action buttons
+        if (e.target.closest('.inline-actions')) return;
+        
+        // Ignore if cell is being edited (contenteditable)
+        if (cell.isContentEditable || cell.classList.contains('editing')) return;
+        
+        // Don't start selection if double-clicking to edit
+        if (e.detail === 2) return;
+        
+        const row = cell.closest('tr');
+        if (!row) return;
+        
+        const rowIndex = parseInt(row.dataset.index);
+        const colIndex = Array.from(row.children).indexOf(cell);
+        
+        // Shift+Click: extend selection from existing start to clicked cell
+        if (e.shiftKey && selectionStart) {
+            selectionEnd = { row: rowIndex, col: colIndex };
+            updateSelection();
+            updateButtonStates();
+            e.preventDefault();
+            return;
+        }
+        
+        // Clear previous selection
+        clearSelection();
+        
+        // Start new selection
+        selectionStart = { row: rowIndex, col: colIndex };
+        selectionEnd = { row: rowIndex, col: colIndex };
+        isSelecting = true;
+        
+        // Highlight cell
+        updateSelection();
+        updateButtonStates();
+        
+        // Focus the table so clipboard events (Ctrl+V) fire
+        window.app.dom.spreadsheet.focus();
+        
+        e.preventDefault();
+    }
+
+    /**
+     * Handle mouse move during selection
+     */
+    function handleMouseMove(e) {
+        if (!isSelecting) return;
+        
+        // Store mouse position for auto-scroll
+        lastMouseY = e.clientY;
+        
+        const cell = e.target.closest('td');
+        if (!cell) return;
+        
+        const row = cell.closest('tr');
+        if (!row) return;
+        
+        const rowIndex = parseInt(row.dataset.index);
+        const colIndex = Array.from(row.children).indexOf(cell);
+        
+        if (rowIndex === undefined || colIndex === -1) return;
+        
+        // Update selection end
+        selectionEnd = { row: rowIndex, col: colIndex };
+        
+        // Highlight selected cells
+        updateSelection();
+        
+        // Start auto-scroll if not already running
+        if (!autoScrollInterval) {
+            startAutoScroll();
+        }
+    }
+
+    /**
+     * Start continuous auto-scroll
+     */
+    function startAutoScroll() {
+        const scrollThreshold = 50; // pixels from edge
+        const scrollSpeed = 5; // pixels per frame
+        
+        const scroll = () => {
+            if (!isSelecting) {
+                autoScrollInterval = null;
+                return;
+            }
+            
+            const viewport = document.querySelector('.spreadsheet-pane');
+            if (!viewport) {
+                autoScrollInterval = null;
+                return;
+            }
+            
+            const rect = viewport.getBoundingClientRect();
+            
+            // Determine scroll direction based on last mouse position
+            if (lastMouseY > rect.bottom - scrollThreshold) {
+                viewport.scrollTop += scrollSpeed; // Scroll down
+            } else if (lastMouseY < rect.top + scrollThreshold) {
+                viewport.scrollTop -= scrollSpeed; // Scroll up
+            }
+            
+            // Continue scrolling
+            autoScrollInterval = requestAnimationFrame(scroll);
+        };
+        
+        autoScrollInterval = requestAnimationFrame(scroll);
+    }
+
+    /**
+     * Handle mouse up - end selection
+     */
+    function handleMouseUp(e) {
+        isSelecting = false;
+        
+        // Stop auto-scrolling
+        if (autoScrollInterval) {
+            cancelAnimationFrame(autoScrollInterval);
+            autoScrollInterval = null;
+        }
+        
+        updateButtonStates();
+    }
+
+    /**
+     * Update visual selection highlighting
+     */
+    function updateSelection() {
+        if (!selectionStart || !selectionEnd) return;
+        
+        // Clear all previous highlights
+        document.querySelectorAll('.selected-cell').forEach(cell => {
+            cell.classList.remove('selected-cell');
+        });
+        
+        // Calculate selection bounds
+        const minRow = Math.min(selectionStart.row, selectionEnd.row);
+        const maxRow = Math.max(selectionStart.row, selectionEnd.row);
+        const minCol = Math.min(selectionStart.col, selectionEnd.col);
+        const maxCol = Math.max(selectionStart.col, selectionEnd.col);
+        
+        // Highlight selected cells
+        const tbody = window.app.dom.spreadsheetBody;
+        const rows = tbody.querySelectorAll('tr');
+        
+        for (let r = minRow; r <= maxRow; r++) {
+            const row = rows[r];
+            if (!row) continue;
+            
+            const cells = row.children;
+            for (let c = minCol; c <= maxCol; c++) {
+                const cell = cells[c];
+                if (cell) {
+                    cell.classList.add('selected-cell');
+                }
+            }
+        }
+        
+        // Emit rowfocused event for preview pane
+        emitRowFocused(minRow);
+    }
+    
+    /**
+     * Emit row focused event for preview pane
+     */
+    function emitRowFocused(rowIndex) {
+        const files = window.app.modules.store.getDisplayFiles();
+        const file = files[rowIndex];
+        
+        if (file) {
+            const event = new CustomEvent('rowfocused', {
+                detail: { rowIndex, file }
+            });
+            document.dispatchEvent(event);
+        }
+    }
+
+    /**
+     * Clear selection
+     */
+    function clearSelection() {
+        selectionStart = null;
+        selectionEnd = null;
+        document.querySelectorAll('.selected-cell').forEach(cell => {
+            cell.classList.remove('selected-cell');
+        });
+        updateButtonStates();
+    }
+
+    /**
+     * Check if there is an active selection
+     */
+    function hasSelection() {
+        return selectionStart !== null && selectionEnd !== null;
+    }
+
+    /**
+     * Update Copy/Paste button enabled states
+     */
+    function updateButtonStates() {
+        const copyBtn = document.getElementById('copyBtn');
+        const pasteBtn = document.getElementById('pasteBtn');
+        const active = hasSelection();
+        if (copyBtn) copyBtn.disabled = !active;
+        if (pasteBtn) pasteBtn.disabled = !active;
+    }
+
+    /**
+     * Get column headers for selected columns
+     */
+    function getColumnHeaders(minCol, maxCol) {
+        const headerCells = window.app.dom.spreadsheet.querySelectorAll('thead th');
+        const headers = [];
+        for (let c = minCol; c <= maxCol; c++) {
+            const th = headerCells[c];
+            if (th) {
+                // Get the text content, excluding filter inputs
+                const text = th.childNodes[0]?.textContent?.trim() || th.textContent.trim();
+                headers.push(text);
+            } else {
+                headers.push('');
+            }
+        }
+        return headers;
+    }
+
+    /**
+     * Check if first row looks like a header row
+     */
+    function isHeaderRow(row) {
+        const headerPatterns = ['#', 'Original', 'Ext', 'New', 'Tracking', 'Rev', 'Status', 'Title', 'SHA256'];
+        return row.some(cell => headerPatterns.includes(cell.trim()));
+    }
+
+    /**
+     * Convert 2D array of rows to an HTML table string.
+     * Excel prefers text/html over text/plain, so providing a
+     * proper <table> ensures cell boundaries are preserved.
+     */
+    function rowsToHtml(allRows) {
+        const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const headerRow = allRows[0];
+        const dataRows = allRows.slice(1);
+        let html = '<table>';
+        html += '<tr>' + headerRow.map(c => '<th>' + esc(c) + '</th>').join('') + '</tr>';
+        for (const row of dataRows) {
+            html += '<tr>' + row.map(c => '<td>' + esc(c) + '</td>').join('') + '</tr>';
+        }
+        html += '</table>';
+        return html;
+    }
+
+    /**
+     * Handle copy event
+     */
+    function handleCopy(e) {
+        if (!selectionStart || !selectionEnd) return;
+        
+        const minCol = Math.min(selectionStart.col, selectionEnd.col);
+        const maxCol = Math.max(selectionStart.col, selectionEnd.col);
+        
+        // Get column headers for selected range
+        const headers = getColumnHeaders(minCol, maxCol);
+        
+        const data = getSelectionData();
+        if (!data) return;
+        
+        // Prepend header row
+        const allRows = [headers, ...data];
+        
+        // Convert to TSV and HTML table
+        const tsv = allRows.map(row => row.join('\t')).join('\n');
+        
+        e.clipboardData.setData('text/plain', tsv);
+        e.clipboardData.setData('text/html', rowsToHtml(allRows));
+        e.preventDefault();
+    }
+
+    /**
+     * Handle cut event
+     */
+    function handleCut(e) {
+        if (!selectionStart || !selectionEnd) return;
+        
+        const minCol = Math.min(selectionStart.col, selectionEnd.col);
+        const maxCol = Math.max(selectionStart.col, selectionEnd.col);
+        
+        // Get column headers for selected range
+        const headers = getColumnHeaders(minCol, maxCol);
+        
+        const data = getSelectionData();
+        if (!data) return;
+        
+        // Prepend header row
+        const allRows = [headers, ...data];
+        
+        // Convert to TSV
+        const tsv = allRows.map(row => row.join('\t')).join('\n');
+        
+        e.clipboardData.setData('text/plain', tsv);
+        e.clipboardData.setData('text/html', rowsToHtml(allRows));
+        
+        // Clear selected cells (only editable ones)
+        clearSelectionData();
+        
+        e.preventDefault();
+    }
+
+    /**
+     * Handle paste event
+     */
+    function handlePaste(e) {
+        // Don't intercept paste in input fields
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) {
+            return;
+        }
+        
+        if (!selectionStart) return;
+        
+        const tsv = e.clipboardData.getData('text/plain');
+        if (!tsv) return;
+        
+        e.preventDefault();
+        executePaste(tsv);
+    }
+
+    /**
+     * Execute paste from TSV string into the selected range.
+     * - If pasted cols > selected cols, right-align (user likely copied all but only pastes back editable cols).
+     * - If pasted data includes the first two columns (#, Original), validate they match.
+     * - If pasted row count != selected row count, abort with error.
+     */
+    function executePaste(tsv) {
+        if (!selectionStart || !selectionEnd) return;
+
+        // Parse TSV
+        let rows = tsv.split('\n').map(row => row.split('\t'));
+
+        // Filter out empty trailing rows
+        while (rows.length > 0 && rows[rows.length - 1].every(cell => !cell.trim())) {
+            rows.pop();
+        }
+        if (rows.length === 0) return;
+
+        // Check if first row is a header row and skip it
+        if (rows.length > 1 && isHeaderRow(rows[0])) {
+            rows = rows.slice(1);
+        }
+        if (rows.length === 0) return;
+
+        // Selection bounds
+        const minRow = Math.min(selectionStart.row, selectionEnd.row);
+        const maxRow = Math.max(selectionStart.row, selectionEnd.row);
+        const minCol = Math.min(selectionStart.col, selectionEnd.col);
+        const maxCol = Math.max(selectionStart.col, selectionEnd.col);
+        const selectedRowCount = maxRow - minRow + 1;
+        const selectedColCount = maxCol - minCol + 1;
+        const pastedColCount = rows[0].length;
+
+        // Row count validation: must match
+        if (rows.length !== selectedRowCount) {
+            alert(`Paste aborted: row count mismatch.\n` +
+                  `Selected ${selectedRowCount} row(s), but clipboard has ${rows.length} row(s).`);
+            return;
+        }
+
+        // Determine column offset for right-alignment
+        let colOffset = 0;
+        if (pastedColCount > selectedColCount) {
+            colOffset = pastedColCount - selectedColCount;
+        }
+
+        // Get column names from header
+        const headerCells = window.app.dom.spreadsheet.querySelectorAll('thead th');
+        const columnNames = Array.from(headerCells).map(th => {
+            const match = th.className.match(/col-(\w+)/);
+            return match ? match[1] : '';
+        });
+
+        // If pasted data includes first two columns (row-num, original), validate they match
+        if (colOffset === 0 && pastedColCount >= selectedColCount) {
+            // Check if pasted range starts at col 0 or col 1 (row-num or original)
+            const files = window.app.modules.store.getDisplayFiles();
+            const startsAtRowNum = (minCol === 0);
+            const startsAtOriginal = (minCol === 1);
+
+            if (startsAtRowNum || startsAtOriginal) {
+                for (let r = 0; r < rows.length; r++) {
+                    const targetRowIndex = minRow + r;
+                    const file = files[targetRowIndex];
+                    if (!file) continue;
+
+                    if (startsAtRowNum) {
+                        // Validate col 0 = row number, col 1 = original filename
+                        const expectedNum = String(targetRowIndex + 1);
+                        const pastedNum = rows[r][0]?.trim();
+                        const pastedOriginal = rows[r][1]?.trim();
+                        if (pastedNum && pastedNum !== expectedNum) {
+                            alert(`Paste aborted: row number mismatch at row ${targetRowIndex + 1}.\n` +
+                                  `Expected "${expectedNum}", got "${pastedNum}".\n` +
+                                  `Data may be shuffled.`);
+                            return;
+                        }
+                        if (pastedOriginal && pastedOriginal !== file.originalFilename) {
+                            alert(`Paste aborted: filename mismatch at row ${targetRowIndex + 1}.\n` +
+                                  `Expected "${file.originalFilename}", got "${pastedOriginal}".\n` +
+                                  `Data may be shuffled.`);
+                            return;
+                        }
+                    } else if (startsAtOriginal) {
+                        // Validate col 0 of paste = original filename
+                        const pastedOriginal = rows[r][0]?.trim();
+                        if (pastedOriginal && pastedOriginal !== file.originalFilename) {
+                            alert(`Paste aborted: filename mismatch at row ${targetRowIndex + 1}.\n` +
+                                  `Expected "${file.originalFilename}", got "${pastedOriginal}".\n` +
+                                  `Data may be shuffled.`);
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Editable columns
+        const editableColumns = ['newFilename', 'tracking', 'revision', 'status', 'title'];
+        const files = window.app.modules.store.getDisplayFiles();
+        let updatedCount = 0;
+
+        for (let r = 0; r < rows.length; r++) {
+            const targetRowIndex = minRow + r;
+            if (targetRowIndex >= files.length) continue;
+            const file = files[targetRowIndex];
+            if (!file) continue;
+
+            const rowData = rows[r];
+
+            for (let c = 0; c < selectedColCount; c++) {
+                const pasteIdx = c + colOffset; // right-align: skip leading pasted cols
+                if (pasteIdx >= rowData.length) continue;
+
+                const targetColIndex = minCol + c;
+                if (targetColIndex >= columnNames.length) continue;
+
+                const columnName = columnNames[targetColIndex];
+                if (!editableColumns.includes(columnName)) continue;
+
+                const value = rowData[pasteIdx]?.trim() || '';
+
+                if (columnName === 'newFilename') {
+                    if (value) {
+                        file.manualFilename = value;
+                    } else {
+                        delete file.manualFilename;
+                    }
+                } else {
+                    file[columnName] = value;
+                    if (file.manualFilename) {
+                        delete file.manualFilename;
+                    }
+                }
+
+                file.isDirty = true;
+                file.autoPopulated = false;
+                updatedCount++;
+            }
+        }
+
+        // Re-render and restore selection
+        if (updatedCount > 0) {
+            window.app.modules.spreadsheet.render();
+            // Restore selection highlight
+            updateSelection();
+            showToast(`Pasted ${updatedCount} cell(s)`, 'success');
+        }
+    }
+
+    /**
+     * Show a brief toast notification
+     */
+    function showToast(message, type) {
+        if (window.app.modules.excel && window.app.modules.excel.showToast) {
+            window.app.modules.excel.showToast(message, type);
+            return;
+        }
+        // Fallback: simple toast
+        const toast = document.createElement('div');
+        toast.textContent = message;
+        toast.style.cssText = 'position:fixed;bottom:20px;right:20px;padding:8px 16px;' +
+            'background:' + (type === 'success' ? '#28a745' : '#dc3545') + ';color:#fff;' +
+            'border-radius:4px;z-index:9999;font-size:14px;';
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+
+    /**
+     * Get data from selected cells
+     */
+    function getSelectionData() {
+        if (!selectionStart || !selectionEnd) return null;
+        
+        const minRow = Math.min(selectionStart.row, selectionEnd.row);
+        const maxRow = Math.max(selectionStart.row, selectionEnd.row);
+        const minCol = Math.min(selectionStart.col, selectionEnd.col);
+        const maxCol = Math.max(selectionStart.col, selectionEnd.col);
+        
+        const data = [];
+        const tbody = window.app.dom.spreadsheetBody;
+        const rows = tbody.querySelectorAll('tr');
+        
+        for (let r = minRow; r <= maxRow; r++) {
+            const row = rows[r];
+            if (!row) continue;
+            
+            const rowData = [];
+            const cells = row.children;
+            
+            for (let c = minCol; c <= maxCol; c++) {
+                const cell = cells[c];
+                if (cell) {
+                    rowData.push(cell.textContent.trim());
+                } else {
+                    rowData.push('');
+                }
+            }
+            
+            data.push(rowData);
+        }
+        
+        return data;
+    }
+
+    /**
+     * Clear data from selected cells (only editable ones)
+     */
+    function clearSelectionData() {
+        if (!selectionStart || !selectionEnd) return;
+        
+        const minRow = Math.min(selectionStart.row, selectionEnd.row);
+        const maxRow = Math.max(selectionStart.row, selectionEnd.row);
+        const minCol = Math.min(selectionStart.col, selectionEnd.col);
+        const maxCol = Math.max(selectionStart.col, selectionEnd.col);
+        
+        const tbody = window.app.dom.spreadsheetBody;
+        const rows = tbody.querySelectorAll('tr');
+        
+        // Get column names from header
+        const headerCells = window.app.dom.spreadsheet.querySelectorAll('thead th');
+        const columnNames = Array.from(headerCells).map(th => {
+            const className = th.className.replace('col-', '');
+            return className;
+        });
+        
+        for (let r = minRow; r <= maxRow; r++) {
+            const row = rows[r];
+            if (!row) continue;
+            
+            const rowIndex = parseInt(row.dataset.index);
+            const files = window.app.modules.store.getDisplayFiles();
+            const file = files[rowIndex];
+            if (!file) continue;
+            
+            const cells = row.children;
+            
+            for (let c = minCol; c <= maxCol; c++) {
+                const cell = cells[c];
+                if (!cell || !cell.classList.contains('cell-editable')) continue;
+                
+                const columnName = columnNames[c];
+                
+                // Clear the data
+                if (columnName === 'newFilename') {
+                    delete file.manualFilename;
+                } else {
+                    file[columnName] = '';
+                }
+                
+                file.isDirty = true;
+            }
+        }
+        
+        // Re-render
+        window.app.modules.spreadsheet.render();
+    }
+
+    /**
+     * Copy selection to clipboard via button click
+     */
+    function doCopy() {
+        if (!selectionStart || !selectionEnd) return;
+
+        const minCol = Math.min(selectionStart.col, selectionEnd.col);
+        const maxCol = Math.max(selectionStart.col, selectionEnd.col);
+        const headers = getColumnHeaders(minCol, maxCol);
+        const data = getSelectionData();
+        if (!data) return;
+
+        const allRows = [headers, ...data];
+        const tsv = allRows.map(row => row.join('\t')).join('\n');
+        const html = rowsToHtml(allRows);
+
+        // Write both plain text and HTML to clipboard
+        const htmlBlob = new Blob([html], { type: 'text/html' });
+        const textBlob = new Blob([tsv], { type: 'text/plain' });
+        const item = new ClipboardItem({ 'text/html': htmlBlob, 'text/plain': textBlob });
+
+        navigator.clipboard.write([item]).then(() => {
+            showToast(`Copied ${data.length} row(s)`, 'success');
+        }).catch(err => {
+            // Fallback to plain text if ClipboardItem not supported
+            navigator.clipboard.writeText(tsv).then(() => {
+                showToast(`Copied ${data.length} row(s)`, 'success');
+            }).catch(err2 => {
+                console.error('Copy failed:', err2);
+            });
+        });
+    }
+
+    /**
+     * Paste from clipboard via button click
+     */
+    function doPaste() {
+        if (!selectionStart || !selectionEnd) return;
+
+        navigator.clipboard.readText().then(tsv => {
+            if (tsv) executePaste(tsv);
+        }).catch(err => {
+            console.error('Paste failed:', err);
+            alert('Cannot read clipboard. Use Ctrl+V instead, or grant clipboard permission.');
+        });
+    }
+
+    // Export module
+    window.app.modules.selection = {
+        init,
+        clearSelection,
+        hasSelection,
+        doCopy,
+        doPaste
+    };
+})();
+
+/**
+ * Preview Module
+ * Opens file preview in a separate popup window
+ */
+(function() {
+    'use strict';
+
+    let currentBlobUrl = null;
+    let currentFile = null;
+    let currentRowIndex = null;
+    let previewWindow = null;
+
+    // File type mappings
+    const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.svg', '.webp', '.bmp', '.ico'];
+    const TEXT_EXTENSIONS = ['.txt', '.md', '.json', '.xml', '.csv', '.log', '.html', '.css', '.js', '.ts', '.py', '.sh', '.bat', '.yaml', '.yml', '.ini', '.cfg', '.conf'];
+    const PDF_EXTENSIONS = ['.pdf'];
+    const ZIP_EXTENSIONS = ['.zip'];
+
+    // Cache for lazily loaded CDN libraries
+    const loadedLibraries = new Map();
+
+    /**
+     * Lazily load a script from CDN. Returns a promise that resolves when loaded.
+     * Caches the promise so subsequent calls return immediately.
+     */
+    function loadLibrary(url) {
+        if (loadedLibraries.has(url)) return loadedLibraries.get(url);
+        const promise = new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = url;
+            script.onload = resolve;
+            script.onerror = () => reject(new Error(`Failed to load library: ${url}`));
+            document.head.appendChild(script);
+        });
+        loadedLibraries.set(url, promise);
+        return promise;
+    }
+
+    /**
+     * Initialize preview module
+     */
+    function init() {
+        // Listen for row focus events from selection module
+        document.addEventListener('rowfocused', handleRowFocused);
+        
+        // Set up toggle button to open preview window
+        const toggleBtn = document.getElementById('togglePreviewBtn');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', () => {
+                if (currentFile) {
+                    openPreviewWindow(currentFile);
+                }
+            });
+        }
+    }
+
+    /**
+     * Handle row focused event
+     */
+    function handleRowFocused(e) {
+        const { rowIndex, file } = e.detail;
+        
+        currentRowIndex = rowIndex;
+        
+        if (file && file !== currentFile) {
+            currentFile = file;
+            
+            // Update preview window if open
+            if (previewWindow && !previewWindow.closed) {
+                openPreviewWindow(file);
+            }
+        }
+    }
+
+    /**
+     * Open preview in a separate popup window
+     */
+    async function openPreviewWindow(file) {
+        if (!file) return;
+        
+        currentFile = file;
+        
+        try {
+            const blob = await getFileBlob(file);
+            
+            // Clean up previous blob URL
+            if (currentBlobUrl) {
+                URL.revokeObjectURL(currentBlobUrl);
+            }
+            currentBlobUrl = URL.createObjectURL(blob);
+            
+            const fileName = file.originalFilename + file.extension;
+            
+            // Build preview HTML with toolbar
+            const previewHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>${escapeHtml(fileName)} - Preview</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            display: flex; 
+            flex-direction: column; 
+            height: 100vh; 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: #f5f5f5;
+            border-bottom: 1px solid #ddd;
+        }
+        .toolbar h1 {
+            flex: 1;
+            font-size: 0.95rem;
+            font-weight: 500;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .btn {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.85rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+        }
+        .btn:hover { background: #e8e8e8; }
+        iframe, img {
+            flex: 1;
+            width: 100%;
+            border: none;
+        }
+        img {
+            object-fit: contain;
+            background: #f0f0f0;
+        }
+        pre {
+            flex: 1;
+            padding: 1rem;
+            overflow: auto;
+            background: #fafafa;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .unsupported {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+        }
+        .unsupported .icon { font-size: 3rem; margin-bottom: 1rem; }
+        #previewContent {
+            flex: 1;
+            overflow: auto;
+        }
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #666;
+            font-size: 1.1rem;
+        }
+        .docx-wrapper { padding: 1rem; }
+        .xlsx-table { border-collapse: collapse; width: 100%; font-size: 0.85rem; }
+        .xlsx-table th, .xlsx-table td {
+            border: 1px solid #ddd;
+            padding: 0.35rem 0.5rem;
+            text-align: left;
+            white-space: nowrap;
+        }
+        .xlsx-table th { background: #f0f0f0; font-weight: 600; position: sticky; top: 0; }
+        .xlsx-table tr:nth-child(even) { background: #fafafa; }
+        .xlsx-table tr:hover { background: #f0f7ff; }
+        .sheet-tabs { display: flex; gap: 0; border-bottom: 1px solid #ddd; background: #f5f5f5; }
+        .sheet-tab {
+            padding: 0.4rem 1rem;
+            cursor: pointer;
+            border: 1px solid transparent;
+            border-bottom: none;
+            font-size: 0.85rem;
+            background: transparent;
+        }
+        .sheet-tab:hover { background: #e8e8e8; }
+        .sheet-tab.active {
+            background: white;
+            border-color: #ddd;
+            border-bottom-color: white;
+            margin-bottom: -1px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <h1>${escapeHtml(fileName)}</h1>
+        <button class="btn" onclick="downloadFile()">Download</button>
+    </div>
+    ${await getPreviewContent(file, currentBlobUrl)}
+    <script>
+        var blobUrl = "${currentBlobUrl}";
+        var fileName = "${escapeHtml(fileName).replace(/"/g, '\\"')}";
+        
+        function downloadFile() {
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+    <\/script>
+</body>
+</html>`;
+            
+            // Reuse existing window if open, otherwise create new one
+            if (previewWindow && !previewWindow.closed) {
+                previewWindow.document.open();
+                previewWindow.document.write(previewHtml);
+                previewWindow.document.close();
+                previewWindow.focus();
+            } else {
+                // Calculate window size
+                const width = Math.round(screen.width * 0.6);
+                const height = Math.round(screen.height * 0.8);
+                const left = Math.round((screen.width - width) / 2);
+                const top = Math.round((screen.height - height) / 2);
+                
+                previewWindow = window.open('', 'classifierPreview', 
+                    `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`);
+                
+                if (!previewWindow) {
+                    // Popup blocked - fall back to new tab
+                    window.open(currentBlobUrl, '_blank');
+                    return;
+                }
+                
+                previewWindow.document.write(previewHtml);
+                previewWindow.document.close();
+                previewWindow.focus();
+            }
+            
+            // For office types, render content after window is ready
+            const ext = file.extension.toLowerCase();
+            if (ext === '.docx') {
+                await renderDocxInWindow(file);
+            } else if (ext === '.xlsx' || ext === '.xls') {
+                await renderXlsxInWindow(file);
+            }
+        } catch (err) {
+            console.error('Error opening preview:', err);
+            alert(`Error opening preview: ${err.message}`);
+        }
+    }
+    
+    /**
+     * Get preview content HTML based on file type
+     */
+    async function getPreviewContent(file, blobUrl) {
+        const ext = file.extension.toLowerCase();
+        const previewType = getPreviewType(ext);
+        
+        switch (previewType) {
+            case 'pdf':
+                return `<iframe src="${blobUrl}#view=FitV"></iframe>`;
+            case 'image':
+                return `<img src="${blobUrl}" alt="${escapeHtml(file.originalFilename)}" />`;
+            case 'text':
+                const text = await getFileText(file);
+                const maxLength = 100000;
+                const displayText = text.length > maxLength 
+                    ? text.substring(0, maxLength) + '\n\n... (truncated)'
+                    : text;
+                return `<pre>${escapeHtml(displayText)}</pre>`;
+            case 'docx':
+            case 'xlsx':
+                return `<div id="previewContent"><div class="loading">Loading preview...</div></div>`;
+            default:
+                return `
+                    <div class="unsupported">
+                        <div class="icon">📄</div>
+                        <p>Preview not available for ${ext} files</p>
+                        <p style="margin-top: 0.5rem;">Click Download to view in external application</p>
+                    </div>
+                `;
+        }
+    }
+    
+    /**
+     * Get preview type from extension
+     */
+    function getPreviewType(ext) {
+        if (PDF_EXTENSIONS.includes(ext)) return 'pdf';
+        if (IMAGE_EXTENSIONS.includes(ext)) return 'image';
+        if (TEXT_EXTENSIONS.includes(ext)) return 'text';
+        if (ext === '.docx') return 'docx';
+        if (ext === '.xlsx' || ext === '.xls') return 'xlsx';
+        if (ZIP_EXTENSIONS.includes(ext)) return 'zip';
+        return 'none';
+    }
+
+    /**
+     * Get MIME type from file extension
+     */
+    function getMimeType(ext) {
+        const mimeTypes = {
+            '.pdf': 'application/pdf',
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.png': 'image/png',
+            '.gif': 'image/gif',
+            '.svg': 'image/svg+xml',
+            '.webp': 'image/webp',
+            '.bmp': 'image/bmp',
+            '.ico': 'image/x-icon',
+            '.txt': 'text/plain',
+            '.md': 'text/markdown',
+            '.json': 'application/json',
+            '.xml': 'application/xml',
+            '.csv': 'text/csv',
+            '.html': 'text/html',
+            '.css': 'text/css',
+            '.js': 'text/javascript'
+        };
+        return mimeTypes[ext.toLowerCase()] || 'application/octet-stream';
+    }
+    
+    /**
+     * Get file content as blob (handles both real and virtual files)
+     */
+    async function getFileBlob(file) {
+        if (file.isVirtual) {
+            // Get from ZIP cache
+            const cached = window.app.modules.scanner.getZipCache(file.zipPath);
+            if (!cached) throw new Error('ZIP not found in cache');
+            
+            const zipEntry = cached.zip.file(file.zipEntryPath);
+            if (!zipEntry) throw new Error('File not found in ZIP');
+            
+            // Get as arraybuffer and create blob with correct MIME type
+            const arrayBuffer = await zipEntry.async('arraybuffer');
+            const mimeType = getMimeType(file.extension);
+            return new Blob([arrayBuffer], { type: mimeType });
+        } else {
+            // Get from file handle
+            if (!file.handle) {
+                throw new Error('File handle not available');
+            }
+            return await file.handle.getFile();
+        }
+    }
+    
+    /**
+     * Get file content as text (handles both real and virtual files)
+     */
+    async function getFileText(file) {
+        if (file.isVirtual) {
+            const cached = window.app.modules.scanner.getZipCache(file.zipPath);
+            if (!cached) throw new Error('ZIP not found in cache');
+            
+            const zipEntry = cached.zip.file(file.zipEntryPath);
+            if (!zipEntry) throw new Error('File not found in ZIP');
+            
+            return await zipEntry.async('string');
+        } else {
+            if (!file.handle) {
+                throw new Error('File handle not available');
+            }
+            const fileObj = await file.handle.getFile();
+            return await fileObj.text();
+        }
+    }
+
+    /**
+     * Render a DOCX file in the preview window using docx-preview library
+     */
+    async function renderDocxInWindow(file) {
+        const container = previewWindow.document.getElementById('previewContent');
+        if (!container) return;
+        
+        try {
+            await loadLibrary('https://cdn.jsdelivr.net/npm/jszip@3/dist/jszip.min.js');
+            await loadLibrary('https://cdn.jsdelivr.net/npm/docx-preview@latest/dist/docx-preview.min.js');
+            
+            const blob = await getFileBlob(file);
+            const arrayBuffer = await blob.arrayBuffer();
+            
+            container.innerHTML = '';
+            await window.docx.renderAsync(arrayBuffer, container);
+        } catch (err) {
+            console.error('Error rendering DOCX:', err);
+            container.innerHTML = `<div class="loading">Error rendering DOCX: ${err.message}<br>Click Download to view in Word.</div>`;
+        }
+    }
+
+    /**
+     * Render an XLSX/XLS file in the preview window using SheetJS
+     */
+    async function renderXlsxInWindow(file) {
+        const container = previewWindow.document.getElementById('previewContent');
+        if (!container) return;
+        
+        try {
+            await loadLibrary('https://cdn.jsdelivr.net/npm/xlsx@latest/dist/xlsx.full.min.js');
+            
+            const blob = await getFileBlob(file);
+            const arrayBuffer = await blob.arrayBuffer();
+            const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+            
+            container.innerHTML = '';
+            
+            if (workbook.SheetNames.length > 1) {
+                const tabs = previewWindow.document.createElement('div');
+                tabs.className = 'sheet-tabs';
+                workbook.SheetNames.forEach((name, i) => {
+                    const tab = previewWindow.document.createElement('button');
+                    tab.className = 'sheet-tab' + (i === 0 ? ' active' : '');
+                    tab.textContent = name;
+                    tab.onclick = () => {
+                        tabs.querySelectorAll('.sheet-tab').forEach(t => t.classList.remove('active'));
+                        tab.classList.add('active');
+                        renderSheetInWindow(workbook, name, tableContainer);
+                    };
+                    tabs.appendChild(tab);
+                });
+                container.appendChild(tabs);
+            }
+            
+            const tableContainer = previewWindow.document.createElement('div');
+            tableContainer.style.flex = '1';
+            tableContainer.style.overflow = 'auto';
+            container.appendChild(tableContainer);
+            
+            renderSheetInWindow(workbook, workbook.SheetNames[0], tableContainer);
+        } catch (err) {
+            console.error('Error rendering XLSX:', err);
+            container.innerHTML = `<div class="loading">Error rendering spreadsheet: ${err.message}<br>Click Download to view in Excel.</div>`;
+        }
+    }
+
+    /**
+     * Render a single sheet as an HTML table in the preview window
+     */
+    function renderSheetInWindow(workbook, sheetName, container) {
+        const sheet = workbook.Sheets[sheetName];
+        const html = XLSX.utils.sheet_to_html(sheet, { editable: false });
+        container.innerHTML = html;
+        const table = container.querySelector('table');
+        if (table) table.className = 'xlsx-table';
+    }
+
+    /**
+     * Escape HTML for safe display
+     */
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    /**
+     * Download current file
+     */
+    async function downloadFile() {
+        if (!currentFile) return;
+        
+        try {
+            const blob = await getFileBlob(currentFile);
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = currentFile.originalFilename + currentFile.extension;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        } catch (err) {
+            console.error('Error downloading file:', err);
+            alert('Error downloading file: ' + err.message);
+        }
+    }
+
+    // Export module
+    window.app.modules.preview = {
+        init
+    };
+})();
+
+/**
+ * Column Resize Module
+ * Handles resizable table columns
+ */
+(function() {
+    'use strict';
+
+    let resizingColumn = null;
+    let startX = 0;
+    let startWidth = 0;
+
+    /**
+     * Initialize column resizing
+     */
+    function init() {
+        const table = window.app.dom.spreadsheet;
+        const headers = table.querySelectorAll('thead th');
+        
+        headers.forEach(th => {
+            // Skip if resize handle already exists
+            if (th.querySelector('.column-resizer')) return;
+            
+            // Add resize handle
+            const resizer = document.createElement('div');
+            resizer.className = 'column-resizer';
+            th.appendChild(resizer);
+            
+            // Mouse down on resizer
+            resizer.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                resizingColumn = th;
+                startX = e.pageX;
+                startWidth = th.offsetWidth;
+                
+                document.addEventListener('mousemove', handleMouseMove);
+                document.addEventListener('mouseup', handleMouseUp);
+            });
+        });
+    }
+
+    /**
+     * Handle mouse move during resize
+     */
+    function handleMouseMove(e) {
+        if (!resizingColumn) return;
+        
+        const diff = e.pageX - startX;
+        const newWidth = Math.max(50, startWidth + diff);
+        
+        resizingColumn.style.width = newWidth + 'px';
+        resizingColumn.style.minWidth = newWidth + 'px';
+        resizingColumn.style.maxWidth = newWidth + 'px';
+    }
+
+    /**
+     * Handle mouse up - end resize
+     */
+    function handleMouseUp() {
+        resizingColumn = null;
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+    }
+
+    // Export module
+    window.app.modules.resize = {
+        init
+    };
+})();
+
+/**
+ * Filter Module
+ * Handles advanced column filtering with boolean logic
+ */
+(function() {
+    'use strict';
+
+    // Filter state: {columnName: filterString}
+    let filters = {};
+
+    /**
+     * Initialize filtering
+     */
+    function init() {
+        const table = window.app.dom.spreadsheet;
+        const headers = table.querySelectorAll('thead th');
+        
+        headers.forEach(th => {
+            // Skip row number column
+            if (th.classList.contains('col-row-num')) return;
+            
+            // Skip if filter already exists
+            if (th.querySelector('.column-filter')) return;
+            
+            const columnName = th.className.replace('col-', '');
+            
+            // Create filter input
+            const filterInput = document.createElement('input');
+            filterInput.type = 'text';
+            filterInput.className = 'column-filter';
+            filterInput.placeholder = 'Filter...';
+            filterInput.title = 'Filter syntax: +required -excluded (grouped) or-terms';
+            
+            // Add to header
+            th.appendChild(document.createElement('br'));
+            th.appendChild(filterInput);
+            
+            // Filter on input
+            filterInput.addEventListener('input', (e) => {
+                e.stopPropagation();
+                const filterText = filterInput.value.trim();
+                
+                // Use store to set filter
+                window.app.modules.store.setFilter(columnName, filterText);
+            });
+            
+            // Prevent sort when clicking in filter
+            filterInput.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+        });
+    }
+
+    /**
+     * Apply filters to files array (pure function - doesn't mutate)
+     */
+    function applyFiltersToFiles(files) {
+        if (Object.keys(filters).length === 0) {
+            return files;
+        }
+        
+        return files.filter(file => {
+            for (const [columnName, filterText] of Object.entries(filters)) {
+                const value = getColumnValue(file, columnName);
+                if (!matchesFilter(value, filterText)) {
+                    return false;
+                }
+            }
+            return true;
+        });
+    }
+
+    /**
+     * Apply all filters (legacy - triggers render)
+     */
+    function applyFilters() {
+        window.app.modules.spreadsheet.render();
+    }
+
+
+    /**
+     * Get column value from file (delegates to utils)
+     */
+    function getColumnValue(file, columnName) {
+        if (window.app.modules.utils) {
+            return window.app.modules.utils.getColumnValue(file, columnName);
+        }
+        
+        // Fallback
+        switch (columnName) {
+            case 'original':
+                return file.originalFilename || '';
+            case 'extension':
+                return file.extension || '';
+            case 'new':
+            case 'newFilename':
+                return file.manualFilename || window.app.modules.spreadsheet.computeNewFilename(file, 0);
+            case 'tracking':
+                return file.tracking || '';
+            case 'revision':
+                return file.revision || '';
+            case 'status':
+                return file.status || '';
+            case 'title':
+                return file.title || '';
+            case 'sha256':
+                return file.sha256 || '';
+            default:
+                return '';
+        }
+    }
+
+    /**
+     * Check if value matches filter expression
+     */
+    function matchesFilter(value, filterText) {
+        const terms = parseFilterExpression(filterText);
+        return evaluateTerms(value.toLowerCase(), terms);
+    }
+
+    /**
+     * Parse filter expression into terms
+     */
+    function parseFilterExpression(filterText) {
+        const terms = {
+            required: [],    // Must have all
+            excluded: [],    // Must not have any
+            optional: []     // Must have at least one (OR)
+        };
+        
+        // Simple tokenizer
+        const tokens = [];
+        let current = '';
+        let inParens = 0;
+        
+        for (let i = 0; i < filterText.length; i++) {
+            const char = filterText[i];
+            
+            if (char === '(') {
+                inParens++;
+                current += char;
+            } else if (char === ')') {
+                inParens--;
+                current += char;
+            } else if (char === ' ' && inParens === 0) {
+                if (current) {
+                    tokens.push(current);
+                    current = '';
+                }
+            } else {
+                current += char;
+            }
+        }
+        
+        if (current) {
+            tokens.push(current);
+        }
+        
+        // Process tokens
+        for (const token of tokens) {
+            if (token.startsWith('(') && token.endsWith(')')) {
+                // Grouped expression - treat as single required term
+                const inner = token.slice(1, -1);
+                const innerTerms = parseFilterExpression(inner);
+                
+                // If group has required terms, add them
+                if (innerTerms.required.length > 0) {
+                    terms.required.push(...innerTerms.required);
+                }
+                if (innerTerms.excluded.length > 0) {
+                    terms.excluded.push(...innerTerms.excluded);
+                }
+                if (innerTerms.optional.length > 0) {
+                    // Group optional terms as a single requirement
+                    terms.required.push(innerTerms.optional);
+                }
+            } else if (token.startsWith('+')) {
+                // Required term
+                terms.required.push(token.slice(1).toLowerCase());
+            } else if (token.startsWith('-')) {
+                // Excluded term
+                terms.excluded.push(token.slice(1).toLowerCase());
+            } else {
+                // Optional term (OR)
+                terms.optional.push(token.toLowerCase());
+            }
+        }
+        
+        return terms;
+    }
+
+    /**
+     * Evaluate if value matches terms
+     */
+    function evaluateTerms(value, terms) {
+        // Check excluded terms (must not have any)
+        for (const excluded of terms.excluded) {
+            if (value.includes(excluded)) {
+                return false;
+            }
+        }
+        
+        // Check required terms (must have all)
+        for (const required of terms.required) {
+            if (Array.isArray(required)) {
+                // This is a group of OR terms - must match at least one
+                let matched = false;
+                for (const term of required) {
+                    if (value.includes(term)) {
+                        matched = true;
+                        break;
+                    }
+                }
+                if (!matched) {
+                    return false;
+                }
+            } else {
+                if (!value.includes(required)) {
+                    return false;
+                }
+            }
+        }
+        
+        // Check optional terms (must have at least one, or none specified)
+        if (terms.optional.length > 0) {
+            let matched = false;
+            for (const optional of terms.optional) {
+                if (value.includes(optional)) {
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
+    /**
+     * Clear all filters
+     */
+    function clearFilters() {
+        filters = {};
+        
+        // Clear filter inputs
+        document.querySelectorAll('.column-filter').forEach(input => {
+            input.value = '';
+        });
+        
+        applyFilters();
+    }
+
+    // Export module
+    window.app.modules.filter = {
+        init,
+        applyFiltersToFiles,
+        clearFilters
+    };
+})();
+
+/**
+ * Sort Module
+ * Handles multi-column sorting for the spreadsheet
+ */
+(function() {
+    'use strict';
+
+    // Sort state: array of {column, direction}
+    let sortState = [];
+
+    /**
+     * Initialize sorting
+     */
+    function init() {
+        const table = window.app.dom.spreadsheet;
+        const headers = table.querySelectorAll('thead th');
+        
+        headers.forEach((th, index) => {
+            // Skip row number column
+            if (th.classList.contains('col-row-num')) return;
+            
+            // Skip if already initialized
+            if (th.querySelector('.sort-indicator')) return;
+            
+            // Make header clickable
+            th.style.cursor = 'pointer';
+            th.style.userSelect = 'none';
+            
+            // Add sort indicator container
+            const sortIndicator = document.createElement('span');
+            sortIndicator.className = 'sort-indicator';
+            
+            // Insert after the text node (before any br or filter)
+            const firstChild = th.firstChild;
+            if (firstChild && firstChild.nodeType === Node.TEXT_NODE) {
+                // Insert after text node
+                firstChild.after(sortIndicator);
+            } else {
+                // Prepend to header
+                th.insertBefore(sortIndicator, firstChild);
+            }
+            
+            // Click to sort (only add once)
+            const handleClick = (e) => {
+                // Don't sort if clicking on resizer or filter input
+                if (e.target.classList.contains('column-resizer')) return;
+                if (e.target.classList.contains('column-filter')) return;
+                
+                const columnName = th.className.replace('col-', '');
+                handleSort(columnName, e.ctrlKey || e.metaKey);
+            };
+            
+            th.addEventListener('click', handleClick);
+        });
+    }
+
+    /**
+     * Apply default sort (called after initial render)
+     */
+    function applyDefaultSort() {
+        const files = window.app.modules.store.getDisplayFiles();
+        if (files.length > 0) {
+            sortState = [{ column: 'original', direction: 'asc' }];
+            applySorts();
+            updateSortIndicators();
+        }
+    }
+
+    /**
+     * Handle sort click
+     */
+    function handleSort(columnName, multiSort) {
+        // Use store to toggle sort
+        window.app.modules.store.toggleSort(columnName, multiSort);
+    }
+
+    /**
+     * Apply sort to files array (pure function - doesn't mutate)
+     */
+    function applySortToFiles(files) {
+        if (sortState.length === 0) {
+            return files;
+        }
+        
+        return [...files].sort((a, b) => {
+            for (const sort of sortState) {
+                const result = compareValues(a, b, sort.column, sort.direction);
+                if (result !== 0) return result;
+            }
+            return 0;
+        });
+    }
+
+    /**
+     * Apply all sorts (legacy - triggers render)
+     */
+    function applySorts() {
+        window.app.modules.spreadsheet.render();
+    }
+    
+    /**
+     * Apply default sort
+     */
+    function applyDefaultSort() {
+        const files = window.app.modules.store.getDisplayFiles();
+        if (files.length > 0 && sortState.length === 0) {
+            sortState = [{ column: 'original', direction: 'asc' }];
+            window.app.modules.spreadsheet.render();
+        }
+    }
+    
+    /**
+     * Get current sort state
+     */
+    function getSortState() {
+        return sortState;
+    }
+    
+    /**
+     * Update sort indicators in headers
+     */
+    function updateIndicators() {
+        const table = window.app.dom.spreadsheet;
+        const headers = table.querySelectorAll('thead th');
+        
+        headers.forEach(th => {
+            const indicator = th.querySelector('.sort-indicator');
+            if (!indicator) return;
+            
+            const columnName = th.className.replace('col-', '');
+            const sortIndex = sortState.findIndex(s => s.column === columnName);
+            
+            if (sortIndex >= 0) {
+                const sort = sortState[sortIndex];
+                const arrow = sort.direction === 'asc' ? '▲' : '▼';
+                const priority = sortState.length > 1 ? (sortIndex + 1) : '';
+                indicator.textContent = ` ${arrow}${priority}`;
+                indicator.style.display = 'inline';
+            } else {
+                indicator.textContent = '';
+                indicator.style.display = 'none';
+            }
+        });
+    }
+
+    /**
+     * Compare two values for sorting
+     */
+    function compareValues(a, b, columnName, direction) {
+        let aVal, bVal;
+        
+        // Get values based on column
+        switch (columnName) {
+            case 'original':
+                aVal = a.originalFilename || '';
+                bVal = b.originalFilename || '';
+                break;
+            case 'extension':
+                aVal = a.extension || '';
+                bVal = b.extension || '';
+                break;
+            case 'new':
+            case 'newFilename':
+                aVal = a.manualFilename || window.app.modules.spreadsheet.computeNewFilename(a, 0);
+                bVal = b.manualFilename || window.app.modules.spreadsheet.computeNewFilename(b, 0);
+                break;
+            case 'tracking':
+                aVal = a.tracking || '';
+                bVal = b.tracking || '';
+                break;
+            case 'revision':
+                aVal = a.revision || '';
+                bVal = b.revision || '';
+                break;
+            case 'status':
+                aVal = a.status || '';
+                bVal = b.status || '';
+                break;
+            case 'title':
+                aVal = a.title || '';
+                bVal = b.title || '';
+                break;
+            case 'sha256':
+                aVal = a.sha256 || '';
+                bVal = b.sha256 || '';
+                break;
+            default:
+                return 0;
+        }
+        
+        // Natural sort for strings (handles numbers within strings)
+        const comparison = aVal.localeCompare(bVal, undefined, { numeric: true, sensitivity: 'base' });
+        
+        return direction === 'asc' ? comparison : -comparison;
+    }
+
+    /**
+     * Clear all sorts
+     */
+    function clearSorts() {
+        sortState = [];
+        applySorts();
+    }
+
+    // Export module
+    window.app.modules.sort = {
+        init,
+        applyDefaultSort,
+        applySorts,
+        applySortToFiles,
+        updateIndicators,
+        getSortState,
+        clearSorts
+    };
+})();
+
+/**
+ * Excel Integration Module
+ * Toast notifications and hash export
+ */
+(function() {
+    'use strict';
+
+    /**
+     * Show toast notification
+     */
+    function showToast(message, type = 'info') {
+        // Remove existing toast
+        const existing = document.querySelector('.toast');
+        if (existing) {
+            existing.remove();
+        }
+
+        // Create toast
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            toast.classList.add('toast-fade');
+            setTimeout(() => toast.remove(), 300);
+        }, 5000);
+    }
+
+    /**
+     * Export SHA256 hashes in sha256sum format
+     */
+    async function exportHashes() {
+        const files = window.app.modules.store.getDisplayFiles();
+        if (files.length === 0) {
+            alert('No files to export');
+            return;
+        }
+
+        // Check if SHA256 is enabled
+        if (!window.app.calculateSha256) {
+            alert('Please enable SHA256 checkbox first and wait for hashes to calculate');
+            return;
+        }
+
+        try {
+            // Build sha256sum format: hash *filepath
+            const lines = [];
+            
+            // Get root path
+            const rootPath = await getFullPath(window.app.rootHandle);
+            
+            for (const file of files) {
+                if (!file.sha256 || file.sha256 === 'calculating...' || file.sha256 === 'error') {
+                    continue; // Skip files without calculated hash
+                }
+                
+                // Get full path from root
+                const folderPath = await getFullPath(file.folderHandle);
+                const fullPath = `${folderPath}/${file.originalFilename}${file.extension}`;
+                
+                // Format: hash *filepath (asterisk indicates binary mode)
+                lines.push(`${file.sha256} *${fullPath}`);
+            }
+
+            if (lines.length === 0) {
+                alert('No SHA256 hashes available. Enable SHA256 and wait for calculation to complete.');
+                return;
+            }
+
+            // Create output
+            const output = lines.join('\n');
+
+            // Generate filename with timestamp
+            const now = new Date();
+            const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, -5); // YYYY-MM-DDTHH-MM-SS
+            const filename = `sha256sums_${timestamp}.txt`;
+
+            // Download as file
+            const blob = new Blob([output], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            // Show success message
+            showToast(`✓ Downloaded ${lines.length} hash(es) to ${filename}`, 'success');
+
+        } catch (err) {
+            console.error('Error exporting hashes:', err);
+            alert('Error exporting hashes: ' + err.message);
+        }
+    }
+
+    /**
+     * Get full path from directory handle (all the way to root)
+     */
+    async function getFullPath(dirHandle) {
+        const parts = [];
+        let current = dirHandle;
+        
+        // Walk up to root - collect ALL parent folders
+        while (current) {
+            parts.unshift(current.name);
+            
+            try {
+                // Try to get parent
+                if (typeof current.getParent === 'function') {
+                    const parent = await current.getParent();
+                    if (parent && parent !== current) {
+                        current = parent;
+                        continue;
+                    }
+                }
+                break;
+            } catch {
+                break;
+            }
+        }
+        
+        return parts.join('/');
+    }
+
+    // Export module
+    window.app.modules.excel = {
+        showToast,
+        exportHashes
+    };
+})();
+
+    </script>
+</body>
+</html>

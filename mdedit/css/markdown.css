@@ -1,0 +1,223 @@
+/* Markdown content rendering styles */
+.markdown-content {
+    line-height: 1.6;
+}
+
+.markdown-content h1,
+.toastui-editor-contents h1 {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-size: 2em;
+    font-weight: 600;
+    line-height: 1.25;
+    margin-top: 24px;
+    margin-bottom: 16px;
+    padding-bottom: 0.3em;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    word-wrap: break-word;
+}
+
+.markdown-content h2,
+.toastui-editor-contents h2 {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-size: 1.5em;
+    font-weight: 600;
+    line-height: 1.25;
+    margin-top: 24px;
+    margin-bottom: 16px;
+    padding-bottom: 0.3em;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    word-wrap: break-word;
+}
+
+.markdown-content h3,
+.toastui-editor-contents h3 {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-size: 1.25em;
+    font-weight: 600;
+    line-height: 1.25;
+    margin-top: 16px;
+    margin-bottom: 16px;
+    color: var(--text);
+    word-wrap: break-word;
+}
+
+.markdown-content h4,
+.toastui-editor-contents h4 {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-size: 1em;
+    font-weight: 600;
+    line-height: 1.25;
+    margin-top: 16px;
+    margin-bottom: 16px;
+    color: var(--text);
+    word-wrap: break-word;
+}
+
+.markdown-content h5,
+.toastui-editor-contents h5 {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-size: 0.875em;
+    font-weight: 600;
+    line-height: 1.25;
+    margin-top: 16px;
+    margin-bottom: 16px;
+    color: var(--text);
+    word-wrap: break-word;
+}
+
+.markdown-content h6,
+.toastui-editor-contents h6 {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-size: 0.85em;
+    font-weight: 600;
+    line-height: 1.25;
+    margin-top: 16px;
+    margin-bottom: 16px;
+    color: var(--text-muted);
+    word-wrap: break-word;
+}
+
+/* Reset margin-top for first-child headings */
+.markdown-content h1:first-child,
+.markdown-content h2:first-child,
+.markdown-content h3:first-child,
+.markdown-content h4:first-child,
+.markdown-content h5:first-child,
+.markdown-content h6:first-child,
+.toastui-editor-contents h1:first-child,
+.toastui-editor-contents h2:first-child,
+.toastui-editor-contents h3:first-child,
+.toastui-editor-contents h4:first-child,
+.toastui-editor-contents h5:first-child,
+.toastui-editor-contents h6:first-child {
+    margin-top: 0;
+}
+
+/* Reduce spacing between consecutive headings */
+.markdown-content h1 + h2,
+.toastui-editor-contents h1 + h2 {
+    margin-top: 1rem;
+}
+
+.markdown-content h2 + h3,
+.toastui-editor-contents h2 + h3 {
+    margin-top: 1.5rem;
+}
+
+.markdown-content h3 + h4,
+.toastui-editor-contents h3 + h4 {
+    margin-top: 1.25rem;
+}
+
+.markdown-content h4 + h5,
+.toastui-editor-contents h4 + h5 {
+    margin-top: 1rem;
+}
+
+.markdown-content h5 + h6,
+.toastui-editor-contents h5 + h6 {
+    margin-top: 0.75rem;
+}
+
+.markdown-content p,
+.toastui-editor-contents p {
+    margin-bottom: 1rem;
+}
+
+.markdown-content ul,
+.markdown-content ol,
+.toastui-editor-contents ul,
+.toastui-editor-contents ol {
+    margin-bottom: 1rem;
+    padding-left: 2rem;
+}
+
+.markdown-content ul,
+.toastui-editor-contents ul {
+    list-style-type: disc;
+}
+
+.markdown-content ol,
+.toastui-editor-contents ol {
+    list-style-type: decimal;
+}
+
+.markdown-content li,
+.toastui-editor-contents li {
+    margin-bottom: 0.25rem;
+}
+
+.markdown-content code,
+.toastui-editor-contents code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.9em;
+    padding: 0.2em 0.4em;
+    background-color: var(--bg-secondary);
+    border-radius: 0.25rem;
+}
+
+.markdown-content pre,
+.toastui-editor-contents pre {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background-color: var(--bg-secondary);
+    border-radius: 0.375rem;
+    overflow-x: auto;
+}
+
+.markdown-content pre code,
+.toastui-editor-contents pre code {
+    background-color: transparent;
+    padding: 0;
+    border-radius: 0;
+}
+
+.markdown-content blockquote,
+.toastui-editor-contents blockquote {
+    border-left: 4px solid var(--border);
+    padding-left: 1rem;
+    margin-left: 0;
+    margin-right: 0;
+    margin-bottom: 1rem;
+    color: var(--text-muted);
+}
+
+.markdown-content a,
+.toastui-editor-contents a {
+    color: var(--primary);
+    text-decoration: none;
+}
+
+.markdown-content a:hover,
+.toastui-editor-contents a:hover {
+    text-decoration: underline;
+}
+
+.markdown-content table,
+.toastui-editor-contents table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+.markdown-content th,
+.markdown-content td,
+.toastui-editor-contents th,
+.toastui-editor-contents td {
+    border: 1px solid var(--border);
+    padding: 0.5rem;
+    text-align: left;
+}
+
+.markdown-content th,
+.toastui-editor-contents th {
+    background-color: var(--bg-secondary);
+    font-weight: 600;
+}
+
+.markdown-content tr:nth-child(even),
+.toastui-editor-contents tr:nth-child(even) {
+    background-color: var(--bg-hover);
+}

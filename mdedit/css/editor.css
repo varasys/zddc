@@ -1,0 +1,25 @@
+/* Toast UI Editor styles */
+#markdown-editor {
+    display: block !important;
+    height: 100% !important;
+    min-height: 500px !important;
+    width: 100% !important;
+    position: relative !important;
+    z-index: 10;
+}
+
+.editor-instance {
+    height: 100% !important;
+    min-height: 500px !important;
+}
+
+.toastui-editor-defaultUI {
+    height: 100% !important;
+}
+
+.toastui-editor-defaultUI-toolbar,
+.toastui-editor-main,
+.toastui-editor-main .ProseMirror,
+.toastui-editor-main .toastui-editor-md-preview {
+    height: 100% !important;
+}

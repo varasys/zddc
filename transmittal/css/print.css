@@ -1,0 +1,144 @@
+@media print {
+    body {
+        background: none;
+        padding: 0;
+    }
+
+    .page-container {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        min-height: 0;
+        box-shadow: none;
+        border: none;
+    }
+
+    @page {
+        margin: 0.375in;
+        size: 8.5in 11in;
+    }
+
+    .table-wrapper {
+        overflow: visible !important;
+        max-height: none !important;
+    }
+
+    thead th {
+        position: static !important;
+        top: auto !important;
+    }
+
+    /* Hide interactive-only elements in print */
+    .table-filter-input,
+    .logo-placeholder,
+    .drop-zone-label {
+        display: none !important;
+    }
+
+
+    /* Adjust table header caption spacing when filters are hidden */
+    .table-header__caption {
+        display: block;
+        padding: 0.25rem 0;
+    }
+
+    table {
+        width: 100% !important;
+        table-layout: fixed !important;
+        border: 1px solid #999 !important;
+        border-collapse: collapse !important;
+    }
+
+    th {
+        background-color: #e0e0e0 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        border-left: 1px solid #999 !important;
+        border-right: 1px solid #999 !important;
+        border-bottom: 1px solid #999 !important;
+        border-top: none !important;
+    }
+
+    td {
+        border-left: 1px solid #999 !important;
+        border-right: 1px solid #999 !important;
+        border-top: 1px solid #999 !important;
+        border-bottom: 1px solid #999 !important;
+    }
+
+    tr.self-entry td {
+        background-color: #f3f4f6 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    /* Fixed column widths for print */
+    thead th:nth-child(1),
+    tbody td:nth-child(1) {
+        width: 18% !important;
+    }
+
+    thead th:nth-child(2),
+    tbody td:nth-child(2) {
+        width: 30% !important;
+    }
+
+    thead th:nth-child(3),
+    tbody td:nth-child(3) {
+        width: 10% !important;
+    }
+
+    thead th:nth-child(4),
+    tbody td:nth-child(4) {
+        width: 8% !important;
+    }
+
+    thead th:nth-child(5),
+    tbody td:nth-child(5) {
+        width: 6% !important;
+    }
+
+    thead th:nth-child(6),
+    tbody td:nth-child(6) {
+        width: 8% !important;
+    }
+
+    thead th:nth-child(7),
+    tbody td:nth-child(7) {
+        width: 20% !important;
+    }
+
+    /* Ensure text wraps properly in print */
+    tbody td {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+
+    /* SHA256 column - allow breaking */
+    tbody td:nth-child(7) {
+        word-break: break-all;
+        font-size: 7pt !important;
+    }
+
+    /* From field: show rendered mailto link, hide input */
+    #from { display: none !important; }
+    .from-render {
+        display: block !important;
+    }
+    .from-mailto {
+        color: #2563eb !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    /* To field: show rendered mailto links, hide input */
+    #to { display: none !important; }
+    .to-render {
+        display: block !important;
+    }
+    .to-mailto {
+        color: #2563eb !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}

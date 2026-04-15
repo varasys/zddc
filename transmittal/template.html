@@ -1,0 +1,495 @@
+<!--
+This is a html transmittal template.
+It is meant to be an editable form to fill out transmittal information and
+scan documents to be included in the transmittal, and then complete the
+transmittal files table by parsing the file names according to ZDDC naming
+conventions at https://varasys.github.io/zddc/#file-naming-convention.
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZDDC Transmittal</title>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/forms.css">
+    <link rel="stylesheet" href="css/table.css">
+    <link rel="stylesheet" href="css/remarks.css">
+    <link rel="stylesheet" href="css/markdown.css">
+    <link rel="stylesheet" href="css/markdown-editor.css">
+    <link rel="stylesheet" href="css/filter.css">
+    <link rel="stylesheet" href="css/modal.css">
+    <link rel="stylesheet" href="css/utilities.css">
+    <link rel="stylesheet" href="css/print.css">
+</head>
+
+<body class="font-sans text-gray-900">
+    <div class="app-header print:hidden" data-no-disable="true">
+        <div class="split-button" id="bottom-menu" hidden>
+            <button id="bottom-toggle" type="button" class="btn btn-primary split-button__toggle" data-no-disable="true" aria-haspopup="true" aria-expanded="false">&#x25BE;</button>
+            <button id="bottom-primary" type="button" class="btn btn-primary" data-no-disable="true">Publish</button>
+            <div class="dropdown-menu hidden" role="menu" id="bottom-dropdown"></div>
+        </div>
+        <span id="no-js-notice" class="text-gray-400 text-xs italic">JavaScript not available</span>
+        <div class="header-title-group">
+            <span class="app-header__title">ZDDC Transmittal</span>
+            <span class="build-timestamp">Built: {{BUILD_TIMESTAMP}}</span>
+        </div>
+        <div class="app-header__spacer"></div>
+        <div class="app-header__icons">
+            <button type="button" id="theme-btn" class="btn btn-secondary" title="Theme: auto (follows OS)" aria-label="Theme: auto (follows OS)">◐</button>
+            <button type="button" id="help-btn" class="btn btn-secondary" aria-label="Help" title="Help">?</button>
+        </div>
+    </div>
+    <div class="page-container">
+    <form id="transmittal-form">
+    <input type="hidden" id="mode" value="edit">
+    <input type="hidden" id="published" value="false">
+    <header class="page-header flex flex-col gap-2 p-2 max-w-[1600px] relative">
+        <div class="logo-row">
+            <div class="logo-cell" id="left-logo-cell" data-drop-zone="logo-left">
+                <img id="left-logo" class="logo-img" alt="Sender Logo">
+                <span class="logo-placeholder">Drop sender logo (optional)</span>
+                <span class="drop-zone-label">Drop sender logo</span>
+            </div>
+            <div class="title-area">
+              <div class="type-combo" id="type-combo">
+                <input type="hidden" name="type" id="type" value="Transmittal">
+                <span id="type-display" role="combobox" contenteditable="true" class="type-display w-full text-2xl font-bold bg-transparent border-0 p-0 focus:outline-none text-center" data-placeholder="Type">Transmittal</span>
+                <div class="type-combo__menu hidden" id="type-menu" role="listbox">
+                  <button type="button" class="type-combo__option" role="option" data-value="Transmittal">Transmittal</button>
+                  <button type="button" class="type-combo__option" role="option" data-value="Submittal">Submittal</button>
+                </div>
+              </div>
+              <input type="text" name="title" id="title" placeholder="Title" class="w-full text-base italic bg-transparent border-0 p-0 focus:outline-none disabled:pointer-events-none text-center" value="">
+            </div>
+            <div class="logo-cell" id="right-logo-cell" data-drop-zone="logo-right">
+                <img id="right-logo" class="logo-img" alt="Receiver Logo">
+                <span class="logo-placeholder">Drop receiver logo (optional)</span>
+                <span class="drop-zone-label">Drop receiver logo</span>
+            </div>
+        </div>
+        
+        
+
+        <div id="header-info" data-drop-zone="header">
+        <div class="drop-zone-label">Drop HTML or JSON&#10;to import transmittal data</div>
+        <div class="header-names w-full bg-gray-50 border border-gray-100 rounded-md px-3 py-1.5 flex flex-col gap-0.5">
+            <h2 id="owner-name" class="text-xl font-semibold" data-placeholder="Owner Name"></h2>
+            <h2 id="project-name" class="text-lg font-semibold" data-placeholder="Project Name"></h2>
+            <div id="project-number" class="text-sm text-gray-700" data-placeholder="Project Number"></div>
+        </div>
+
+        <div class="grid grid-cols-12 gap-x-6 gap-y-3 items-start">
+          <!-- Row 1: Tracking Number (A), Date (B) -->
+          <div class="col-span-6">
+            <div class="relative">
+              <input type="text" name="tracking-number" id="tracking-number" placeholder="" class="w-full min-w-0 bg-white border border-gray-300 rounded px-2 pt-5 pb-2 text-[12px] font-mono focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400">
+              <label for="tracking-number" class="absolute left-2 -top-2 bg-white px-1 text-[10px] text-gray-700 font-semibold pointer-events-none">Tracking Number</label>
+            </div>
+          </div>
+          <div class="col-span-6">
+            <div class="relative">
+              <input type="text" name="date" id="date" placeholder="YYYY-MM-DD" class="w-full min-w-0 bg-white border border-gray-300 rounded px-2 pt-5 pb-2 text-[12px] font-mono focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400">
+              <label for="date" class="absolute left-2 -top-2 bg-white px-1 text-[10px] text-gray-700 font-semibold pointer-events-none">Date</label>
+              <input type="date" id="date-picker-hidden" style="position:absolute;width:0;height:0;padding:0;border:0;overflow:hidden;clip:rect(0,0,0,0);" tabindex="-1" aria-hidden="true">
+            </div>
+          </div>
+
+          <!-- Row 2: From | Purpose (+ Response Due for Submittals) -->
+          <div class="col-span-6">
+            <div class="relative">
+              <input type="text" name="from" id="from" placeholder="" class="w-full min-w-0 bg-white border border-gray-300 rounded px-2 pt-5 pb-2 text-[12px] font-mono focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400">
+              <div id="from-render" class="from-render hidden"></div>
+              <label for="from" class="absolute left-2 -top-2 bg-white px-1 text-[10px] text-gray-700 font-semibold pointer-events-none">From</label>
+            </div>
+          </div>
+          <div class="col-span-6">
+            <div class="flex gap-x-6" id="purpose-group">
+              <div class="relative flex-1">
+                <input type="text" name="purpose" id="purpose" placeholder="" class="w-full min-w-0 bg-white border border-gray-300 rounded px-2 pt-5 pb-2 text-[12px] font-mono focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400">
+                <label for="purpose" class="absolute left-2 -top-2 bg-white px-1 text-[10px] text-gray-700 font-semibold pointer-events-none">Purpose</label>
+              </div>
+              <div class="relative flex-1 hidden" id="response-due-wrapper">
+                <input type="text" name="response-due" id="response-due" placeholder="YYYY-MM-DD" class="w-full min-w-0 bg-white border border-gray-300 rounded px-2 pt-5 pb-2 text-[12px] font-mono focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400">
+                <label for="response-due" class="absolute left-2 -top-2 bg-white px-1 text-[10px] text-gray-700 font-semibold pointer-events-none">Response Due</label>
+                <input type="date" id="response-due-picker-hidden" style="position:absolute;width:0;height:0;padding:0;border:0;overflow:hidden;clip:rect(0,0,0,0);" tabindex="-1" aria-hidden="true">
+              </div>
+            </div>
+          </div>
+
+          <!-- Row 3: To full width -->
+          <div class="col-span-12">
+            <div class="relative">
+              <input type="text" name="to" id="to" placeholder="" class="w-full min-w-0 bg-white border border-gray-300 rounded px-2 pt-5 pb-2 text-[12px] font-mono focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400">
+              <div id="to-render" class="to-render hidden"></div>
+              <label for="to" class="absolute left-2 -top-2 bg-white px-1 text-[10px] text-gray-700 font-semibold pointer-events-none">To</label>
+            </div>
+          </div>
+
+          <!-- Row 4: Subject full width -->
+          <div class="col-span-12">
+            <div class="relative">
+              <input type="text" name="subject" id="subject" placeholder="" class="w-full min-w-0 bg-white border border-gray-300 rounded px-2 pt-5 pb-2 text-[12px] font-bold focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400" />
+              <label for="subject" class="absolute left-2 -top-2 bg-white px-1 text-[10px] text-gray-700 font-semibold pointer-events-none">Subject</label>
+            </div>
+          </div>
+
+          <!-- Row 5: Remarks full width (Markdown) -->
+          <div class="col-span-12">
+            <div class="relative w-full">
+              <div id="remarks-wrapper" class="w-full">
+                <textarea id="remarks" name="remarks" placeholder="Remarks" aria-label="Remarks" class="px-2 pt-1 pb-3 bg-white border-0 rounded-none text-[12px] w-full min-h-[3.5rem] leading-snug resize-y"></textarea>
+                <div id="remarks-render-container" class="w-full p-2 overflow-auto">
+                  <div id="remarks-render" class="text-sm"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        </div>
+    </header>
+
+    <main class="p-2 max-w-[1600px]">
+
+          <!-- Step: Integrity — "Is this verified?" -->
+          <div class="workflow-step" id="integrity-section">
+            <h3 class="workflow-step__label">
+              Integrity
+              <span id="signature-status-static" class="workflow-badge workflow-badge--warn" data-hydrate-hide="true">Not Validated (requires JavaScript)</span>
+            </h3>
+            <div id="integrity-body" class="integrity-body">
+              <div id="digest-display"></div>
+              <div id="signatures-list"></div>
+              <button id="add-signature-btn" type="button" class="btn btn-secondary btn-sm hidden print:hidden">Add Signature</button>
+            </div>
+          </div>
+
+        <!-- file table goes here (tracking number, title, revision, status) -->
+        <div id="file-table-drop-zone" data-drop-zone="file-table">
+        <div class="drop-zone-label">Drop folder to scan / verify&#10;Drop HTML or JSON to import</div>
+        <div class="table-wrapper mt-2">
+         <table class="table-auto text-[10px] w-full">
+            <thead>
+                <tr>
+                    <th class="bg-gray-100 text-center px-2 py-1 sticky top-0 z-20 whitespace-nowrap"><span class="table-header__caption">#</span></th>
+                    <th class="bg-gray-100 text-left px-2 py-1 sticky top-0 z-20 whitespace-nowrap">
+                        <label class="table-header">
+                            <span class="table-header__caption">TRACKING NUMBER</span>
+                            <input type="text" data-no-disable="true" data-filter-field="trackingNumber" class="column-filter" placeholder="filter" inputmode="text" spellcheck="false" aria-label="Filter by tracking number">
+                        </label>
+                    </th>
+                    <th class="bg-gray-100 text-left px-2 py-1 sticky top-0 z-20 w-full">
+                        <label class="table-header">
+                            <span class="table-header__caption">TITLE</span>
+                            <input type="text" data-no-disable="true" data-filter-field="title" class="column-filter" placeholder="filter" inputmode="text" spellcheck="false" aria-label="Filter by title">
+                        </label>
+                    </th>
+                    <th class="bg-gray-100 text-center px-2 py-1 sticky top-0 z-20 whitespace-nowrap">
+                        <label class="table-header">
+                            <span class="table-header__caption">REVISION</span>
+                            <input type="text" data-no-disable="true" data-filter-field="revision" class="column-filter" placeholder="filter" inputmode="text" spellcheck="false" aria-label="Filter by revision">
+                        </label>
+                    </th>
+                    <th class="bg-gray-100 text-center px-2 py-1 sticky top-0 z-20 whitespace-nowrap">
+                        <label class="table-header">
+                            <span class="table-header__caption">STATUS</span>
+                            <input type="text" data-no-disable="true" data-filter-field="status" class="column-filter" placeholder="filter" inputmode="text" spellcheck="false" aria-label="Filter by status">
+                        </label>
+                    </th>
+                    <th class="bg-gray-100 text-center px-2 py-1 sticky top-0 z-20 whitespace-nowrap">
+                        <label class="table-header">
+                            <span class="table-header__caption">EXT</span>
+                            <input type="text" data-no-disable="true" data-filter-field="extension" class="column-filter" placeholder="filter" inputmode="text" spellcheck="false" aria-label="Filter by extension">
+                        </label>
+                    </th>
+                    <th class="bg-gray-100 text-right px-2 py-1 sticky top-0 z-20 whitespace-nowrap">
+                        <label class="table-header">
+                            <span class="table-header__caption">SIZE</span>
+                            <input type="text" data-no-disable="true" data-filter-field="fileSize" class="column-filter" placeholder="filter" inputmode="text" spellcheck="false" aria-label="Filter by size">
+                        </label>
+                    </th>
+                    <th class="bg-gray-100 text-left px-2 py-1 sticky top-0 z-20 whitespace-nowrap">
+                        <label class="table-header">
+                            <span class="table-header__caption">SHA256</span>
+                            <input type="text" data-no-disable="true" data-filter-field="sha256" class="column-filter" placeholder="filter" inputmode="text" spellcheck="false" aria-label="Filter by SHA256">
+                        </label>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </tbody>
+         </table>
+        </div>
+        </div>
+
+    </main>
+
+    <footer class="page-footer print:hidden">
+        <div class="page-footer__inner">
+            <span id="data-status" class="text-gray-600 text-[10px]" aria-live="polite"></span>
+            <span id="selected-directory" class="workflow-dir text-[10px]"></span>
+        </div>
+    </footer>
+    </form>
+    </div>
+
+    <dialog id="publish-modal" class="modal" data-edit-only="true" aria-labelledby="publish-modal-title">
+      <div class="modal__header">
+        <h2 id="publish-modal-title" class="modal__title">Publish Transmittal</h2>
+        <button type="button" class="modal__close" data-modal-close aria-label="Close">&times;</button>
+      </div>
+      <div class="modal__body">
+        <div id="publish-date-row" class="publish-field">
+          <label for="publish-date-input" class="publish-field__label">Date</label>
+          <div class="publish-field__row">
+            <input type="text" id="publish-date-input" class="publish-field__input" placeholder="YYYY-MM-DD" pattern="\d{4}-\d{2}-\d{2}">
+            <span id="publish-date-warning" class="publish-field__warning" hidden></span>
+          </div>
+        </div>
+        <fieldset class="publish-outputs">
+          <legend class="publish-field__label">Output</legend>
+          <label class="publish-check">
+            <input type="checkbox" id="publish-save-folder"> Save in directory
+          </label>
+          <label class="publish-check">
+            <input type="checkbox" id="publish-download-html"> Download HTML
+          </label>
+        </fieldset>
+      </div>
+      <div class="modal__feedback" id="publish-modal-feedback" role="status" aria-live="polite"></div>
+      <div class="modal__footer">
+        <button type="button" class="btn btn-secondary" data-modal-close>Cancel</button>
+        <button type="button" class="btn btn-secondary" id="publish-draft-btn">Save Draft</button>
+        <button type="button" class="btn btn-secondary" id="publish-signed-btn">Publish Signed</button>
+        <button type="button" class="btn btn-primary" id="publish-confirm">Publish</button>
+      </div>
+    </dialog>
+
+    <dialog id="key-dialog" class="modal modal--narrow" aria-labelledby="key-dialog-title">
+      <div class="modal__header">
+        <h2 id="key-dialog-title" class="modal__title">Signing Key</h2>
+        <button type="button" class="modal__close" data-modal-close aria-label="Close">&times;</button>
+      </div>
+      <div class="modal__body">
+        <p class="key-dialog__desc">Select your signing key file or generate a new key pair.</p>
+        <div class="key-dialog__actions">
+          <button type="button" class="btn btn-secondary" id="key-select-file">Select Key File</button>
+          <button type="button" class="btn btn-secondary" id="key-generate">Generate New Key</button>
+        </div>
+        <div id="key-generate-panel" hidden>
+          <label class="publish-field__label" for="key-password">Password (optional)</label>
+          <input type="password" id="key-password" class="publish-field__input" placeholder="Leave blank for no password" autocomplete="new-password">
+          <label class="publish-field__label" for="key-password-confirm" style="margin-top:0.25rem;">Confirm password</label>
+          <input type="password" id="key-password-confirm" class="publish-field__input" placeholder="Confirm password" autocomplete="new-password">
+          <div class="key-dialog__actions" style="margin-top:0.5rem;">
+            <button type="button" class="btn btn-primary" id="key-generate-confirm">Generate &amp; Download</button>
+            <button type="button" class="btn btn-secondary" id="key-generate-cancel">Back</button>
+          </div>
+        </div>
+        <div class="modal__feedback" id="key-dialog-feedback" role="status" aria-live="polite"></div>
+      </div>
+    </dialog>
+
+    <dialog id="password-dialog" class="modal modal--narrow" aria-labelledby="password-dialog-title">
+      <div class="modal__header">
+        <h2 id="password-dialog-title" class="modal__title">Enter Key Password</h2>
+        <button type="button" class="modal__close" data-modal-close aria-label="Close">&times;</button>
+      </div>
+      <div class="modal__body">
+        <p id="password-dialog-fingerprint" class="key-dialog__desc"></p>
+        <input type="password" id="password-dialog-input" class="publish-field__input" placeholder="Password" autocomplete="current-password">
+        <div class="modal__feedback" id="password-dialog-feedback" role="status" aria-live="polite"></div>
+      </div>
+      <div class="modal__footer">
+        <button type="button" class="btn btn-secondary" data-modal-close>Cancel</button>
+        <button type="button" class="btn btn-primary" id="password-dialog-ok">Unlock</button>
+      </div>
+    </dialog>
+
+    <!-- Help panel (non-modal slide-out) -->
+    <aside id="help-panel" class="help-panel" hidden aria-labelledby="help-panel-title">
+      <div class="help-panel__header">
+        <h2 id="help-panel-title" class="help-panel__title">Help</h2>
+        <button type="button" class="help-panel__close" id="help-panel-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="help-panel__body">
+        <h3>What is a Transmittal?</h3>
+        <p>A transmittal is a cover sheet that travels with a set of files. It records <em>what</em> was sent, <em>to whom</em>, and <em>when</em>. This tool produces a single self-contained HTML file that serves as both the cover sheet and a cryptographic proof of what was delivered.</p>
+        <p><strong>How it works:</strong> Each file in the transmittal is fingerprinted with a SHA-256 hash &mdash; a value computed from the file&rsquo;s contents. Change even one byte and the hash changes, so a matching hash proves the file is unaltered. The transmittal then hashes the entire payload (header, file list, and all per-file hashes) into a single <em>digest</em>. Optionally, one or more people can digitally sign that digest.</p>
+
+        <h3>Typical Workflow</h3>
+        <ol>
+          <li><strong>Fill in the header</strong> &mdash; tracking number, date, recipient, project, etc.</li>
+          <li>Optionally <em>Save Draft</em> to create a reusable template.</li>
+          <li><strong>Add files</strong> &mdash; paste rows from a spreadsheet, or use <em>Scan Directory</em> to read a folder and compute hashes automatically.</li>
+          <li><strong>Review</strong> the file table and remarks.</li>
+          <li>Use <em>Verify Directory</em> to confirm every listed file is present and unchanged.</li>
+          <li><strong>Publish</strong> &mdash; click <em>Publish</em> for an unsigned digest, or use the dropdown for <em>Publish Signed</em> (with a signing key) or <em>Save Draft</em>. The output is saved to the working directory, or downloaded if no directory is selected.</li>
+          <li><strong>Distribute</strong> &mdash; send the HTML alongside the actual files.</li>
+        </ol>
+
+        <h3>Signing Keys</h3>
+        <p>Signing keys are stored in <code>.zddc-key</code> files. When generating a new key, you can optionally protect it with a password. Password-protected keys require the password each time they are used to sign.</p>
+        <p>Keys without a password work immediately, like an unprotected SSH key.</p>
+
+        <h3>Verification Levels</h3>
+        <p>A published transmittal provides up to four escalating levels of integrity protection. Higher levels guard against increasingly sophisticated threats:</p>
+        <ol>
+          <li><strong>Static HTML</strong> &mdash; A human-readable record of everything sent. Works without JavaScript (e.g.&nbsp;on a SharePoint site). No cryptographic protection.</li>
+          <li><strong>Digest check</strong> &mdash; With JavaScript, the tool recomputes the SHA-256 digest and compares it to the stored value. A match proves nothing changed since publication. Detects accidental corruption, but someone could alter both the data and the digest.</li>
+          <li><strong>Digital signatures</strong> &mdash; ECDSA signatures bind the digest to a signer&rsquo;s private key. Any change invalidates the signature, preventing undetected tampering. Add signatures after publishing via <em>Add Signature</em>.</li>
+          <li><strong>Independent verification</strong> &mdash; A tampered HTML file could ship modified JavaScript that always says &ldquo;Verified.&rdquo; To rule this out, the recipient opens the sender&rsquo;s file in their <em>own</em> trusted copy of the tool using <em>Import HTML</em>. This extracts the raw data and re-verifies it with the recipient&rsquo;s own code. Use this level for anything that matters.</li>
+        </ol>
+        <p class="text-sm text-gray-500">Level&nbsp;4 assumes the recipient&rsquo;s tool is trustworthy (downloaded from a known source or built from source). A reference instance is at <a href="https://varasys.github.io/zddc/transmittal/dist/transmittal.html" target="_blank" rel="noopener">varasys.github.io/zddc</a>.</p>
+
+        <h3>Menu Actions</h3>
+        <p>Actions available from the dropdown button. <span class="help-badge help-badge--draft">draft</span> items appear only while editing. <span class="help-badge help-badge--published">published</span> items appear only after publishing. Unmarked items appear in both modes.</p>
+
+        <dl>
+          <dt>Save Draft <span class="help-badge help-badge--draft">draft</span></dt>
+          <dd>Downloads the current state as an HTML file. Reopen it later to continue editing, or use it as a template for new transmittals.</dd>
+
+          <dt>Revise <span class="help-badge help-badge--published">published</span></dt>
+          <dd>Unlocks a published transmittal back into an editable draft.</dd>
+
+          <dt>Add Signature <span class="help-badge help-badge--published">published</span></dt>
+          <dd>Signs the digest with a new ECDSA key and downloads the updated file. Multiple people can sign sequentially.</dd>
+
+          <dt>Acknowledge Receipt <span class="help-badge help-badge--published">published</span></dt>
+          <dd>Same as Add Signature, but labeled &ldquo;Received By&rdquo; in the signature list &mdash; used by the recipient to confirm delivery.</dd>
+        </dl>
+
+        <h4>Table Clipboard</h4>
+        <dl>
+          <dt>Paste New Rows <span class="help-badge help-badge--draft">draft</span></dt>
+          <dd>Replaces the file table with tab-separated data from the clipboard (e.g.&nbsp;copied from Excel).</dd>
+          <dt>Paste Append Rows <span class="help-badge help-badge--draft">draft</span></dt>
+          <dd>Appends clipboard rows to the existing file table.</dd>
+          <dt>Copy Table</dt>
+          <dd>Copies the file table as tab-separated text for pasting into spreadsheets.</dd>
+        </dl>
+
+        <h4>Data Import &amp; Export</h4>
+        <dl>
+          <dt>Import HTML</dt>
+          <dd>Opens a published transmittal HTML, extracts its data, and re-verifies it with your own code (Level&nbsp;4). You can also drag-and-drop an HTML or JSON file directly onto the <strong>Header</strong> or <strong>File table</strong> drop zones &mdash; drag anything over the page to reveal the zones.</dd>
+          <dt>Copy JSON</dt>
+          <dd>Copies the raw transmittal data as JSON for backup or transfer.</dd>
+          <dt>Paste JSON <span class="help-badge help-badge--draft">draft</span></dt>
+          <dd>Loads transmittal data from JSON on the clipboard.</dd>
+        </dl>
+
+        <h4>Drag-and-Drop Zones</h4>
+        <p>Drag any file or folder over the page to reveal labelled drop zones. Zones that can accept your data are highlighted in blue; others are dimmed.</p>
+        <dl>
+          <dt>Sender / Receiver logo zones</dt>
+          <dd>Top-left and top-right areas. Accept image files. Edit mode only.</dd>
+          <dt>Header zone <span class="help-badge help-badge--draft">draft</span></dt>
+          <dd>The form header area. Accepts a transmittal HTML or JSON file to import all fields.</dd>
+          <dt>File table zone</dt>
+          <dd>The document list area. Accepts a folder (triggers Scan or Verify), or a transmittal HTML/JSON file.</dd>
+        </dl>
+
+        <h4>Directory Operations</h4>
+        <p class="text-sm text-gray-500">Requires a Chromium-based desktop browser (File System Access API).</p>
+        <dl>
+          <dt>Scan Directory <span class="help-badge help-badge--draft">draft</span></dt>
+          <dd>Picks a local folder, lists every file, and computes SHA-256 hashes to populate the file table.</dd>
+          <dt>Verify Directory</dt>
+          <dd>Picks a local folder and checks that each file on disk matches its hash in the transmittal.</dd>
+        </dl>
+
+        <h4>Other</h4>
+        <dl>
+          <dt>Create Index</dt>
+          <dd>Scans transmittal folders and builds a <code>.archive</code> directory of small HTML redirects keyed by tracking number, revision, and hash &mdash; enabling direct links between documents in a file-based archive.</dd>
+          <dt>Reset</dt>
+          <dd>Clears everything and restores the blank template.</dd>
+        </dl>
+      </div>
+    </aside>
+
+    <!-- Single source of truth for all data; replace this block to swap content -->
+    <!-- Hydration: Populate static content from JSON on publish -->
+    <script id="transmittal-data" type="application/json">
+{
+  "envelope": {
+    "version": 1,
+    "digestAlgorithm": "SHA-256",
+    "digest": "",
+    "digestedAt": "",
+    "signatureAlgorithm": "ECDSA-P256-SHA256",
+    "signatures": []
+  },
+  "payload": {
+    "version": 1,
+    "type": "Transmittal",
+    "title": "",
+    "client": "",
+    "project": "",
+    "projectNumber": "",
+    "date": "",
+    "trackingNumber": "",
+    "from": "",
+    "to": "",
+    "purpose": "",
+    "responseDue": "",
+    "subject": "",
+    "remarks": "",
+    "files": []
+  },
+  "presentation": {
+    "leftLogo": "",
+    "rightLogo": "",
+    "theme": "default",
+    "customCss": ""
+  }
+}
+    </script>
+    <script src="js/app.js"></script>
+    <script src="js/reactive.js"></script>
+    <script src="js/dom.js"></script>
+    <script src="js/util.js"></script>
+    <script src="js/json.js"></script>
+    <script src="js/hydrate.js"></script>
+    <script src="js/state.js"></script>
+    <script src="js/mode.js"></script>
+    <script src="js/visibility.js"></script>
+    <script src="js/live-digest.js"></script>
+    <script src="js/files.js"></script>
+    <script src="js/files-archive.js"></script>
+    <script src="js/files-render.js"></script>
+    <script src="js/files-preview.js"></script>
+    <script src="js/filters.js"></script>
+    <script src="js/markdown.js"></script>
+    <script src="js/markdown-editor.js"></script>
+    <script src="js/email-tags.js"></script>
+    <script src="js/validation.js"></script>
+    <script src="js/security.js"></script>
+    <script src="js/verification.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/publish.js"></script>
+    <script src="js/reset.js"></script>
+    <script src="js/publish-modal.js"></script>
+    <script src="js/logos.js"></script>
+    <script src="js/drop-zones.js"></script>
+    <script src="js/advanced.js"></script>
+    <script src="js/focus.js"></script>
+    <script src="../shared/help.js"></script>
+    <script src="js/main.js"></script>
+</body>
+
+</html>

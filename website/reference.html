@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Technical Reference — ZDDC</title>
+  <meta name="description" content="Complete specification for the ZDDC filename convention, revision system, status codes, folder structure, and transmittal workflow.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://varasys.github.io/zddc/reference.html">
+  <meta property="og:title" content="Technical Reference — ZDDC">
+  <meta property="og:description" content="Complete technical reference for ZDDC: naming convention, tracking numbers, revisions, status codes, folder structure, and transmittal workflow.">
+  <meta name="theme-color" content="#2a5a8a">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="site-header">
+    <div class="container header-content">
+      <a href="/" class="brand">
+        <div class="brand-logo">
+          <svg viewBox="0 0 24 24">
+            <path d="M3 5h18v2H3V5zm0 6h12v2H3v-2zm0 6h6v2H3v-2z" />
+          </svg>
+        </div>
+        <span class="brand-name">ZDDC</span>
+      </a>
+      <nav class="header-nav">
+        <div class="dropdown">
+          <button class="dropdown-toggle" onmouseenter="showDropdown(this)" onmouseleave="hideDropdown(this)">
+            <span>Tools</span>
+            <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; fill: currentColor;">
+              <path d="M7 10l5 5 5-5z"/>
+            </svg>
+          </button>
+          <div class="dropdown-menu">
+            <a href="archive.html">Archive Browser</a>
+            <a href="transmittal.html">Transmittal Creator</a>
+            <a href="classifier.html">Document Classifier</a>
+            <a href="mdedit.html">Markdown Editor</a>
+          </div>
+        </div>
+        <a href="reference.html" class="nav-link active">Docs</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Page Title Area -->
+  <div class="container" style="margin-top: var(--spacing-xl);">
+    <h1>Technical Reference</h1>
+    <p style="color: var(--color-text-muted); font-size: 1.125rem; margin-bottom: 0;">
+      Complete specification for the ZDDC filename convention, revision system, status codes, folder structure, and transmittal workflow.
+    </p>
+  </div>
+
+  <!-- Reference Layout: Sidebar TOC + Content -->
+  <div class="container ref-layout">
+    <!-- Sidebar TOC -->
+    <aside class="ref-toc" id="sidebar-toc">
+      <h3 class="muted" style="font-size: 0.875rem; font-weight: 600; margin-bottom: var(--spacing-sm);">On this page</h3>
+      <nav>
+        <div class="ref-toc__item"><a href="#overview" class="ref-toc__link">1. Overview</a></div>
+        <div class="ref-toc__item"><a href="#filename-format" class="ref-toc__link">2. Filename format</a></div>
+        <div class="ref-toc__item"><a href="#tracking-numbers" class="ref-toc__link">3. Tracking numbers</a></div>
+        <div class="ref-toc__item"><a href="#revisions" class="ref-toc__link">4. Revisions</a></div>
+        <div class="ref-toc__item"><a href="#draft-prefix" class="ref-toc__link">5. Draft prefix (~)</a></div>
+        <div class="ref-toc__item"><a href="#revision-modifiers" class="ref-toc__link">6. Revision modifiers (+)</a></div>
+        <div class="ref-toc__item"><a href="#status-codes" class="ref-toc__link">7. Status codes</a></div>
+        <div class="ref-toc__item"><a href="#folder-naming" class="ref-toc__link">8. Folder naming</a></div>
+        <div class="ref-toc__item"><a href="#transmittal-workflow" class="ref-toc__link">9. Transmittal workflow</a></div>
+        <div class="ref-toc__item"><a href="#tools" class="ref-toc__link">10. Tools</a></div>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="ref-content">
+      <!-- Section 1: Overview -->
+      <section id="overview">
+        <h2>1. Overview</h2>
+        <p>ZDDC — Zero Day Document Control — is one naming convention plus a flat folder structure. It makes no hierarchy decisions for you.</p>
+        <p>Every filename carries project, discipline, type, sequence, revision, status, and title. Your file browser is the search engine.</p>
+        <p>The four tools implement interfaces around this structure — but they're optional. The structure works without them.</p>
+      </section>
+
+      <!-- Section 2: Filename format -->
+      <section id="filename-format">
+        <h2>2. Filename format</h2>
+        <p>Grammar:</p>
+        <div class="code-block" style="text-align: center; font-style: italic; color: var(--color-text-muted);">
+          trackingNumber_revision (status) - title.extension
+        </div>
+
+        <p>Rules:</p>
+        <ul style="margin: var(--spacing-md) 0; padding-left: 1.5rem; color: var(--color-text-muted); line-height: 1.65;">
+          <li>Tracking number: no spaces, no underscores, hyphens as separators</li>
+          <li>Underscore <code>_</code> separates tracking number from revision</li>
+          <li>Revision: no spaces; may include <code>~</code> prefix and/or <code>+</code> modifier</li>
+          <li>Space before <code>(status)</code></li>
+          <li>Space-dash-space <code> - </code> before title</li>
+          <li>Extension is the original file extension, preserved exactly</li>
+        </ul>
+
+        <p>Anatomy:</p>
+        <div class="filename-anatomy">
+          <span class="filename-anatomy__part filename-anatomy__part--tracking">123456-EL-SPC-2623</span>
+          <span class="filename-anatomy__part">_</span>
+          <span class="filename-anatomy__part filename-anatomy__part--revision">B</span>
+          <span class="filename-anatomy__part"> </span>
+          <span class="filename-anatomy__part filename-anatomy__part--status">(IFC)</span>
+          <span class="filename-anatomy__part"> - </span>
+          <span class="filename-anatomy__part filename-anatomy__part--title">Specification For Switchgear.pdf</span>
+        </div>
+
+        <p>Real examples:</p>
+        <div class="code-block">
+123456-EM-MDL-0001_A (IFR) - Master Deliverables List.pdf
+123456-EL-SPC-2623_A (IFR) - Specification For Switchgear.pdf
+123456-EL-ARR-0003_A+C1 (RSB) - Electrical Room Equipment Arrangement.pdf
+123456-EL-ARR-0003_0 (IFC) - Electrical Room Equipment Arrangement.pdf
+123456-ME-RFI-0024_A (IFR) - Mechanical Room Size RFI.pdf
+        </div>
+      </section>
+
+      <!-- Section 3: Tracking numbers -->
+      <section id="tracking-numbers">
+        <h2>3. Tracking numbers</h2>
+        <p>A tracking number is the document's <strong>permanent identifier</strong>. It never changes — regardless of revision, status, or content changes. Think of it like a passport number — your name can change, but your passport number does not.</p>
+        <p>Format is your choice. Must be consistent within a project. No spaces, no underscores — hyphens as separators only.</p>
+
+        <p>Common pattern: <code>PROJECT-DISCIPLINE-TYPE-SEQUENCE</code></p>
+
+        <h3>Example schemas</h3>
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Project type</th>
+              <th scope="col">Example</th>
+              <th scope="col">Schema</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Engineering</td>
+              <td><code>123456-EL-SPC-2623</code></td>
+              <td>project · discipline · type · sequence</td>
+            </tr>
+            <tr>
+              <td>Construction</td>
+              <td><code>PROJ-STR-DWG-0001</code></td>
+              <td>project · discipline · type · sequence</td>
+            </tr>
+            <tr>
+              <td>Legal</td>
+              <td><code>SMITH-2025-CTR-0014</code></td>
+              <td>client · year · type · sequence</td>
+            </tr>
+            <tr>
+              <td>Research</td>
+              <td><code>RNA-SEQ-EXP-0042</code></td>
+              <td>program · method · type · sequence</td>
+            </tr>
+            <tr>
+              <td>Small project</td>
+              <td><code>MCH-2025-001</code></td>
+              <td>client · year · sequence</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="highlight-box" style="margin-top: var(--spacing-lg);">
+          <p><strong>Benefits of encoded discipline and type:</strong> Search <code>EL</code> to find all electrical documents. Search <code>SPC</code> to find all specifications. Sort by name and the entire project groups together.</p>
+        </div>
+      </section>
+
+      <!-- Section 4: Revisions -->
+      <section id="revisions">
+        <h2>4. Revisions</h2>
+        <p>Letters A, B, C... for design/review phase. Numbers 0, 1, 2... for construction/record phase (post-approval). Letters sort before numbers — this is intentional (lexical sort is meaningful).</p>
+
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Revision</th>
+              <th scope="col">Meaning</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>A</code></td>
+              <td>First issued revision</td>
+            </tr>
+            <tr>
+              <td><code>B</code></td>
+              <td>Second issued revision</td>
+            </tr>
+            <tr>
+              <td><code>C</code>, <code>D</code>, …</td>
+              <td>Subsequent revisions</td>
+            </tr>
+            <tr>
+              <td><code>0</code></td>
+              <td>First numeric revision (typically after approval, IFC)</td>
+            </tr>
+            <tr>
+              <td><code>1</code>, <code>2</code>, …</td>
+              <td>Subsequent numeric revisions</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Section 5: Draft prefix (~) -->
+      <section id="draft-prefix">
+        <h2>5. Draft prefix (<code>~</code>)</h2>
+        <p><code>~</code> before revision = working draft, not yet formally issued. Keeps working files alongside formal versions without ambiguity.</p>
+
+        <ul>
+          <li><code>~A</code> = draft that will become Rev A when issued</li>
+          <li><code>~B</code> = working version incorporating Rev A comments</li>
+        </ul>
+
+        <p><code>~</code> sorts after the base revision, so drafts are clearly subordinate.</p>
+
+        <div class="code-block">
+123456-EL-SPC-2623_~A (---) - Working draft of Rev A — not yet issued
+123456-EL-SPC-2623_A (IFR) - Rev A — formally issued for review
+        </div>
+      </section>
+
+      <!-- Section 6: Revision modifiers (+) -->
+      <section id="revision-modifiers">
+        <h2>6. Revision modifiers (<code>+</code>)</h2>
+        <p><code>+modifier</code> associates a file with a base revision without incrementing it. Used for comments, backup material, quality records, and internal notes. Sorts after the base revision in alphabetical order.</p>
+
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Modifier</th>
+              <th scope="col">Meaning</th>
+              <th scope="col">Typical status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>+C1</code>, <code>+C2</code></td>
+              <td>Comments on the base revision</td>
+              <td><span class="status-badge">RSA</span> <span class="status-badge">RSB</span> <span class="status-badge">RSC</span> <span class="status-badge">RSD</span></td>
+            </tr>
+            <tr>
+              <td><code>+B1</code>, <code>+B2</code></td>
+              <td>Backup material supporting base content</td>
+              <td><span class="status-badge">IFI</span></td>
+            </tr>
+            <tr>
+              <td><code>+N1</code>, <code>+N2</code></td>
+              <td>Internal notes (not for general distribution)</td>
+              <td><span class="status-badge">IFI</span></td>
+            </tr>
+            <tr>
+              <td><code>+Q1</code>, <code>+Q2</code></td>
+              <td>Quality check records</td>
+              <td><span class="status-badge">RSA</span> <span class="status-badge">RSI</span></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <details style="margin-top: var(--spacing-lg);">
+          <summary style="cursor: pointer; font-weight: 600; color: var(--color-accent);">Show complete document lifecycle</summary>
+          <div style="overflow-x: auto; margin-top: var(--spacing-md);">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Filename</th>
+                  <th scope="col">Meaning</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>123456-EL-SPC-2623_~A (---)</code></td>
+                  <td>Working draft of Rev A — not yet issued</td>
+                </tr>
+                <tr>
+                  <td><code>123456-EL-SPC-2623_A (IFR)</code></td>
+                  <td>Rev A — formally issued for review</td>
+                </tr>
+                <tr>
+                  <td><code>123456-EL-SPC-2623_A+C1 (RSB)</code></td>
+                  <td>Comments on Rev A — incorporate and resubmit</td>
+                </tr>
+                <tr>
+                  <td><code>123456-EL-SPC-2623_~B (---)</code></td>
+                  <td>Working draft of Rev B incorporating comments</td>
+                </tr>
+                <tr>
+                  <td><code>123456-EL-SPC-2623_B (IFR)</code></td>
+                  <td>Rev B — issued for review</td>
+                </tr>
+                <tr>
+                  <td><code>123456-EL-SPC-2623_B+C1 (RSA)</code></td>
+                  <td>Review approved — no comments</td>
+                </tr>
+                <tr>
+                  <td><code>123456-EL-SPC-2623_0 (IFC)</code></td>
+                  <td>First numeric revision — Issued For Construction</td>
+                </tr>
+                <tr>
+                  <td><code>123456-EL-SPC-2623_1 (IFC)</code></td>
+                  <td>Construction revision — field change incorporated</td>
+                </tr>
+                <tr>
+                  <td><code>123456-EL-SPC-2623_2 (REC)</code></td>
+                  <td>Issued For Record — as-built</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </details>
+      </section>
+
+      <!-- Section 7: Status codes -->
+      <section id="status-codes">
+        <h2>7. Status codes</h2>
+
+        <h3>Primary status codes</h3>
+        <p>Used on formally issued deliverables:</p>
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Code</th>
+              <th scope="col">Meaning</th>
+              <th scope="col">What's expected</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="status-badge">DFT</span></td>
+              <td>Draft</td>
+              <td>Internal working version — not for external distribution</td>
+            </tr>
+            <tr>
+              <td><span class="status-badge">IFA</span></td>
+              <td>Issued For Approval</td>
+              <td>Formal sign-off required before proceeding</td>
+            </tr>
+            <tr>
+              <td><span class="status-badge">IFB</span></td>
+              <td>Issued For Bid</td>
+              <td>Price to this — binding scope</td>
+            </tr>
+            <tr>
+              <td><span class="status-badge">IFC</span></td>
+              <td>Issued For Construction</td>
+              <td>Build to this — approved</td>
+            </tr>
+            <tr>
+              <td><span class="status-badge">IFD</span></td>
+              <td>Issued For Design</td>
+              <td>Reference for downstream design work</td>
+            </tr>
+            <tr>
+              <td><span class="status-badge">IFI</span></td>
+              <td>Issued For Information</td>
+              <td>No action required — for awareness only</td>
+            </tr>
+            <tr>
+              <td><span class="status-badge">IFP</span></td>
+              <td>Issued For Purchase</td>
+              <td>Procurement may proceed to this version</td>
+            </tr>
+            <tr>
+              <td><span class="status-badge">IFR</span></td>
+              <td>Issued For Review</td>
+              <td>Please review and return comments</td>
+            </tr>
+            <tr>
+              <td><span class="status-badge">IFU</span></td>
+              <td>Issued For Use</td>
+              <td>Approved for operational use</td>
+            </tr>
+            <tr>
+              <td><span class="status-badge">REC</span></td>
+              <td>Issued For Record</td>
+              <td>Final as-built or archived version</td>
+            </tr>
+            <tr>
+              <td><span class="status-badge">---</span></td>
+              <td>Status unknown</td>
+              <td>Working version — status not yet determined</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Review status codes</h3>
+        <p>Used with revision modifiers like <code>+C1</code>:</p>
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Code</th>
+              <th scope="col">Meaning</th>
+              <th scope="col">What it means</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="status-badge">RSA</span></td>
+              <td>Review Status A</td>
+              <td>No comments — approved as submitted</td>
+            </tr>
+            <tr>
+              <td><span class="status-badge">RSB</span></td>
+              <td>Review Status B</td>
+              <td>Incorporate comments, resubmit for record</td>
+            </tr>
+            <tr>
+              <td><span class="status-badge">RSC</span></td>
+              <td>Review Status C</td>
+              <td>Incorporate comments, resubmit before proceeding</td>
+            </tr>
+            <tr>
+              <td><span class="status-badge">RSD</span></td>
+              <td>Review Status D</td>
+              <td>Rejected — resubmit per stated requirements</td>
+            </tr>
+            <tr>
+              <td><span class="status-badge">RSI</span></td>
+              <td>No Review Required</td>
+              <td>Supplemental information only</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Section 8: Folder naming -->
+      <section id="folder-naming">
+        <h2>8. Folder naming</h2>
+        <p>Transmittal folders follow the same convention, date-prefixed so folders sort chronologically:</p>
+        <p>Format: <code>YYYY-MM-DD_trackingNumber (status) - title</code></p>
+
+        <div class="code-block">
+2025-10-31_123456-EM-SUB-0001 (IFR) - General Arrangement for Review
+2025-10-31_123456-EL-TRN-0043 (IFC) - Electrical Design Issued For Construction
+2025-11-12_123456-ME-RFI-0024 (IFR) - Mechanical Room Size RFI (question)
+2025-11-19_123456-ME-RFI-0024 (IFU) - Mechanical Room Size RFI (response)
+        </div>
+      </section>
+
+      <!-- Section 9: Transmittal workflow -->
+      <section id="transmittal-workflow">
+        <h2>9. Transmittal workflow</h2>
+        <p>The directory structure:</p>
+        <div class="code-block">
+project/
+  incoming/     ← sender deposits transmittal folders here
+  received/     ← permanent record of accepted transmittals
+  issued/       ← your copies of transmittals you sent
+        </div>
+
+        <p><strong>5-step workflow:</strong></p>
+        <ol class="steps" style="margin-top: var(--spacing-lg);">
+          <li class="step">
+            <div class="step__number">1</div>
+            <div class="step__content">
+              <h3>Sender creates transmittal folder</h3>
+              <p>Sender creates a correctly named transmittal folder and uploads to receiver's <code>incoming/</code></p>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step__number">2</div>
+            <div class="step__content">
+              <h3>Receiver validates</h3>
+              <p>Receiver checks filenames, completeness, and SHA-256 checksums</p>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step__number">3</div>
+            <div class="step__content">
+              <h3>Receiver accepts</h3>
+              <p>Receiver moves folder from <code>incoming/</code> to <code>received/</code> — it is now a permanent record</p>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step__number">4</div>
+            <div class="step__content">
+              <h3>Receiver records hashes</h3>
+              <p>Receiver saves an acknowledgment with SHA-256 hashes — establishes the "official" version</p>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step__number">5</div>
+            <div class="step__content">
+              <h3>Receiver notifies</h3>
+              <p>Receiver notifies sender and distribution list, including SHA-256 hashes</p>
+            </div>
+          </li>
+        </ol>
+
+        <div class="highlight-box" style="margin-top: var(--spacing-lg);">
+          <p><strong>What SHA-256 gives you:</strong> Mathematical fingerprint of file contents. Single byte change → hash changes. When acknowledgment records hashes, you can verify years later that the file is identical to what was transmitted.</p>
+        </div>
+
+        <details style="margin-top: var(--spacing-lg);">
+          <summary style="cursor: pointer; font-weight: 600; color: var(--color-accent);">When shared directories aren't available</summary>
+          <p style="margin-top: var(--spacing-md);">Use <a href="https://rsync.samba.org/" style="color: var(--color-accent);">rsync</a> or <a href="https://rclone.org/" style="color: var(--color-accent);">rclone</a> to replicate the <code>received/</code> folder between sites. Cloud storage (SharePoint, Google Drive, Dropbox) also works — the workflow is filesystem-agnostic.</p>
+        </details>
+      </section>
+
+      <!-- Section 10: Tools -->
+      <section id="tools">
+        <h2>10. Tools</h2>
+        <p>Four single-file HTML applications — each is complete and self-contained. Save them locally and they work forever, without internet, without updates, without a subscription.</p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--spacing-lg); margin-top: var(--spacing-lg);">
+          <a href="archive.html" class="tool-card" style="text-decoration: none; display: block;">
+            <div class="tool-card__title">Archive Browser</div>
+            <div class="tool-card__desc">Browse, search, filter your project folder. Filter by tracking number, discipline, revision, status, or free text. Group by transmittal. Download selected files as ZIP.</div>
+            <div class="tool-card__link">Open Archive Browser</div>
+          </a>
+
+          <a href="transmittal.html" class="tool-card" style="text-decoration: none; display: block;">
+            <div class="tool-card__title">Transmittal Creator</div>
+            <div class="tool-card__desc">Fill in metadata, drag in files, publish a self-contained HTML transmittal record with SHA-256 checksums. Supports digital signatures. The published file IS the transmittal record.</div>
+            <div class="tool-card__link">Create Transmittal</div>
+          </a>
+
+          <a href="classifier.html" class="tool-card" style="text-decoration: none; display: block;">
+            <div class="tool-card__title">Document Classifier</div>
+            <div class="tool-card__desc">Spreadsheet-like interface for bulk-renaming files to ZDDC format. Copy/paste with Excel. Point it at a folder, fill in the columns, save all at once.</div>
+            <div class="tool-card__link">Run Classifier</div>
+          </a>
+
+          <a href="mdedit.html" class="tool-card" style="text-decoration: none; display: block;">
+            <div class="tool-card__title">Markdown Editor</div>
+            <div class="tool-card__desc">Browser-based markdown editor with live preview, YAML front matter support, and table of contents. Direct local file access via File System Access API.</div>
+            <div class="tool-card__link">Open Editor</div>
+          </a>
+        </div>
+
+        <p style="margin-top: var(--spacing-xl); color: var(--color-text-muted);">All tools require Chrome or Edge (File System Access API).</p>
+      </section>
+    </main>
+  </div>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container footer-content">
+      <span>ZDDC is open source — <a href="https://github.com/varasys/zddc">github.com/varasys/zddc</a></span>
+    </div>
+  </footer>
+
+  <script>
+    function showDropdown(el) { var m = el.nextElementSibling; if (m) m.classList.add('show'); }
+    function hideDropdown(el) { var m = el.nextElementSibling; if (m) m.classList.remove('show'); }
+  </script>
+  <script src="js/layout.js"></script>
+</body>
+</html>

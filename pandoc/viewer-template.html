@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>$if(title)$$title$$else$Document$endif$</title>
+  
+  <!-- Document metadata for JavaScript -->
+  $if(revision)$<meta name="revision" content="$revision$">$endif$
+  $if(generation_time)$<meta name="generation_time" content="$generation_time$">$endif$
+  
+  <!-- Embedded CSS -->
+  <style>
+/*
+* ZDDC Document Viewer Template
+* Enhanced responsive layout with TOC navigation
+*/
+
+/* CSS Variables for theming - Soft Light Theme */
+:root {
+  --primary-color: #2563eb;
+  --primary-color-dark: #1d4ed8;
+  --text-color: #4b5563;
+  --text-secondary: #6b7280;
+  --text-primary: #1f2937;
+  --bg-primary: #f8fafc;
+  --bg-secondary: #f1f5f9;
+  --border-color: #d1d5db;
+  --hover-bg: #e2e8f0;
+  --active-bg: rgba(37, 99, 235, 0.1);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --sidebar-width: 280px;
+  --header-height: 120px;
+  --content-max-width: 900px;
+}
+
+/* Dark mode variables - Standard Dark Theme */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --primary-color: #60a5fa;
+    --primary-color-dark: #3b82f6;
+    --text-color: #d1d5db;
+    --text-secondary: #9ca3af;
+    --text-primary: #f9fafb;
+    --bg-primary: #111827;
+    --bg-secondary: #1f2937;
+    --border-color: #374151;
+    --hover-bg: #374151;
+    --active-bg: rgba(96, 165, 250, 0.2);
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* Reset and base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  line-height: 1.6;
+  color: var(--text-color);
+  background: var(--bg-secondary);
+  height: 100vh;
+  overflow-x: hidden;
+}
+
+@media print {
+  body {
+    height: auto !important;
+    overflow: visible !important;
+  }
+}
+
+/* App Container - Modern CSS Grid Layout */
+.app-container {
+  height: 100vh;
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1fr;
+  grid-template-areas: "sidebar main";
+}
+
+@media (max-width: 768px) {
+  .app-container {
+    grid-template-columns: 1fr;
+    grid-template-areas: "main";
+  }
+}
+
+/* Content wrapper - Grid area */
+.content-wrapper {
+  grid-area: main;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-width: min(900px, 100%);
+  margin: 0;
+  container-type: inline-size;
+}
+
+/* Content page simplified */
+.content-page {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.header-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+/* Sidebar Navigation - Grid area */
+#sidebar {
+  grid-area: sidebar;
+  height: 100vh;
+  background: var(--bg-primary);
+  border-inline-end: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  #sidebar {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    background: var(--bg-primary);
+  }
+  
+  #sidebar.mobile-open {
+    transform: translateX(0);
+  }
+  
+  .content-wrapper {
+    max-width: none;
+  }
+  
+  /* Ensure mobile TOC uses light theme colors */
+  #sidebar .sidebar-header {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+  }
+  
+  #sidebar .toc a {
+    color: var(--text-primary);
+  }
+  
+  #sidebar .toc a:hover {
+    background: var(--hover-bg);
+  }
+}
+
+/* Document Header - Flex Row Layout */
+.document-header {
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
+  padding: 1rem;
+  margin-bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+.mobile-menu-container {
+  display: none;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .mobile-menu-container {
+    display: flex;
+    align-items: center;
+  }
+  
+  .mobile-menu-toggle {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    line-height: 1;
+  }
+  
+  .mobile-menu-toggle:hover {
+    background: var(--primary-color-dark);
+    transform: scale(1.05);
+    margin: 0;
+  }
+}
+
+.header-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.sidebar-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.sidebar-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+}
+
+.toc-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.toc-level-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+
+.toc-level-selector select {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.25rem;
+  background: var(--bg-primary);
+  color: var(--text-color);
+  font-size: 0.9rem;
+}
+
+/* TOC Container */
+.toc-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color) transparent;
+  position: relative;
+}
+
+.toc-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.toc-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.toc-container::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+/* Scroll Progress Indicator */
+.scroll-progress {
+  width: 100%;
+  height: 3px;
+  background: var(--border-color);
+  margin-bottom: 20px;
+}
+
+.scroll-progress-bar {
+  height: 100%;
+  background: var(--primary-color);
+  width: 0%;
+  transition: width 0.1s ease;
+}
+
+/* TOC Styling */
+.toc ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.toc ul ul {
+  padding-left: 1.25rem;
+  margin-top: 0.25rem;
+  border-left: 2px solid var(--border-color);
+  margin-left: 0.5rem;
+}
+
+.toc li {
+  margin: 0;
+}
+
+.toc a {
+  display: block;
+  padding: 0.375rem 0.75rem;
+  color: var(--text-color);
+  text-decoration: none;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  line-height: 1.3;
+}
+
+.toc li li a {
+  border-left: none;
+}
+
+.toc a:hover {
+  background: var(--hover-bg);
+  color: var(--primary-color);
+}
+
+.toc a.active {
+  background: var(--active-bg);
+  color: var(--primary-color);
+  border-left-color: var(--primary-color);
+  font-weight: 500;
+}
+
+/* Content Page Container - Simplified */
+.content-page {
+  flex: 1;
+  background: var(--bg-primary);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* Document Content */
+.document-content {
+  flex: 1;
+  padding: 0.5rem 2rem 2rem 2rem;
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  overflow-y: auto;
+  position: relative;
+}
+
+/* Document Header */
+.document-header {
+  border-bottom: 1px solid var(--border-color);
+  padding: 0.75rem 2rem;
+  background: var(--bg-primary);
+}
+
+.header-content {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+}
+
+.header-line {
+  margin: 0;
+  line-height: 1.3;
+}
+
+/* Header line hierarchy */
+.client-project {
+  font-size: 1.2rem;
+  color: var(--text-color);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.document-title {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.metadata-line {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+.draft-status {
+  color: #dc3545;
+  font-weight: bold;
+  margin-left: 0.5rem;
+}
+
+/* Print-only elements - hidden on screen */
+.print-header,
+.print-footer {
+  display: none;
+}
+
+/* Mobile menu backdrop */
+@media (max-width: 768px) {
+  .mobile-menu-container {
+    display: flex;
+    align-items: center;
+  }
+
+  #sidebar.mobile-open::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: -1;
+  }
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary);
+  font-weight: 600;
+  line-height: 1.25;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+}
+
+/* Remove top margin from first heading in content */
+.document-content h1:first-child,
+.document-content h2:first-child,
+.document-content h3:first-child,
+.document-content h4:first-child,
+.document-content h5:first-child,
+.document-content h6:first-child {
+  margin-top: 0;
+}
+
+h1 { font-size: 2rem; }
+h2 { font-size: 1.5rem; }
+h3 { font-size: 1.25rem; }
+h4 { font-size: 1.125rem; }
+h5 { font-size: 1rem; }
+h6 { font-size: 0.875rem; }
+
+p {
+  margin: 1rem 0;
+  color: var(--text-color);
+}
+
+/* Lists */
+ol, ul {
+  margin: 1rem 0;
+  padding-left: 2rem;
+}
+
+ol {
+  list-style-type: decimal;
+}
+
+ul {
+  list-style-type: disc;
+}
+
+li {
+  margin: 0.25rem 0;
+  color: var(--text-color);
+}
+
+/* Nested lists */
+ol ol, ul ul, ol ul, ul ol {
+  margin: 0.25rem 0;
+  padding-left: 1.5rem;
+}
+
+ul ul {
+  list-style-type: circle;
+}
+
+ul ul ul {
+  list-style-type: square;
+}
+
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.9rem;
+}
+
+th, td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Print styles */
+@media print {
+  /* Hide online-only elements */
+  .sidebar,
+  .mobile-menu-toggle,
+  .scroll-progress,
+  .document-header {
+    display: none !important;
+  }
+
+  /* Show print-only elements */
+  .print-header {
+    display: block !important;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-bottom: 1pt solid #000;
+    padding: 12pt 0.5in;
+    z-index: 1000;
+    margin: 0;
+  }
+
+  .print-footer {
+    display: flex !important;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-top: 1pt solid #000;
+    padding: 8pt 0.5in;
+    z-index: 1000;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0;
+  }
+
+  /* Print header styling */
+  .print-header .client-project {
+    font-size: 12pt;
+    color: #333;
+    font-weight: 600;
+    margin: 0 0 4pt 0;
+    line-height: 1.2;
+  }
+
+  .print-header .document-title {
+    font-size: 16pt;
+    color: #000;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  /* Print footer styling */
+  .print-footer .footer-left,
+  .print-footer .footer-right {
+    font-size: 10pt;
+    color: #666;
+    margin: 0;
+  }
+  
+  /* Page counter for print */
+  .print-footer .page-number::after {
+    content: counter(page);
+  }
+  
+  @page {
+    margin: 1in;
+    size: letter;
+    counter-increment: page;
+  }
+  
+  .draft-line {
+    margin-top: 4pt;
+    font-size: 10pt;
+  }
+
+  /* Layout adjustments */
+  .app-container {
+    display: block !important;
+  }
+  
+  .content-wrapper {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+
+  .content-page {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+
+  .document-content {
+    margin-top: 80pt !important;
+    margin-bottom: 50pt !important;
+    padding: 0 0.5in !important;
+    border-left: none !important;
+    min-height: calc(100vh - 130pt) !important;
+  }
+
+  /* Fix list formatting in print */
+  ol, ul {
+    padding-left: 2rem !important;
+  }
+
+  li {
+    margin: 0.25rem 0 !important;
+  }
+
+  /* Typography for print */
+  body {
+    font-size: 12pt !important;
+    line-height: 1.4 !important;
+    color: #000 !important;
+    background: white !important;
+  }
+
+  /* Page breaks */
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+    page-break-inside: avoid;
+    margin-top: 0.5em;
+  }
+
+  p, li {
+    orphans: 3;
+    widows: 3;
+    page-break-inside: avoid;
+  }
+  
+  /* Prevent content cutoff */
+  * {
+    box-sizing: border-box;
+  }
+  
+  /* Ensure proper spacing at page breaks */
+  h1:first-child, h2:first-child, h3:first-child {
+    margin-top: 0;
+    padding-top: 0.5em;
+  }
+  
+  /* Table print formatting */
+  table {
+    page-break-inside: avoid;
+  }
+  
+  thead {
+    display: table-header-group;
+  }
+  
+  tbody {
+    display: table-row-group;
+  }
+  
+  tr {
+    page-break-inside: avoid;
+  }
+  
+  th, td {
+    padding: 8pt 6pt !important;
+    vertical-align: top;
+  }
+
+  a {
+    color: #000 !important;
+    text-decoration: underline !important;
+  }
+}
+
+/* Diff styling for pandiff output */
+u {
+  background-color: #d4edda;
+  color: #155724;
+  text-decoration: none;
+  padding: 0.1em 0.2em;
+  border-radius: 0.2em;
+}
+
+
+  </style>
+  
+  <!-- Optional custom CSS - users can create this file to override styles -->
+  <link rel="stylesheet" href="custom.css" type="text/css">
+  
+  $for(header-includes)$
+  $header-includes$
+  $endfor$
+</head>
+
+<body>
+  <div class="app-container">
+    $if(toc)$
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" role="complementary" aria-label="Table of contents">
+      <header class="sidebar-header">
+        <div class="toc-header-row">
+          <div class="sidebar-title">Table Of Contents</div>
+          <div class="toc-level-selector">
+            <select id="toc-level" aria-label="Filter table of contents levels">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3" selected>3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+            </select>
+          </div>
+        </div>
+      </header>
+      
+      <div class="toc-container">
+        $if(toc)$
+        <nav class="toc" role="navigation" aria-label="Table of contents">
+          $toc$
+        </nav>
+        $endif$
+      </div>
+    </aside>
+    $endif$
+    <!-- Main Content Area -->
+    <main class="content-wrapper" role="main">
+      <div class="content-page">
+        <!-- Document Header -->
+        <header class="document-header">
+          $if(toc)$
+          <div class="mobile-menu-container">
+            <button class="mobile-menu-toggle" type="button" aria-label="Toggle navigation menu" aria-expanded="false">
+              <span aria-hidden="true">☰</span>
+            </button>
+          </div>
+          $endif$
+          <div class="header-content">
+            $if(client)$$if(project)$
+            <div class="header-line client-project">
+              $client$ - $project$$if(project_number)$ ($project_number$)$endif$
+            </div>
+            $endif$$endif$
+            $if(title)$
+            <div class="document-title">$title$</div>
+            $endif$
+            <div class="document-meta">
+              $if(tracking_number)$<span class="tracking-number">$tracking_number$</span>$endif$
+              $if(revision)$<span class="revision">Revision: $revision$</span>$endif$
+              $if(status)$<span class="status">Status: $status$</span>$endif$
+              $if(revision_comparison)$<span class="revision-comparison">$revision_comparison$</span>$endif$
+            </div>
+            $if(is_draft)$
+            $if(generation_time)$
+            <div class="draft-line">
+              <span class="draft-status">[DRAFT Generated at $generation_time$]</span>
+            </div>
+            $endif$
+            $endif$
+          </div>
+        </header>
+        
+        <!-- Scroll Progress Bar -->
+        <div class="scroll-progress" role="progressbar" aria-label="Reading progress">
+          <div class="scroll-progress-bar"></div>
+        </div>
+        
+        <!-- Print-only header -->
+        <div class="print-header">
+          $if(custom_header)$
+          $custom_header$
+          $else$
+          $if(client)$$if(project)$
+          <div class="header-line client-project">
+            $client$ - $project$$if(project_number)$ ($project_number$)$endif$
+          </div>
+          $endif$$endif$
+          $if(title)$
+          <div class="header-line document-title">$title$</div>
+          $endif$
+          $if(tracking_number)$<div class="header-line">$tracking_number$$if(revision)$ Revision: $revision$$endif$$if(status)$ Status: $status$$endif$</div>$endif$
+          $if(revision_comparison)$<div class="header-line revision-comparison">$revision_comparison$</div>$endif$
+          $endif$
+          $if(generation_time)$
+          <div class="header-line metadata-line draft-line">
+            <span class="draft-status">Generated: $generation_time$</span>
+          </div>
+          $endif$
+        </div>
+
+        <!-- Print-only footer -->
+        <div class="print-footer">
+          <div class="footer-left">
+            $if(tracking_number)$$tracking_number$$endif$$if(revision)$ Revision: $revision$$endif$$if(status)$ Status: $status$$endif$
+          </div>
+          <div class="footer-right">
+            Page <span class="page-number"></span>
+          </div>
+        </div>
+
+
+        <!-- Document Content -->
+        <article class="document-content">
+          $body$
+        </article>
+      </div>
+    </main>
+  </div>
+
+  <!-- Embedded JavaScript -->
+  <script>
+    // View mode toggle functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      const buttons = document.querySelectorAll('.view-mode-btn');
+      const body = document.body;
+      
+      buttons.forEach(button => {
+        button.addEventListener('click', function() {
+          const mode = this.dataset.mode;
+          
+          // Remove all view mode classes
+          body.classList.remove('view-original', 'view-final');
+          
+          // Add the selected mode class (except for diff which is default)
+          if (mode === 'original') {
+            body.classList.add('view-original');
+          } else if (mode === 'final') {
+            body.classList.add('view-final');
+          }
+          
+          // Update button states
+          buttons.forEach(btn => btn.classList.remove('active'));
+          this.classList.add('active');
+        });
+      });
+    });
+
+'use strict';
+
+// Modern initialization with arrow functions
+document.addEventListener('DOMContentLoaded', function() {
+  const sidebar = document.getElementById('sidebar');
+  if (sidebar) {
+    initTocNavigation();
+  }
+  
+  // Set default TOC level filtering
+  filterTocLevels('3');
+  
+  // Setup event listeners with delegation
+  setupEventListeners();
+  
+  // Initialize print functionality
+  initPrintSupport();
+});
+
+// Modern TOC Navigation with ES6+ patterns
+function initTocNavigation() {
+  const tocLinks = document.querySelectorAll('.toc a');
+  const contentArea = document.querySelector('.document-content');
+  
+  if (!tocLinks.length || !contentArea) return;
+  
+  // Smooth scroll with event delegation (better performance)
+  function handleTocClick(e) {
+    if (!e.target.matches('.toc a')) return;
+    
+    e.preventDefault();
+    var href = e.target.getAttribute('href');
+    var targetId = href ? href.slice(1) : null;
+    var targetElement = targetId ? document.getElementById(targetId) : null;
+    
+    if (!targetElement) return;
+    
+    targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    
+    // Update URL hash without adding to browser history
+    window.location.replace(window.location.pathname + window.location.search + href);
+    
+    // Update active state
+    tocLinks.forEach(link => link.classList.remove('active'));
+    e.target.classList.add('active');
+    
+    // Close mobile menu if open
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar && sidebar.classList.contains('mobile-open')) toggleMobileMenu();
+  };
+  
+  document.addEventListener('click', handleTocClick);
+  
+  // TOC scroll tracking using Intersection Observer API
+  // NOTE: Intersection Observer is the industry-standard, recommended approach for scroll spy
+  // implementations as of 2024. It provides better performance (runs off main thread),
+  // cleaner code, and is supported by all modern browsers. Avoid scroll event listeners
+  // for this use case as they are performance-intensive and require complex calculations.
+  // Find all sections with IDs - much simpler approach
+  const sections = Array.from(contentArea.querySelectorAll('section[id]'));
+  
+  
+  if (sections.length === 0) {
+    return;
+  }
+  
+  function updateActiveTocItem(activeSection) {
+    if (!activeSection || !activeSection.id) return;
+    
+    // Clear all active states
+    tocLinks.forEach(link => link.classList.remove('active'));
+    
+    // Find and activate the matching TOC link
+    var activeLink = document.querySelector('.toc a[href="#' + activeSection.id + '"]');
+    if (!activeLink) return;
+    
+    activeLink.classList.add('active');
+    
+    // Auto-scroll TOC to keep active item visible
+    activeLink.scrollIntoView({
+      behavior: 'smooth',
+      block: 'nearest',
+      inline: 'nearest'
+    });
+  };
+  
+  // Create Intersection Observer with industry-standard configuration
+  var observer = new IntersectionObserver(function(entries) {
+    // Find visible sections and update active TOC item
+    var visibleSections = entries.filter(function(entry) { return entry.isIntersecting; });
+    if (visibleSections.length > 0) {
+      // Sort by position in viewport (topmost first)
+      visibleSections.sort(function(a, b) { return a.boundingClientRect.top - b.boundingClientRect.top; });
+      const activeSection = visibleSections[0].target;
+      updateActiveTocItem(activeSection);
+    }
+  }, {
+    root: contentArea,
+    rootMargin: '-20% 0px -60% 0px', // Only consider sections in the middle 20% of viewport
+    threshold: 0.1
+  });
+  
+  // Observe all sections
+  sections.forEach(function(section) { observer.observe(section); });
+  
+  // Cleanup on page unload
+  window.addEventListener('beforeunload', function() { observer.disconnect(); });
+  
+  // Scroll progress bar with throttling for better performance
+  const progressBar = document.querySelector('.scroll-progress-bar');
+  if (progressBar) {
+    let ticking = false;
+    
+    function updateScrollProgress() {
+      const scrollTop = contentArea.scrollTop;
+      const scrollHeight = contentArea.scrollHeight;
+      const clientHeight = contentArea.clientHeight;
+      const scrollPercent = scrollHeight > clientHeight 
+        ? (scrollTop / (scrollHeight - clientHeight)) * 100 
+        : 0;
+      progressBar.style.width = Math.min(100, Math.max(0, scrollPercent)) + '%';
+      ticking = false;
+    };
+    
+    function onScroll() {
+      if (!ticking) {
+        requestAnimationFrame(updateScrollProgress);
+        ticking = true;
+      }
+    };
+    
+    contentArea.addEventListener('scroll', onScroll, { passive: true });
+    updateScrollProgress(); // Initial call
+  }
+};
+
+// Toggle mobile menu with ARIA support
+function toggleMobileMenu() {
+  const sidebar = document.getElementById('sidebar');
+  const menuToggle = document.querySelector('.mobile-menu-toggle');
+  
+  if (!sidebar || !menuToggle) return;
+  
+  const isOpen = sidebar.classList.toggle('mobile-open');
+  menuToggle.setAttribute('aria-expanded', isOpen.toString());
+};
+
+// Filter TOC levels with modern patterns
+function filterTocLevels(maxLevel) {
+  const toc = document.querySelector('.toc');
+  if (!toc) return;
+  
+  const allItems = toc.querySelectorAll('li');
+  const maxLevelNum = parseInt(maxLevel);
+  const showAll = maxLevel === '6';
+  
+  allItems.forEach(function(item) {
+    const link = item.querySelector('a');
+    if (!link) return;
+    
+    if (showAll) {
+      item.style.display = '';
+      return;
+    }
+    
+    // Calculate nesting level more efficiently
+    let level = 1;
+    let parent = item.parentElement;
+    while (parent && !parent.classList.contains('toc')) {
+      if (parent.tagName === 'LI') level++;
+      parent = parent.parentElement;
+    }
+    
+    item.style.display = level <= maxLevelNum ? '' : 'none';
+  });
+};
+
+
+// Setup event listeners with delegation
+function setupEventListeners() {
+  // TOC level selector
+  const tocLevelSelect = document.getElementById('toc-level');
+  if (tocLevelSelect) tocLevelSelect.addEventListener('change', function(e) {
+    filterTocLevels(e.target.value);
+  });
+  
+  // Mobile menu toggle
+  const menuToggle = document.querySelector('.mobile-menu-toggle');
+  if (menuToggle) menuToggle.addEventListener('click', toggleMobileMenu);
+  
+  // Close mobile menu on outside click
+  document.addEventListener('click', function(e) {
+    const sidebar = document.getElementById('sidebar');
+    const menuToggle = document.querySelector('.mobile-menu-toggle');
+    
+    if (sidebar && sidebar.classList.contains('mobile-open') && 
+        !sidebar.contains(e.target) && 
+        (!menuToggle || !menuToggle.contains(e.target))) {
+      toggleMobileMenu();
+    }
+  });
+  
+  // Handle escape key to close mobile menu
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      const sidebar = document.getElementById('sidebar');
+      if (sidebar && sidebar.classList.contains('mobile-open')) {
+        toggleMobileMenu();
+      }
+    }
+  });
+};
+
+// Initialize print support and draft status
+function initPrintSupport() {
+  // Handle draft status for revisions containing tilde (~)
+  const revision = document.querySelector('meta[name="revision"]');
+  const generationTime = document.querySelector('meta[name="generation_time"]');
+  
+  if (revision && generationTime) {
+    const revisionValue = revision.getAttribute('content');
+    const timeValue = generationTime.getAttribute('content');
+    
+    if (revisionValue && revisionValue.includes('~') && timeValue) {
+      const draftElements = document.querySelectorAll('.draft-status');
+      draftElements.forEach(function(element) {
+        element.textContent = ' [DRAFT Generated at ' + timeValue + ']';
+      });
+    }
+  }
+}
+
+// Export functions for global access (maintaining backward compatibility)
+window.toggleMobileMenu = toggleMobileMenu;
+window.filterTocLevels = filterTocLevels;
+  </script>
+</body>
+</html>

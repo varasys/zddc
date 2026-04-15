@@ -1,0 +1,26 @@
+{
+  "name": "zddc",
+  "version": "0.1.0",
+  "description": "Zero Day Document Control - lightweight project management tools",
+  "private": true,
+  "scripts": {
+    "test": "npx playwright test",
+    "test:headed": "npx playwright test --headed",
+    "test:debug": "npx playwright test --debug",
+    "test:install": "npx playwright install chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.50.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/varasys/zddc.git"
+  },
+  "keywords": [
+    "project-management",
+    "document-control",
+    "markdown-editor",
+    "document-transmittal"
+  ],
+  "license": "AGPL-3.0"
+}

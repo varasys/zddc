@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZDDC Classifier</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        {{CSS_PLACEHOLDER}}
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Main Application -->
+        <div id="mainApp" class="main-app">
+            <!-- Header -->
+            <header class="app-header">
+                <div class="header-left">
+                    <div class="header-title-group">
+                        <span class="app-header__title">ZDDC Classifier</span>
+                        <span class="build-timestamp">Built: {{BUILD_TIMESTAMP}}</span>
+                    </div>
+                    <button id="selectDirectoryBtn" class="btn btn-primary">Select Directory</button>
+                    <button id="refreshBtn" class="btn btn-secondary hidden" title="Refresh and rescan directory">Refresh</button>
+                </div>
+                <div class="header-right">
+                    <button id="theme-btn" class="btn btn-secondary" title="Theme: auto (follows OS)" aria-label="Theme: auto (follows OS)">◐</button>
+                    <button id="help-btn" class="btn btn-secondary" title="Help">?</button>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <div class="main-content">
+                <!-- Folder Tree -->
+                <aside class="folder-tree-pane" id="folderTreePane">
+                    <div class="pane-header">
+                        <div class="pane-header-title">
+                            <button class="btn btn-sm collapse-tree-btn" id="collapseTreeBtn" title="Collapse folder tree">◀</button>
+                            <h3>Folder Tree</h3>
+                        </div>
+                        <div class="pane-header-controls">
+                            <label class="checkbox-label" title="Auto-scroll folder tree when hovering files">
+                                <input type="checkbox" id="autoScrollCheckbox" checked>
+                                Auto-scroll
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="hideCompliantCheckbox">
+                                Hide Compliant
+                            </label>
+                            <span id="selectedFoldersCount" class="folder-count">0 folders selected</span>
+                        </div>
+                    </div>
+                    <div id="folderTree" class="folder-tree">
+                        <!-- Dynamically populated -->
+                    </div>
+                    <div class="resize-handle" id="treeResizeHandle"></div>
+                </aside>
+
+                <!-- Spreadsheet Table -->
+                <main class="spreadsheet-pane">
+                    <div class="pane-header">
+                        <div class="pane-header-left">
+                            <h3>Files</h3>
+                            <div class="file-stats">
+                                <span id="totalFiles">0 files</span>
+                                <span id="modifiedFiles">0 modified</span>
+                                <span id="errorFiles" class="hidden">0 errors</span>
+                            </div>
+                        </div>
+                        <div class="pane-header-right">
+                            <button id="saveAllBtn" class="btn btn-success btn-sm" disabled>Save All</button>
+                            <button id="cancelAllBtn" class="btn btn-secondary btn-sm" disabled>Cancel All</button>
+                            <span class="header-divider">|</span>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="sha256Checkbox">
+                                SHA256
+                            </label>
+                            <button id="exportHashesBtn" class="btn btn-secondary btn-sm" disabled title="Export SHA256 hashes in sha256sum format">💾 Export Hashes</button>
+                            <span class="header-divider">|</span>
+                            <button id="togglePreviewBtn" class="btn btn-secondary btn-sm" title="Toggle file preview panel">👁 Preview</button>
+                        </div>
+                    </div>
+                    <div class="spreadsheet-container">
+                        <table id="spreadsheet" class="spreadsheet">
+                            <thead>
+                                <tr>
+                                    <th class="col-row-num">#</th>
+                                    <th class="col-original">Original Filename
+                                        <input type="text" class="column-filter" data-filter-field="original" placeholder="filter…" spellcheck="false" aria-label="Filter by original filename">
+                                    </th>
+                                    <th class="col-extension">Ext
+                                        <input type="text" class="column-filter" data-filter-field="extension" placeholder="filter…" spellcheck="false" aria-label="Filter by extension">
+                                    </th>
+                                    <th class="col-new">New Filename
+                                        <input type="text" class="column-filter" data-filter-field="newFilename" placeholder="filter…" spellcheck="false" aria-label="Filter by new filename">
+                                    </th>
+                                    <th class="col-tracking">Tracking
+                                        <input type="text" class="column-filter" data-filter-field="tracking" placeholder="filter…" spellcheck="false" aria-label="Filter by tracking number">
+                                    </th>
+                                    <th class="col-revision">Rev
+                                        <input type="text" class="column-filter" data-filter-field="revision" placeholder="filter…" spellcheck="false" aria-label="Filter by revision">
+                                    </th>
+                                    <th class="col-status">Status
+                                        <input type="text" class="column-filter" data-filter-field="status" placeholder="filter…" spellcheck="false" aria-label="Filter by status">
+                                    </th>
+                                    <th class="col-title">Title
+                                        <input type="text" class="column-filter" data-filter-field="title" placeholder="filter…" spellcheck="false" aria-label="Filter by title">
+                                    </th>
+                                    <th class="col-sha256 hidden" id="sha256Column">SHA256
+                                        <input type="text" class="column-filter" data-filter-field="sha256" placeholder="filter…" spellcheck="false" aria-label="Filter by SHA256">
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="spreadsheetBody">
+                                <!-- Dynamically populated -->
+                            </tbody>
+                        </table>
+                    </div>
+                </main>
+
+            </div>
+
+            <!-- Empty State — shown until a directory is selected -->
+            <div id="welcomeScreen" class="empty-state">
+                <div class="empty-state-content">
+                    <h2>Welcome to ZDDC Classifier</h2>
+                    <p>Click "Select Directory" to open a folder of files to rename.</p>
+                    <p>The Classifier presents files in a spreadsheet where you can set tracking number, revision, status, and title — then saves the renamed files back to disk.</p>
+
+                    <!-- Browser Compatibility Warning -->
+                    <div id="browserWarning" class="browser-warning hidden">
+                        <h3>⚠️ Browser Not Supported</h3>
+                        <p>This application requires the File System Access API, available only in Chromium-based browsers (Chrome, Edge, Brave, Opera).</p>
+                    </div>
+
+                    <p><strong>Features:</strong></p>
+                    <ul class="welcome-list">
+                        <li>Excel-like spreadsheet with direct cell editing</li>
+                        <li>RC references — copy values across rows like Excel</li>
+                        <li>Regex capture groups for pattern extraction</li>
+                        <li>Auto-validation of ZDDC compliance</li>
+                        <li>Batch rename with SHA-256 hash export</li>
+                    </ul>
+
+                    <p class="note">This application works entirely in your browser. No data is transmitted to any server.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Panel -->
+        <aside id="help-panel" class="help-panel" hidden aria-labelledby="help-panel-title">
+            <div class="help-panel__header">
+                <h2 id="help-panel-title" class="help-panel__title">Help — ZDDC Classifier</h2>
+                <button type="button" class="help-panel__close" id="help-panel-close" aria-label="Close">&times;</button>
+            </div>
+            <div class="help-panel__body">
+                <h3>What is the Classifier?</h3>
+                <p>The Classifier is a spreadsheet-based tool for renaming files to ZDDC naming conventions. It reads a folder of files and presents them in an editable grid where you can set tracking number, revision, status, and title — then saves the renamed files back to disk.</p>
+
+                <h3>Getting Started</h3>
+                <ol>
+                    <li>Click <strong>Select Directory</strong> to open a folder containing files to rename.</li>
+                    <li>The folder tree on the left shows all sub-folders. Click a folder to load its files.</li>
+                    <li>Edit cells in the spreadsheet to set the new filename components.</li>
+                    <li>Click <strong>Save All</strong> (or save individual rows) to rename the files on disk.</li>
+                </ol>
+
+                <h3>Folder Tree</h3>
+                <dl>
+                    <dt>Multi-select</dt>
+                    <dd>Hold <kbd>Ctrl</kbd> and click to select multiple folders. Hold <kbd>Shift</kbd> to select a range. Files from all selected folders are shown together.</dd>
+                    <dt>Hide Compliant</dt>
+                    <dd>Hides folders where all files already have valid ZDDC names, letting you focus on work remaining.</dd>
+                    <dt>Auto-scroll</dt>
+                    <dd>When enabled, the folder tree scrolls to highlight the folder containing the row you are editing.</dd>
+                </dl>
+
+                <h3>Spreadsheet Editing</h3>
+                <dl>
+                    <dt>Direct cell editing</dt>
+                    <dd>Click any cell in the New Filename, Tracking, Rev, Status, or Title columns to edit it. Press <kbd>Enter</kbd> to confirm, <kbd>Escape</kbd> to cancel.</dd>
+                    <dt>RC References</dt>
+                    <dd>Type a formula like <code>=R[-1]C</code> to copy the value from the cell one row above in the same column — similar to Excel relative references.</dd>
+                    <dt>Regex capture groups</dt>
+                    <dd>Type a formula like <code>=RE(RC[-3], "(\w+)-(\d+)", "$1")</code> to extract a pattern from another cell using a regular expression.</dd>
+                    <dt>Validation</dt>
+                    <dd>Cells are validated automatically. Invalid values are highlighted in red. The New Filename column shows the composed result.</dd>
+                    <dt>Column Filters</dt>
+                    <dd>Each column header has a filter input. Supported syntax:</dd>
+                </dl>
+                <dl>
+                    <dt><code>term</code></dt>
+                    <dd>Contains "term" (case-insensitive)</dd>
+                    <dt><code>!term</code></dt>
+                    <dd>Does not contain "term"</dd>
+                    <dt><code>^term</code></dt>
+                    <dd>Starts with "term"</dd>
+                    <dt><code>term$</code></dt>
+                    <dd>Ends with "term"</dd>
+                    <dt><code>a b</code></dt>
+                    <dd>Matches both (AND)</dd>
+                    <dt><code>a | b</code></dt>
+                    <dd>Matches either (OR)</dd>
+                    <dt><code>^IFA | ^IFB</code></dt>
+                    <dd>Starts with IFA or IFB</dd>
+                    <dt><code>!^~</code></dt>
+                    <dd>Does not start with ~ (excludes drafts)</dd>
+                    <dt><code>el.*spc</code></dt>
+                    <dd>Regex: contains "el" followed by "spc" (use <code>.</code> for any char, <code>.*</code> for any sequence)</dd>
+                    <dt><code>[ei]fa</code></dt>
+                    <dd>Regex character class: matches "efa" or "ifa"</dd>
+                </dl>
+
+                <h3>Saving Files</h3>
+                <dl>
+                    <dt>Save All</dt>
+                    <dd>Renames all modified files in one operation. Confirms before proceeding.</dd>
+                    <dt>Cancel All</dt>
+                    <dd>Reverts all unsaved edits back to the original filenames.</dd>
+                    <dt>SHA256</dt>
+                    <dd>Enable to compute a cryptographic hash of each file. Use <strong>Export Hashes</strong> to save a <code>sha256sum</code>-compatible file.</dd>
+                </dl>
+
+                <h3>ZDDC Filename Format</h3>
+                <p>The required format is:</p>
+                <p><code>TRACKINGNUMBER_REVISION (STATUS) - Title.ext</code></p>
+                <p>Example: <code>123456-EL-SPC-2623_A (IFR) - Electrical Specification.pdf</code></p>
+                <p>Valid statuses: DFT, IFA, IFB, IFC, IFD, IFI, IFP, IFR, IFU, REC, RSA, RSB, RSC, RSD, RSI, ---</p>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        {{JS_PLACEHOLDER}}
+    </script>
+</body>
+</html>

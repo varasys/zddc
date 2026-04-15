@@ -1,0 +1,24 @@
+#remarks-render-container {
+    padding: 6px;
+}
+
+/* In edit mode the rendered preview is clickable to re-enter the editor */
+#remarks-render-container.remarks-clickable {
+    cursor: text;
+    border: 1px dashed #d1d5db;
+    border-radius: 0.25rem;
+    min-height: 3.5rem;
+}
+
+#remarks-render-container.remarks-clickable:hover {
+    border-color: #93c5fd;
+    background: #f0f7ff;
+}
+
+/* Placeholder shown when remarks are empty and editable */
+#remarks-render-container .remarks-placeholder {
+    color: #9ca3af;
+    font-style: italic;
+    font-size: 12px;
+    pointer-events: none;
+}

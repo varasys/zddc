@@ -1,0 +1,232 @@
+/* Archive layout — tokens from shared/base.css */
+
+/* Header — shared/base.css provides base .app-header; add archive-specific overrides */
+.app-header {
+    padding: 0.5rem 1rem;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.header-right {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.preview-toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+/* Main Container */
+.main-container {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* Navigation Pane */
+.nav-pane {
+    width: 300px;
+    min-width: 200px;
+    background: var(--bg);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    height: 100%;
+    position: relative;
+}
+
+.nav-section {
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+    position: relative;
+}
+
+/* Grouping section - larger default size */
+.nav-section:first-child {
+    flex: 0 0 auto;
+    height: 250px;
+    min-height: 50px;
+}
+
+/* Grouping section when collapsed */
+.nav-section:first-child.collapsed {
+    height: auto;
+    flex: 0 0 auto;
+}
+
+/* Transmittal section takes remaining space */
+.nav-section:last-child {
+    flex: 1;
+    min-height: 150px;
+    border-bottom: none;
+}
+
+/* Nav section content wrapper */
+.nav-section-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+    min-height: 0;
+}
+
+/* Hide content when collapsed */
+.nav-section.collapsed .nav-section-content {
+    display: none;
+}
+
+/* Resize handles — persistent 1px divider; grab cursor on hover */
+.resize-handle-horizontal {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    cursor: ew-resize;
+    z-index: 10;
+    /* Persistent 1px right-edge indicator */
+    border-right: 1px solid var(--border-dark);
+}
+
+.resize-handle-horizontal:hover,
+.resize-handle-horizontal.resizing {
+    background: rgba(42, 90, 138, 0.25);
+    cursor: col-resize;
+}
+
+.resize-handle-vertical {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -3px;
+    height: 6px;
+    cursor: ns-resize;
+    z-index: 10;
+    /* Persistent 1px bottom-edge indicator */
+    border-bottom: 1px solid var(--border-dark);
+}
+
+.resize-handle-vertical:hover,
+.resize-handle-vertical.resizing {
+    background: rgba(42, 90, 138, 0.25);
+    cursor: row-resize;
+}
+
+.nav-section h3 {
+    font-size: 1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+    flex-shrink: 0;
+}
+
+.nav-section h3 {
+    font-size: 1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 0;
+    flex-shrink: 0;
+}
+
+.folder-list {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    margin-top: 0.5rem;
+    min-height: 0;
+}
+
+/* Content Area */
+.content-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-secondary);
+    overflow: hidden;
+}
+
+.content-header {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+}
+
+.content-header .content-actions {
+    margin-left: auto;
+}
+
+.content-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Table Container */
+.table-container {
+    flex: 1;
+    overflow: auto;
+    background: var(--bg);
+    margin: 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+
+/* Status Bar */
+.status-bar {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 0.35rem 1rem;
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+    font-size: 0.85em;
+    color: var(--text-muted);
+    gap: 1rem;
+}
+
+/* Empty State — positioned below the app header */
+.empty-state {
+    position: absolute;
+    top: 50px; /* clear the header */
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    z-index: 10;
+}
+
+.empty-state-content {
+    text-align: center;
+    max-width: 500px;
+    padding: 2rem;
+}
+
+.empty-state-content h2 {
+    color: var(--text);
+    margin-bottom: 1rem;
+}
+
+.empty-state-content p {
+    margin-bottom: 1rem;
+    color: var(--text-muted);
+}

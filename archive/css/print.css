@@ -1,0 +1,121 @@
+/* Print styles */
+
+@media print {
+    /* Hide UI elements */
+    .app-header,
+    .nav-pane,
+    .content-header,
+    .status-bar,
+    .modal,
+    .btn,
+    .filter-input,
+    .global-search,
+    .column-filter,
+    input[type="checkbox"],
+    .resize-handle,
+    .sort-indicator {
+        display: none !important;
+    }
+
+    /* Reset layout */
+    body {
+        font-size: 10pt;
+        line-height: 1.4;
+    }
+
+    #app {
+        height: auto;
+    }
+
+    .main-container {
+        display: block;
+    }
+
+    .content-area {
+        background: white;
+    }
+
+    .table-container {
+        margin: 0;
+        border: none;
+        overflow: visible;
+    }
+
+    /* Table adjustments */
+    .files-table {
+        font-size: 9pt;
+        border: 1px solid #000;
+    }
+
+    .files-table thead {
+        position: static;
+    }
+
+    .files-table th {
+        background: #f0f0f0;
+        border: 1px solid #000;
+        padding: 4pt 6pt;
+        font-weight: bold;
+    }
+
+    .files-table td {
+        border: 1px solid #000;
+        padding: 3pt 6pt;
+    }
+
+    .files-table tbody tr:hover {
+        background: transparent;
+    }
+
+    /* Show only text content for revisions */
+    .revision-item {
+        display: inline;
+        margin-right: 0.5em;
+    }
+
+    .file-link {
+        color: black;
+        text-decoration: none;
+    }
+
+    .file-link::after {
+        content: " (" attr(href) ")";
+        font-size: 8pt;
+        color: #666;
+    }
+
+    /* Page breaks */
+    .files-table {
+        page-break-inside: auto;
+    }
+
+    .files-table tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+    }
+
+    /* Header on each page */
+    @page {
+        size: letter portrait;
+        margin: 0.5in;
+    }
+
+    /* Add document title */
+    body::before {
+        content: "Archive Browser Report";
+        display: block;
+        font-size: 16pt;
+        font-weight: bold;
+        margin-bottom: 12pt;
+    }
+
+    /* Add timestamp */
+    body::after {
+        content: "Generated: " attr(data-print-date);
+        display: block;
+        margin-top: 12pt;
+        font-size: 9pt;
+        color: #666;
+        text-align: right;
+    }
+}
