@@ -1,5 +1,5 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/sh
+set -eu
 
 root_dir=$(cd "$(dirname "$0")" && pwd)
 . "$root_dir/../shared/build-lib.sh"
@@ -14,36 +14,6 @@ output_html="$output_dir/mdedit.html"
 toastui_js="$root_dir/vendor/toastui-editor-all.min.js"
 toastui_css="$root_dir/vendor/toastui-editor.min.css"
 
-# CSS files to concatenate in order.
-# tailwind-utils.css provides all Tailwind utility classes used in template.html,
-# replacing the Tailwind Play CDN script entirely (no runtime overhead, no warnings).
-# shared/base.css follows so its :root tokens and .btn primitive are available.
-main_css=(
-  "css/tailwind-utils.css"
-  "../shared/base.css"
-  "css/base.css"
-  "css/editor.css"
-  "css/toc.css"
-  "css/markdown.css"
-)
-
-# JavaScript files to concatenate in order
-main_js=(
-  "../shared/zddc.js"
-  "../shared/theme.js"
-  "js/app.js"
-  "js/utils.js"
-  "js/front-matter.js"
-  "js/file-system.js"
-  "js/file-tree.js"
-  "js/editor.js"
-  "js/toc.js"
-  "js/resizer.js"
-  "js/events.js"
-  "js/main.js"
-  "../shared/help.js"
-)
-
 mkdir -p "$output_dir"
 ensure_exists "$src_html"
 ensure_exists "$toastui_js"
@@ -56,8 +26,32 @@ toastui_js_safe=$(mktemp)
 cleanup() { rm -f "$css_temp" "$js_raw" "$js_temp" "$toastui_js_safe"; }
 trap cleanup EXIT
 
-concat_files main_css > "$css_temp"
-concat_files main_js  > "$js_raw"
+# CSS files to concatenate in order
+concat_files \
+  "css/tailwind-utils.css" \
+  "../shared/base.css" \
+  "css/base.css" \
+  "css/editor.css" \
+  "css/toc.css" \
+  "css/markdown.css" \
+  > "$css_temp"
+
+# JavaScript files to concatenate in order
+concat_files \
+  "../shared/zddc.js" \
+  "../shared/theme.js" \
+  "js/app.js" \
+  "js/utils.js" \
+  "js/front-matter.js" \
+  "js/file-system.js" \
+  "js/file-tree.js" \
+  "js/editor.js" \
+  "js/toc.js" \
+  "js/resizer.js" \
+  "js/events.js" \
+  "js/main.js" \
+  "../shared/help.js" \
+  > "$js_raw"
 
 # Escape all </ sequences in both the app JS and the Toast UI vendor JS so the
 # browser HTML parser cannot mistake them for closing HTML tags inside <script>.
@@ -127,5 +121,5 @@ echo "Wrote $output_html ($(wc -c < "$output_html") bytes)"
 # Copy built file to website/dev/ for live serving
 dev_dir="$root_dir/../website/dev"
 mkdir -p "$dev_dir"
-cp --remove-destination "$output_html" "$dev_dir/mdedit.html"
+rm -f "$dev_dir/mdedit.html" && cp "$output_html" "$dev_dir/mdedit.html"
 echo "Copied to $dev_dir/mdedit.html"

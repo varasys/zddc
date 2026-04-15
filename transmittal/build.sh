@@ -1,5 +1,5 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/sh
+set -eu
 
 root_dir=$(cd "$(dirname "$0")" && pwd)
 . "$root_dir/../shared/build-lib.sh"
@@ -7,58 +7,6 @@ root_dir=$(cd "$(dirname "$0")" && pwd)
 src_html="$root_dir/template.html"
 output_dir="$root_dir/dist"
 output_html="$output_dir/transmittal.html"
-
-main_css=(
-  "../shared/base.css"
-  "css/base.css"
-  "css/layout.css"
-  "css/forms.css"
-  "css/table.css"
-  "css/remarks.css"
-  "css/markdown.css"
-  "css/markdown-editor.css"
-  "css/filter.css"
-  "css/modal.css"
-  "css/utilities.css"
-  "css/print.css"
-)
-
-main_js=(
-  "../shared/zddc.js"
-  "../shared/theme.js"
-  "js/app.js"
-  "js/reactive.js"
-  "js/dom.js"
-  "js/util.js"
-  "js/json.js"
-  "js/hydrate.js"
-  "js/state.js"
-  "js/mode.js"
-  "js/visibility.js"
-  "js/live-digest.js"
-  "js/files.js"
-  "js/files-archive.js"
-  "js/files-render.js"
-  "js/files-preview.js"
-  "../shared/zddc-filter.js"
-  "js/filters.js"
-  "js/markdown.js"
-  "js/markdown-editor.js"
-  "js/email-tags.js"
-  "js/validation.js"
-  "js/security.js"
-  "js/verification.js"
-  "js/data.js"
-  "js/publish.js"
-  "js/reset.js"
-  "js/publish-modal.js"
-  "js/logos.js"
-  "js/drop-zones.js"
-  "js/advanced.js"
-  "js/focus.js"
-  "../shared/help.js"
-  "js/main.js"
-)
 
 mkdir -p "$output_dir"
 ensure_exists "$src_html"
@@ -71,10 +19,59 @@ md_temp=$(mktemp)
 cleanup() { rm -f "$css_temp" "$js_temp" "$md_temp"; }
 trap cleanup EXIT
 
-concat_files main_css > "$css_temp"
-# JS source must never contain a literal </script> sequence (breaks inline embedding).
-# Use string splitting ('</​' + 'script>') or new RegExp() to avoid it.
-concat_files main_js > "$js_temp"
+# CSS files to concatenate in order
+concat_files \
+  "../shared/base.css" \
+  "css/base.css" \
+  "css/layout.css" \
+  "css/forms.css" \
+  "css/table.css" \
+  "css/remarks.css" \
+  "css/markdown.css" \
+  "css/markdown-editor.css" \
+  "css/filter.css" \
+  "css/modal.css" \
+  "css/utilities.css" \
+  "css/print.css" \
+  > "$css_temp"
+
+# JavaScript files to concatenate in order
+concat_files \
+  "../shared/zddc.js" \
+  "../shared/theme.js" \
+  "js/app.js" \
+  "js/reactive.js" \
+  "js/dom.js" \
+  "js/util.js" \
+  "js/json.js" \
+  "js/hydrate.js" \
+  "js/state.js" \
+  "js/mode.js" \
+  "js/visibility.js" \
+  "js/live-digest.js" \
+  "js/files.js" \
+  "js/files-archive.js" \
+  "js/files-render.js" \
+  "js/files-preview.js" \
+  "../shared/zddc-filter.js" \
+  "js/filters.js" \
+  "js/markdown.js" \
+  "js/markdown-editor.js" \
+  "js/email-tags.js" \
+  "js/validation.js" \
+  "js/security.js" \
+  "js/verification.js" \
+  "js/data.js" \
+  "js/publish.js" \
+  "js/reset.js" \
+  "js/publish-modal.js" \
+  "js/logos.js" \
+  "js/drop-zones.js" \
+  "js/advanced.js" \
+  "js/focus.js" \
+  "../shared/help.js" \
+  "js/main.js" \
+  > "$js_temp"
 sed 's#</script>#<\/script>#g' "$readme_file" > "$md_temp"
 
 awk -v css_file="$css_temp" -v js_file="$js_temp" -v md_file="$md_temp" -v build_timestamp="$build_timestamp" '
@@ -159,5 +156,5 @@ echo "Wrote $output_html"
 # Copy built file to website/dev/ for live serving
 dev_dir="$root_dir/../website/dev"
 mkdir -p "$dev_dir"
-cp --remove-destination "$output_html" "$dev_dir/transmittal.html"
+rm -f "$dev_dir/transmittal.html" && cp "$output_html" "$dev_dir/transmittal.html"
 echo "Copied to $dev_dir/transmittal.html"
